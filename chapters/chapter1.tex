@@ -1,0 +1,73 @@
+
+
+\chapter{Introdução}
+\label{chapter:introduction}
+
+\begin{introduction}
+A sort description of the chapter.
+
+A memorable quote can also be used.
+\end{introduction}
+
+
+
+\section{Acrónimos}
+
+Primeira e seguintes referências: \ac{h2o}, \ac{h2o}
+
+Plural, acrónimo expandido e curto: \acp{h2o}, \acs{h2o}, \acl{h2o}
+
+Com citação \footnote{Necessária entrada na bibliografia}: \ac{adsl}, \ac{adsl}
+
+
+\section{Fontes}
+
+\begin{itemize}
+\item{\tiny Tiny}
+\item{\scriptsize Scriptsize}
+\item{\footnotesize Footnotes}
+\item{\small Small}
+\item{\normalsize Normal}
+\item{\large large}
+\item{\Large Large}
+\item{\LARGE LARGE}
+\item{\huge huge}
+\item{\Huge Huge}
+\end{itemize}
+
+\section{Unidades}
+
+Utilizando o pacote \verb|siunitx| é possível utilizar unidades do Sistema Internacional. Exemplo: a aceleração da gravidade é de \SI{9.8}{\metre\per\second\squared} e um ficheiro ocupa \SI{1}{\mebi\byte}. 
+
+\section{Code Blocks}
+\lipsum[5]
+
+\begin{listing}
+\begin{minted}{c}
+
+#include <stdio.h>
+#define N 10
+/* Block
+ * comment */
+ 
+int main()
+{
+    int i;
+ 
+    // Line comment.
+    puts("Hello world!");
+ 
+    for (i = 0; i < N; i++)
+    {
+        puts("LaTeX is also great for programmers!");
+    }
+ 
+    return 0;
+}
+\end{minted}
+\caption{This is below the code.}
+\label{lbl:snippet-test}
+\end{listing}
+
+\lipsum[5]
+
