@@ -51,18 +51,8 @@ if __name__ == '__main__':
     scores = model.evaluate_generator(
         generator=test_generator,
         verbose=1,
-        #workers=multiprocessing.cpu_count()-1 or 1,
-        #use_multiprocessing=True,
+        workers=multiprocessing.cpu_count()-1 or 1,
+        use_multiprocessing=True,
     )
     for score, metric in zip(scores, model.metrics_names):
-        print("%s : %0.4f" % (metric, score))
-
-    # Visualize the model's predictions
-    plt.ion()
-    for x_batch, y_batch in test_generator:
-        y_pred = model.predict_on_batch(x_batch)
-        for i in range(len(x_batch)):
-            plt.imshow(x_batch[i,:,:,:])
-            plt.title(f'Class {y_batch}')
-            input('Press [Enter] to predict another mini-batch...')
-            plt.close()
+        print("%s: %0.4f" % (metric, score))
