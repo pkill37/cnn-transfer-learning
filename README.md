@@ -30,14 +30,13 @@ Train the model:
 
 ```
 mkdir -p ./out/models/ ./out/tensorboard
-python src/train.py --images_path /Volumes/data/images --descriptions_path /Volumes/data/descriptions --augmentation
+python src/train.py --images_path /Volumes/data/images --descriptions_path /Volumes/data/descriptions --augmentation --nb_layers 21
 ```
 
 Monitor training:
 
 ```
-rm -f ./out/tensorboard/*
-tensorboard --logdir ./out/tensorboard
+tensorboard --logdir $(pwd)/out/experiment_21/tensorboard
 ```
 
 ## Evaluation
