@@ -5,7 +5,6 @@ def vgg16(img_height, img_width, loss, optimizer, metrics, dropout, nb_layers=No
     # Freeze the model's first nb_layers layers
     vgg16 = tf.keras.applications.vgg16.VGG16(weights='imagenet')
     for layer in vgg16.layers[1:nb_layers+1]:
-        print(layer)
         layer.trainable = False
 
     # Dropout after each existing fully-connected layer
