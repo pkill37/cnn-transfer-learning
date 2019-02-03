@@ -81,7 +81,6 @@ class BinaryLabelImageSequence(tf.keras.utils.Sequence):
             vertical_flip=True,
             width_shift_range=0.1,
             height_shift_range=0.1,
-            brightness_range=(0,1),
             shear_range=0.5,
             zoom_range=0.2,
             channel_shift_range=0.005,
