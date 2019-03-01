@@ -1,0 +1,31 @@
+\chapter{Hardware}
+\label{chapter:hardware}
+
+Deep learning is very computationally intensive in itself and even more important when we want to run multiple experiments with different architectures and hyperparameters.
+
+\section{GPU}
+\ac{CNN}, the core of most state-of-the-art deep learning applied to dermatology, are computationally complex and embarassingly parallel \cite{chang2017} which the architecture of general purpose \ac{GPU} are appropriate for \cite{gpu} and for which libraries like cuDNN \cite{cudnn} were developed to further leverage the characteristics of \ac{GPU} into even bigger performance improvements.
+
+There is a growing demand for domain-specific hardware designed specifically for the computations necessary in neural network training and inference, like Google's TPU custom ASIC \cite{tpu}, which naturally can achieve major improvements in cost-energy-performance when compared to general purpose hardware like \ac{GPU} that were originally designed for the demands of computer graphics which coincidentally also serve deep learning very well. Nonetheless, \ac{GPU} remain the best cost-effective commodity hardware for this type of computation, especially when not working at the scale of companies like Google and Facebook.
+
+\section{RAM}
+RAM clock rate is irrelevant for memory transfers between the CPU and the GPU because
+
+\begin{itemize}
+    \item x
+    \item x
+\end{itemize}
+
+RAM size should at least match GPU memory so as to avoid swapping to disk. Since RAM is quite cheap nowadays, it is reasonable to acquire more of it in advance to.
+
+\section{CPU}
+The CPU does little useful computation in a deep learning application where most of the computation is delegated to the GPU.
+
+\section{PSU}
+Lorem ipsum
+
+\section{Cooling}
+Lorem ipsum
+
+\section{Motherboard}
+The motherboard
