@@ -8,7 +8,7 @@ import sklearn.model_selection
 
 
 def list_images(directory):
-    return [os.path.join(root, f) for root, _, files in os.walk(directory) for f in files if re.match(r'ISIC_\d+\.jpeg', f)]
+    return [os.path.join(root, f) for root, _, files in os.walk(directory) for f in files if re.match(r'ISIC_\d+\.(?:jpeg|png)', f)]
 
 
 def list_descriptions(directory):
