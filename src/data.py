@@ -48,10 +48,6 @@ def load_data(images_filenames, descriptions_filenames, img_height, img_width, b
     y = np.array([load_label(description) for description in descriptions_filenames[begin:end]], dtype='int')
     assert y.shape == (end-begin,)
 
-    # Make sure classes are balanced
-    unique, counts = np.unique(y, return_counts=True)
-    assert counts[0] == counts[1] and unique[0] == 0
-
     return x, y
 
 
