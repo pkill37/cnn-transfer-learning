@@ -2,11 +2,13 @@
 
 Binary classification of skin samples from ISIC-Archive.
 
-## Install
+## Environment
 
 ```
 conda env create -f environment.yml
 conda activate msc
+conda env create -f environment-gpu.yml
+conda activate msc-gpu
 ```
 
 ## Data
@@ -14,14 +16,7 @@ conda activate msc
 To download the entire dataset (+23000 samples, +50GB):
 
 ```
-python ISIC-Archive-Downloader/download_archive.py --images-dir /Volumes/data/images --descs-dir /Volumes/data/descriptions
-```
-
-For development it may be wise to consider only 150 samples of each class (malignant, benign):
-
-```
-python ISIC-Archive-Downloader/download_archive.py --images-dir /Volumes/data/images --descs-dir /Volumes/data/descriptions --num-images 150 --filter malignant
-python ISIC-Archive-Downloader/download_archive.py --images-dir /Volumes/data/images --descs-dir /Volumes/data/descriptions --num-images 150 --filter benign --offset 150
+tmux new -d python ISIC-Archive-Downloader/download_archive.py --images-dir ~/data/images --descs-dir ~/data/descriptions
 ```
 
 ## Train
@@ -29,20 +24,17 @@ python ISIC-Archive-Downloader/download_archive.py --images-dir /Volumes/data/im
 Train the model:
 
 ```
-mkdir -p ./out/models/ ./out/tensorboard
-python src/train.py --images_path /Volumes/data/images --descriptions_path /Volumes/data/descriptions --augmentation --nb_layers 21
+tmux new -d python src/train.py --images_path ~/data/images --descriptions_path ~/data/descriptions --augmentation --nb_layers 21
 ```
 
 Monitor training:
 
 ```
-tensorboard --logdir $(pwd)/out/experiment_21/tensorboard
+tmux new -d tensorboard --logdir ./out/
 ```
 
-## Evaluation
-
-Evaluate a model:
+## Evaluate
 
 ```
-python src/test.py --images_path /Volumes/data/images --descriptions_path /Volumes/data/descriptions --model $(pwd)/out/experiment_21/best.hdf5
+tmux new -d python src/test.py --images_path ~/data/images --descriptions_path ~/data/descriptions --model ./out/experiment_21/best.hdf5
 ```

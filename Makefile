@@ -1,27 +1,20 @@
-.PHONY: all data train test cleanall
+.PHONY: all data experiments test cleanall
 
-SRC         := /tmp/src
-OUT         := /tmp/out
-DATA        := /tmp/ISIC-Archive-Downloader
-PYTHON      := docker run -it              -v ${PWD}:/tmp -w /tmp tensorflow/tensorflow:latest-py3 python
-TENSORBOARD := docker run -it -p 6006:6006 -v ${PWD}:/tmp -w /tmp tensorflow/tensorflow:latest-py3 tensorboard
+SRC         := ${PWD}/src
+OUT         := ${PWD}/out
+DATA        := ${PWD}/data
 
 all: train
 
 data:
-	rm -rf /Volumes/data/images
-	rm -rf /Volumes/data/descriptions
+	tmux new -d python ISIC-Archive-Downloader/download_archive.py --images-dir ${DATA}/images --descs-dir ${DATA}/descriptions
 
-	${PYTHON} ${DATA}/download_archive.py --num-images 1000 --filter benign    --images-dir /Volumes/data/images --descs-dir /Volumes/data/descriptions
-	${PYTHON} ${DATA}/download_archive.py --num-images 1000 --filter malignant --images-dir /Volumes/data/images --descs-dir /Volumes/data/descriptions --offset 1000
-
-train:
-	tmux split-window -v ${TENSORBOARD} --logdir=${OUT}/tensorboard
-	tmux split-window -h htop
-	${PYTHON} ${SRC}/train.py
+experiments:
+	tmux new -d bash experiments.sh
+	tmux new -d tensorboard --logdir ${OUT}/
 
 test:
-	${PYTHON} ${SRC}/test.py
+	tmux new -d python ${SRC}/test.py
 
 cleanall:
-	rm -f ${OUT}/tensorboard/*
+	rm -f ${OUT}/
