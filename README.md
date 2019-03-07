@@ -16,7 +16,7 @@ conda activate msc-gpu
 To download the entire dataset (+23000 samples, +50GB):
 
 ```
-tmux new -d python ISIC-Archive-Downloader/download_archive.py --images-dir ~/data/images --descs-dir ~/data/descriptions
+tmux new -d python ISIC-Archive-Downloader/download_archive.py --images-dir ./data/images --descs-dir ./data/descriptions
 ```
 
 ## Train
@@ -24,7 +24,7 @@ tmux new -d python ISIC-Archive-Downloader/download_archive.py --images-dir ~/da
 Train the model:
 
 ```
-tmux new -d python src/train.py --images_path ~/data/images --descriptions_path ~/data/descriptions --augmentation --nb_layers 21
+tmux new -d python src/train.py --images_path ./data/images --descriptions_path ./data/descriptions --augmentation --nb_layers 21
 ```
 
 Monitor training:
@@ -33,8 +33,8 @@ Monitor training:
 tmux new -d tensorboard --logdir ./out/
 ```
 
-## Evaluate
+## Test
 
 ```
-tmux new -d python src/test.py --images_path ~/data/images --descriptions_path ~/data/descriptions --model ./out/experiment_21/best.hdf5
+tmux new -d python src/test.py --images_path ./data/images --descriptions_path ./data/descriptions --model ./out/experiment_21/best.hdf5
 ```
