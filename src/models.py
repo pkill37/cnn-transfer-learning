@@ -36,12 +36,12 @@ def vgg16(img_height, img_width, nb_layers=None):
     # Compile model
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='vgg16')
     model.compile(loss=LOSS, optimizer='adam', metrics=METRICS)
-    return model
+    return model, tf.keras.applications.vgg16.preprocess_input
 
 
 def inceptionv3(img_height, img_width, nb_layers=None):
     input_tensor = tf.keras.layers.Input(shape=(img_height, img_width, 3))
-    inceptionv3 = tf.keras.applications.InceptionV3(weights='imagenet', include_top=False, input_tensor=input_tensor)
+    inceptionv3 = tf.keras.applications.inception_v3.InceptionV3(weights='imagenet', include_top=False, input_tensor=input_tensor)
     freeze(inceptionv3, nb_layers)
 
     x = inceptionv3.output
@@ -52,20 +52,20 @@ def inceptionv3(img_height, img_width, nb_layers=None):
     # Compile model
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='inceptionv3')
     model.compile(loss=LOSS, optimizer='adam', metrics=METRICS)
-    return model
+    return model, tf.keras.applications.inception_v3.preprocess_input
 
 
-def resnet152(img_height, img_width, nb_layers=None):
+def resnet50(img_height, img_width, nb_layers=None):
     input_tensor = tf.keras.layers.Input(shape=(img_height, img_width, 3))
-    resnet152 = tf.keras.applications.ResNet152(weights='imagenet', include_top=False, input_tensor=input_tensor)
-    freeze(resnet152, nb_layers)
+    resnet50 = tf.keras.applications.resnet50.ResNet50(weights='imagenet', include_top=False, input_tensor=input_tensor)
+    freeze(resnet50, nb_layers)
 
-    x = resnet152.output
+    x = resnet50.output
     x = tf.keras.layers.GlobalAveragePooling2D(name='avg_pool')(x)
     x = tf.keras.layers.Dropout(0.4)(x)
     x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
 
     # Compile model
-    model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='resnet152')
+    model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='resnet50')
     model.compile(loss=LOSS, optimizer='adam', metrics=METRICS)
-    return model
+    return model, tf.keras.applications.resnet50.preprocess_input

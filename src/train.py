@@ -17,7 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('--descriptions-path', type=str)
     parser.add_argument('--img-height', type=int)
     parser.add_argument('--img-width', type=int)
-    parser.add_argument('--model', choices=['vgg16', 'inceptionv3', 'resnet152'])
+    parser.add_argument('--model', choices=['vgg16', 'inceptionv3', 'resnet50'])
     parser.add_argument('--nb-layers', type=int)
     parser.add_argument('--epochs', type=int)
     parser.add_argument('--batch-size', type=int)
@@ -25,11 +25,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.model == 'vgg16':
-        model = models.vgg16(img_height=args.img_height, img_width=args.img_width, nb_layers=args.nb_layers)
+        model, preprocess_input = models.vgg16(img_height=args.img_height, img_width=args.img_width, nb_layers=args.nb_layers)
     elif args.model == 'inceptionv3':
-        model = models.inceptionv3(img_height=args.img_height, img_width=args.img_width, nb_layers=args.nb_layers)
-    elif args.model == 'resnet152':
-        model = models.resnet152(img_height=args.img_height, img_width=args.img_width, nb_layers=args.nb_layers)
+        model, preprocess_input = models.inceptionv3(img_height=args.img_height, img_width=args.img_width, nb_layers=args.nb_layers)
+    elif args.model == 'resnet50':
+        model, preprocess_input = models.resnet50(img_height=args.img_height, img_width=args.img_width, nb_layers=args.nb_layers)
     model.summary()
 
     callbacks = [
@@ -49,6 +49,7 @@ if __name__ == '__main__':
         split=(0.8, 0.1, 0.1),
         batch_size=args.batch_size,
         augmentation=True,
+        preprocess_input=preprocess_input,
     )
 
     model.fit_generator(
