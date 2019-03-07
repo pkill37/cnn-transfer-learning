@@ -12,17 +12,13 @@ import metrics
 if __name__ == '__main__':
     helpers.seed()
 
-    pwd = os.path.realpath(__file__)
-    out_dir = os.path.abspath(os.path.join(pwd, '../../out/')) + '/'
-    data_dir = os.path.abspath(os.path.join(pwd, '../../data/')) + '/'
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('--images_path', type=str, default=data_dir+'images/')
-    parser.add_argument('--descriptions_path', type=str, default=data_dir+'descriptions/')
-    parser.add_argument('--model', type=str, default=out_dir+'experiment_21/best.hdf5')
-    parser.add_argument('--img_height', type=int, default=224)
-    parser.add_argument('--img_width', type=int, default=224)
-    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--images_path', type=str)
+    parser.add_argument('--descriptions_path', type=str)
+    parser.add_argument('--model', type=str)
+    parser.add_argument('--img_height', type=int)
+    parser.add_argument('--img_width', type=int)
+    parser.add_argument('--batch_size', type=int)
     args = parser.parse_args()
 
     # Load best trained model
