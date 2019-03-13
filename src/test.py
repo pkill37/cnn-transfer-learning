@@ -13,20 +13,16 @@ if __name__ == '__main__':
     helpers.seed()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--images_path', type=str)
-    parser.add_argument('--descriptions_path', type=str)
+    parser.add_argument('--images-path', type=str)
+    parser.add_argument('--descriptions-path', type=str)
     parser.add_argument('--model', type=str)
-    parser.add_argument('--img_height', type=int)
-    parser.add_argument('--img_width', type=int)
-    parser.add_argument('--batch_size', type=int)
+    parser.add_argument('--img-height', type=int)
+    parser.add_argument('--img-width', type=int)
+    parser.add_argument('--batch-size', type=int)
     args = parser.parse_args()
 
     # Load best trained model
     model = tf.keras.models.load_model(args.model, custom_objects={
-        'true_positive': metrics.true_positive(),
-        'true_negative': metrics.true_negative(),
-        'false_negative': metrics.false_negative(),
-        'false_positive': metrics.false_positive(),
         'precision': metrics.precision(),
         'recall': metrics.recall(),
         'f1_score': metrics.f1_score()

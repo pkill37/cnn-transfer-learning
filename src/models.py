@@ -23,7 +23,8 @@ def ensemble(models, model_input):
     return model
 
 
-def vgg16(img_height, img_width, nb_layers=None):
+def vgg16(nb_layers=None):
+    img_height = img_width = 224
     input_tensor = tf.keras.layers.Input(shape=(img_height, img_width, 3))
     vgg16 = tf.keras.applications.vgg16.VGG16(weights='imagenet', include_top=False, input_tensor=input_tensor)
     freeze(vgg16, nb_layers)
@@ -33,13 +34,13 @@ def vgg16(img_height, img_width, nb_layers=None):
     x = tf.keras.layers.Dropout(0.4)(x)
     x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
 
-    # Compile model
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='vgg16')
     model.compile(loss=LOSS, optimizer='adam', metrics=METRICS)
-    return model, tf.keras.applications.vgg16.preprocess_input
+    return model, tf.keras.applications.vgg16.preprocess_input, (img_height, img_width)
 
 
-def inceptionv3(img_height, img_width, nb_layers=None):
+def inceptionv3(nb_layers=None):
+    img_height = img_width = 299
     input_tensor = tf.keras.layers.Input(shape=(img_height, img_width, 3))
     inceptionv3 = tf.keras.applications.inception_v3.InceptionV3(weights='imagenet', include_top=False, input_tensor=input_tensor)
     freeze(inceptionv3, nb_layers)
@@ -49,13 +50,13 @@ def inceptionv3(img_height, img_width, nb_layers=None):
     x = tf.keras.layers.Dropout(0.4)(x)
     x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
 
-    # Compile model
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='inceptionv3')
     model.compile(loss=LOSS, optimizer='adam', metrics=METRICS)
-    return model, tf.keras.applications.inception_v3.preprocess_input
+    return model, tf.keras.applications.inception_v3.preprocess_input, (img_height, img_width)
 
 
-def resnet50(img_height, img_width, nb_layers=None):
+def resnet50(nb_layers=None):
+    img_height = img_width = 224
     input_tensor = tf.keras.layers.Input(shape=(img_height, img_width, 3))
     resnet50 = tf.keras.applications.resnet50.ResNet50(weights='imagenet', include_top=False, input_tensor=input_tensor)
     freeze(resnet50, nb_layers)
@@ -65,7 +66,6 @@ def resnet50(img_height, img_width, nb_layers=None):
     x = tf.keras.layers.Dropout(0.4)(x)
     x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
 
-    # Compile model
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='resnet50')
     model.compile(loss=LOSS, optimizer='adam', metrics=METRICS)
-    return model, tf.keras.applications.resnet50.preprocess_input
+    return model, tf.keras.applications.resnet50.preprocess_input, (img_height, img_width)

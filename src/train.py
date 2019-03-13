@@ -8,15 +8,15 @@ import data
 import helpers
 
 
-def train(experiment, images_path, descriptions_path, img_height, img_width, pretrained_model, nb_layers, epochs, batch_size, lr):
+def train(experiment, images_path, descriptions_path, pretrained_model, nb_layers, epochs, batch_size, lr):
     helpers.seed()
 
     if pretrained_model == 'vgg16':
-        model, preprocess_input = models.vgg16(img_height=img_height, img_width=img_width, nb_layers=nb_layers)
+        model, preprocess_input, (img_height, img_width) = models.vgg16(nb_layers=nb_layers)
     elif pretrained_model == 'inceptionv3':
-        model, preprocess_input = models.inceptionv3(img_height=img_height, img_width=img_width, nb_layers=nb_layers)
+        model, preprocess_input, (img_height, img_width) = models.inceptionv3(nb_layers=nb_layers)
     elif pretrained_model == 'resnet50':
-        model, preprocess_input = models.resnet50(img_height=img_height, img_width=img_width, nb_layers=nb_layers)
+        model, preprocess_input, (img_height, img_width) = models.resnet50(nb_layers=nb_layers)
     model.summary()
 
     callbacks = [
@@ -56,8 +56,6 @@ if __name__ == '__main__':
     parser.add_argument('--experiment', type=str)
     parser.add_argument('--images-path', type=str)
     parser.add_argument('--descriptions-path', type=str)
-    parser.add_argument('--img-height', type=int)
-    parser.add_argument('--img-width', type=int)
     parser.add_argument('--pretrained-model', choices=['vgg16', 'inceptionv3', 'resnet50'])
     parser.add_argument('--nb-layers', type=int)
     parser.add_argument('--epochs', type=int)
@@ -65,4 +63,4 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float)
     args = parser.parse_args()
 
-    train(args.experiment, args.images_path, args.descriptions_path, args.img_height, args.img_width, args.pretrained_model, args.nb_layers, args.epochs, args.batch_size, args.lr)
+    train(args.experiment, args.images_path, args.descriptions_path, args.pretrained_model, args.nb_layers, args.epochs, args.batch_size, args.lr)

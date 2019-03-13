@@ -10,8 +10,6 @@ for ((i=0;i<${#pretrained_models[@]};++i)); do
     python ./src/train.py --experiment ./out/${pretrained_models[i]}_0_100_32_001/ \
                           --images-path ./data/images/ \
                           --descriptions-path ./data/descriptions/ \
-                          --img-height ${image_sizes[i]} \
-                          --img-width ${image_sizes[i]} \
                           --pretrained-model ${pretrained_models[i]} \
                           --nb-layers 0 \
                           --epochs 100 \

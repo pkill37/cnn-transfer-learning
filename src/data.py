@@ -52,12 +52,10 @@ def load_data(images_filenames, descriptions_filenames, img_height, img_width, b
 
 
 class BinaryLabelImageSequence(tf.keras.utils.Sequence):
-    def __init__(self, x, y, img_height, img_width, batch_size, augment, preprocess_input, seed=None):
+    def __init__(self, x, y, batch_size, augment, preprocess_input, seed=None):
         self.x = x
         self.y = y
 
-        self.img_height = img_height
-        self.img_width = img_width
         self.batch_size = batch_size
         self.augment = augment
         self.seed = seed
@@ -125,8 +123,8 @@ def generators(images_path, descriptions_path, img_height, img_width, split, bat
 
     x_train, y_train, x_validation, y_validation, x_test, y_test = split_data(x, y, split)
 
-    train_generator = BinaryLabelImageSequence(x=x_train, y=y_train, img_height=img_height, img_width=img_width, batch_size=batch_size, augment=augmentation, preprocess_input=preprocess_input)
-    validation_generator = BinaryLabelImageSequence(x=x_validation, y=y_validation, img_height=img_height, img_width=img_width, batch_size=batch_size, augment=False, preprocess_input=preprocess_input)
-    test_generator = BinaryLabelImageSequence(x=x_test, y=y_test, img_height=img_height, img_width=img_width, batch_size=batch_size, augment=False, preprocess_input=preprocess_input)
+    train_generator = BinaryLabelImageSequence(x=x_train, y=y_train, batch_size=batch_size, augment=augmentation, preprocess_input=preprocess_input)
+    validation_generator = BinaryLabelImageSequence(x=x_validation, y=y_validation, batch_size=batch_size, augment=False, preprocess_input=preprocess_input)
+    test_generator = BinaryLabelImageSequence(x=x_test, y=y_test, batch_size=batch_size, augment=False, preprocess_input=preprocess_input)
 
     return train_generator, validation_generator, test_generator
