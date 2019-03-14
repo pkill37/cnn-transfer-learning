@@ -23,13 +23,15 @@ def ensemble(models, model_input):
     return model
 
 
-def vgg16(nb_layers=None):
+def vgg16(extract_until, freeze_until):
+    assert extract_until >= freeze_until
+
     img_height = img_width = 224
     input_tensor = tf.keras.layers.Input(shape=(img_height, img_width, 3))
     vgg16 = tf.keras.applications.vgg16.VGG16(weights='imagenet', include_top=False, input_tensor=input_tensor)
-    freeze(vgg16, nb_layers)
+    freeze(vgg16, freeze_until)
 
-    x = vgg16.output
+    x = vgg16.layers[extract_until].output
     x = tf.keras.layers.GlobalAveragePooling2D(name='avg_pool')(x)
     x = tf.keras.layers.Dropout(0.4)(x)
     x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
@@ -39,13 +41,15 @@ def vgg16(nb_layers=None):
     return model, tf.keras.applications.vgg16.preprocess_input, (img_height, img_width)
 
 
-def inceptionv3(nb_layers=None):
+def inceptionv3(extract_until, freeze_until):
+    assert extract_until >= freeze_until
+
     img_height = img_width = 299
     input_tensor = tf.keras.layers.Input(shape=(img_height, img_width, 3))
     inceptionv3 = tf.keras.applications.inception_v3.InceptionV3(weights='imagenet', include_top=False, input_tensor=input_tensor)
-    freeze(inceptionv3, nb_layers)
+    freeze(inceptionv3, freeze_until)
 
-    x = inceptionv3.output
+    x = inceptionv3.layers[extract_until].output
     x = tf.keras.layers.GlobalAveragePooling2D(name='avg_pool')(x)
     x = tf.keras.layers.Dropout(0.4)(x)
     x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
@@ -55,13 +59,15 @@ def inceptionv3(nb_layers=None):
     return model, tf.keras.applications.inception_v3.preprocess_input, (img_height, img_width)
 
 
-def resnet50(nb_layers=None):
+def resnet50(extract_until, freeze_until):
+    assert extract_until >= freeze_until
+
     img_height = img_width = 224
     input_tensor = tf.keras.layers.Input(shape=(img_height, img_width, 3))
     resnet50 = tf.keras.applications.resnet50.ResNet50(weights='imagenet', include_top=False, input_tensor=input_tensor)
-    freeze(resnet50, nb_layers)
+    freeze(resnet50, freeze_until)
 
-    x = resnet50.output
+    x = resnet50.layers[extract_until].output
     x = tf.keras.layers.GlobalAveragePooling2D(name='avg_pool')(x)
     x = tf.keras.layers.Dropout(0.4)(x)
     x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
