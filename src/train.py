@@ -20,7 +20,6 @@ def train(experiment, images_path, descriptions_path, pretrained_model, extract_
     model.summary()
 
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(monitor='val_f1_score', min_delta=0, patience=20, verbose=0, mode='max', baseline=None),
         tf.keras.callbacks.LearningRateScheduler(lambda epoch: lr*(0.1**int(epoch/10))),
         tf.keras.callbacks.ReduceLROnPlateau(monitor='val_f1_score', factor=0.2, patience=10, verbose=0, mode='max', min_delta=0.0001, cooldown=0, min_lr=0.001),
         tf.keras.callbacks.ModelCheckpoint(filepath=experiment+'best.hdf5', monitor='val_f1_score', verbose=1, save_best_only=True, save_weights_only=False, mode='max', period=1),

@@ -13,7 +13,7 @@ for ((i=0;i<${#pretrained_models[@]};++i)); do
                           --pretrained-model ${pretrained_models[i]} \
                           --extract-until 0 \
                           --freeze-until 0 \
-                          --epochs 100 \
+                          --epochs 1000 \
                           --batch-size 32 \
                           --lr 0.01
 done
