@@ -112,7 +112,7 @@ def split_data(x, y, split):
     return x_train, y_train, x_validation, y_validation, x_test, y_test
 
 
-def generators(images_path, descriptions_path, img_height, img_width, split, batch_size, augmentation, preprocess_input):
+def generators(images_path, descriptions_path, img_height, img_width, split, batch_size, preprocess_input):
     x, y = load_data(
         images_filenames=list_images(images_path),
         descriptions_filenames=list_descriptions(descriptions_path),
@@ -122,7 +122,7 @@ def generators(images_path, descriptions_path, img_height, img_width, split, bat
 
     x_train, y_train, x_validation, y_validation, x_test, y_test = split_data(x, y, split)
 
-    train_generator = BinaryLabelImageSequence(x=x_train, y=y_train, batch_size=batch_size, augment=augmentation, preprocess_input=preprocess_input)
+    train_generator = BinaryLabelImageSequence(x=x_train, y=y_train, batch_size=batch_size, augment=True, preprocess_input=preprocess_input)
     validation_generator = BinaryLabelImageSequence(x=x_validation, y=y_validation, batch_size=batch_size, augment=False, preprocess_input=preprocess_input)
     test_generator = BinaryLabelImageSequence(x=x_test, y=y_test, batch_size=batch_size, augment=False, preprocess_input=preprocess_input)
 
