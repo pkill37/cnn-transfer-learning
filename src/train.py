@@ -27,20 +27,13 @@ def train(experiments_path, images_path, descriptions_path, pretrained_model, ex
         tf.keras.callbacks.CSVLogger(filename=experiments_path+'training_log.csv', separator=',', append=False),
     ]
 
-    train_generator, validation_generator, _ = data.generators(
-        images_path=images_path,
-        descriptions_path=descriptions_path,
-        img_height=img_height,
-        img_width=img_width,
-        split=(0.8, 0.1, 0.1),
-        batch_size=batch_size,
-        preprocess_input=preprocess_input,
-    )
+    x_train, y_train = data.load_dataset(args.train)
+    x_validation, y_validation = data.load_dataset(args.validation)
 
     model.fit_generator(
-        generator=train_generator,
+        generator=data.BinaryLabelImageSequence(x_train, y_train, args.batch_size, True, preprocess_input),
         epochs=epochs,
-        validation_data=validation_generator,
+        validation_data=data.BinaryLabelImageSequence(x_validation, y_validation, args.batch_size, False, preprocess_input),
         shuffle=True,
         verbose=1,
         callbacks=callbacks,
@@ -52,8 +45,8 @@ def train(experiments_path, images_path, descriptions_path, pretrained_model, ex
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--experiments-path', type=str)
-    parser.add_argument('--images-path', type=str)
-    parser.add_argument('--descriptions-path', type=str)
+    parser.add_argument('--train', type=str)
+    parser.add_argument('--validation', type=str)
     parser.add_argument('--pretrained-model', choices=['vgg16', 'inceptionv3', 'resnet50'])
     parser.add_argument('--extract-until', type=int)
     parser.add_argument('--freeze-until', type=int)
@@ -62,4 +55,4 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float)
     args = parser.parse_args()
 
-    train(args.experiments_path, args.images_path, args.descriptions_path, args.pretrained_model, args.extract_until, args.freeze_until, args.epochs, args.batch_size, args.lr)
+    train(args.experiments_path, args.train, args.validation, args.pretrained_model, args.extract_until, args.freeze_until, args.epochs, args.batch_size, args.lr)

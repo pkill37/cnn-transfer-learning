@@ -2,53 +2,76 @@ import tensorflow as tf
 import numpy as np
 import os
 import math
-import re
-import json
-import sklearn.model_selection
+import csv
+from tqdm import tqdm
+import helpers
+from PIL import Image
+import argparse
 
 
-def list_images(directory):
-    return [os.path.join(root, f) for root, _, files in os.walk(directory) for f in files if re.match(r'ISIC_\d+\.(?:jpeg|png)', f)]
+def load_image(filename, target_size, color_mode, preprocess_function=None):
+    # Read file into PIL Image instance
+    img = Image.open(filename).convert('RGB')
+
+    # Run image through preprocessing pipeline
+    if preprocess_function:
+        img = preprocess_function(img, target_size)
+
+    # Convert image to NumPy array
+    return np.asarray(img, dtype='float32')
 
 
-def list_descriptions(directory):
-    return [os.path.join(root, f) for root, _, files in os.walk(directory) for f in files if re.match(r'ISIC_\d+', f)]
+def preprocess_image(img, target_size):
+    def _crop_center(img):
+        width, height = img.size
+        if width == height:
+            return img
+
+        length = min(width, height)
+
+        left = (width - length) // 2
+        upper = (height - length) // 2
+        right = left + length
+        lower = upper + length
+
+        box = (left, upper, right, lower)
+        return img.crop(box)
+
+    def _resize(img):
+        return img.resize(target_size, Image.NEAREST)
+
+    return _resize(img)
 
 
-def load_img(filename, target_size, color_mode):
-    obj = tf.keras.preprocessing.image.load_img(filename, target_size=target_size, color_mode=color_mode)
-    arr = tf.keras.preprocessing.image.img_to_array(obj, data_format='channels_last', dtype='float32')
-    return arr
+def preprocess_dataset(images_path, descriptions_filename, preprocessed_dataset_filename, img_height, img_width):
+    with open(descriptions_filename, 'r', newline='') as f:
+        x = []
+        y = []
+
+        # Dynamically build x and y by iterating through each line in the ground-truth CSV
+        for row in tqdm(csv.DictReader(f)):
+            # Construct image filename from the given images directory and the ISIC image ID in the CSV
+            image_filename = os.path.join(images_path, row['image_id']+'.jpg')
+
+            # Load and preprocess the image in the aforementioned filename
+            x.append(load_image(image_filename, (img_height, img_width), 'rgb', preprocess_image))
+
+            # Label of the first classification task (melanoma vs nevus and seborrheic keratosis)
+            y.append(int(float(row['melanoma'])))
+
+        # Construct NumPy ndarrays out of the lists
+        x = np.array(x, dtype='float32')
+        y = np.array(y, dtype='float32')
+        assert x.shape[0] == y.shape[0]
+
+        # Store final, preprocessed, compressed dataset
+        np.savez_compressed(preprocessed_dataset_filename, x=x, y=y)
+        return x, y
 
 
-def load_label(filename):
-    with open(filename) as f:
-        data = json.load(f)
-    return 1 if data['meta']['clinical']['benign_malignant'] == 'benign' else 0
-
-
-def load_data(images_filenames, descriptions_filenames, img_height, img_width, begin=None, end=None):
-    assert len(images_filenames) == len(descriptions_filenames)
-
-    # Load everything
-    if not begin and not end:
-        begin = 0
-        end = len(images_filenames)
-    # Load from the interval [begin, end]
-    else:
-        begin = max(begin, 0)
-        end = min(end, len(images_filenames))
-    assert begin < end
-
-    # Load RGB image into h*w*3 matrix
-    x = np.array([load_img(image, (img_height, img_width), 'rgb') for image in images_filenames[begin:end]], dtype='float32')
-    assert x.shape == (end-begin, img_height, img_width, 3)
-
-    # Load binary labels into column vector
-    y = np.array([load_label(description) for description in descriptions_filenames[begin:end]], dtype='int')
-    assert y.shape == (end-begin,)
-
-    return x, y
+def load_dataset(preprocessed_dataset_filename):
+    dataset = np.load(preprocessed_dataset_filename)
+    return dataset['x'], dataset['y']
 
 
 class BinaryLabelImageSequence(tf.keras.utils.Sequence):
@@ -96,34 +119,25 @@ class BinaryLabelImageSequence(tf.keras.utils.Sequence):
         return x_batch, y_batch
 
 
-def split_data(x, y, split):
-    assert split[0]+split[1]+split[2] == 1
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--images', type=str)
+    parser.add_argument('--descriptions', type=str)
+    parser.add_argument('--dataset', type=str, required=True)
+    args = parser.parse_args()
 
-    # First split everything into train and test
-    x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, test_size=split[2], stratify=y)
+    if args.images and args.descriptions:
+        x, y = preprocess_dataset(args.images, args.descriptions, args.dataset, 224, 224)
+    else:
+        x, y = load_dataset(args.dataset)
 
-    # Then split train into train and validation
-    x_train, x_validation, y_train, y_validation = sklearn.model_selection.train_test_split(x_train, y_train, test_size=split[1], stratify=y_train)
-
-    print('train', x_train.shape, y_train.shape)
-    print('validation', x_validation.shape, y_validation.shape)
-    print('test', x_test.shape, y_test.shape)
-
-    return x_train, y_train, x_validation, y_validation, x_test, y_test
-
-
-def generators(images_path, descriptions_path, img_height, img_width, split, batch_size, preprocess_input):
-    x, y = load_data(
-        images_filenames=list_images(images_path),
-        descriptions_filenames=list_descriptions(descriptions_path),
-        img_height=img_height,
-        img_width=img_width,
-    )
-
-    x_train, y_train, x_validation, y_validation, x_test, y_test = split_data(x, y, split)
-
-    train_generator = BinaryLabelImageSequence(x=x_train, y=y_train, batch_size=batch_size, augment=True, preprocess_input=preprocess_input)
-    validation_generator = BinaryLabelImageSequence(x=x_validation, y=y_validation, batch_size=batch_size, augment=False, preprocess_input=preprocess_input)
-    test_generator = BinaryLabelImageSequence(x=x_test, y=y_test, batch_size=batch_size, augment=False, preprocess_input=preprocess_input)
-
-    return train_generator, validation_generator, test_generator
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(4, 4))
+    rows = columns = 2
+    for cell in range(1, columns*rows+1):
+        i = np.random.randint(0, x.shape[0])
+        plt.subplot(rows, columns, cell)
+        plt.title('Melanoma' if y[i] == 1 else 'Non melanoma')
+        plt.imshow(x[i]/255)
+        plt.axis('off')
+    plt.show()
