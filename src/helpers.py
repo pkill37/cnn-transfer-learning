@@ -1,3 +1,10 @@
+import os
+
+
+def touch(fname, times=None):
+    with open(fname, 'a'):
+        os.utime(fname, times)
+
 def seed():
     from random import seed
     seed(1)
