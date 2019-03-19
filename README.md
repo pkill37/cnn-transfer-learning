@@ -26,7 +26,7 @@ tmux new -d python ./src/data.py --images ~/Downloads/ISIC-2017_Test_v2_Data/ --
 Run the experiments:
 
 ```
-tmux new -d python ./src/experiments.py --experiments_path ./experiments --train-set ./data/train.npz --validation-set ./data/validation.npz
+tmux new -d python ./src/experiments.py --experiments-path ./experiments --train-set ./data/train.npz --validation-set ./data/validation.npz
 ```
 
 Monitor training:
@@ -38,5 +38,5 @@ tmux new -d tensorboard --logdir ./experiments/
 ## Test
 
 ```
-tmux new -d python src/test.py --images_path ./data/images --descriptions_path ./data/descriptions --model ./out/experiment_21/best.hdf5
+tmux new -d python src/test.py --images-path ./data/images --descriptions-path ./data/descriptions --model ./out/experiment_21/best.hdf5
 ```

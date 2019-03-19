@@ -11,12 +11,7 @@ import helpers
 def train(experiments_path, train, validation, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr):
     helpers.seed()
 
-    if pretrained_model == 'vgg16':
-        model, preprocess_input, (img_height, img_width) = models.vgg16(extract_until=extract_until, freeze_until=freeze_until)
-    elif pretrained_model == 'inceptionv3':
-        model, preprocess_input, (img_height, img_width) = models.inceptionv3(extract_until=extract_until, freeze_until=freeze_until)
-    elif pretrained_model == 'resnet50':
-        model, preprocess_input, (img_height, img_width) = models.resnet50(extract_until=extract_until, freeze_until=freeze_until)
+    model, preprocess_input, (img_height, img_width) = getattr(models, pretrained_model)(extract_until=extract_until, freeze_until=freeze_until)
     model.summary()
 
     callbacks = [
