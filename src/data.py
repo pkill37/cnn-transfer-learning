@@ -7,6 +7,7 @@ from tqdm import tqdm
 import helpers
 from PIL import Image
 import argparse
+import sklearn
 
 
 def load_image(filename, target_size, color_mode, preprocess_function=None):
@@ -71,7 +72,11 @@ def preprocess_dataset(images_path, descriptions_filename, preprocessed_dataset_
 
 def load_dataset(preprocessed_dataset_filename):
     dataset = np.load(preprocessed_dataset_filename)
-    return dataset['x'], dataset['y']
+    x = dataset['x']
+    y = dataset['y']
+    class_weights = sklearn.utils.class_weight.compute_class_weight('balanced', np.unique(y), y)
+
+    return x, y, class_weights
 
 
 class BinaryLabelImageSequence(tf.keras.utils.Sequence):

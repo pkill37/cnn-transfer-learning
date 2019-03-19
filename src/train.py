@@ -22,13 +22,14 @@ def train(experiments_path, train, validation, pretrained_model, extract_until, 
         tf.keras.callbacks.CSVLogger(filename=os.path.join(experiments_path, 'training_log.csv'), separator=',', append=False),
     ]
 
-    x_train, y_train = data.load_dataset(train)
-    x_validation, y_validation = data.load_dataset(validation)
+    x_train, y_train, class_weights = data.load_dataset(train)
+    x_validation, y_validation, _ = data.load_dataset(validation)
 
     model.fit_generator(
         generator=data.BinaryLabelImageSequence(x_train, y_train, batch_size, True, preprocess_input),
         epochs=epochs,
         validation_data=data.BinaryLabelImageSequence(x_validation, y_validation, batch_size, False, preprocess_input),
+        class_weight=class_weights,
         shuffle=True,
         verbose=1,
         callbacks=callbacks,
