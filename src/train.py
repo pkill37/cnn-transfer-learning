@@ -8,7 +8,7 @@ import data
 import helpers
 
 
-def train(experiments_path, images_path, descriptions_path, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr):
+def train(experiments_path, train, validation, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr):
     helpers.seed()
 
     if pretrained_model == 'vgg16':
@@ -22,18 +22,18 @@ def train(experiments_path, images_path, descriptions_path, pretrained_model, ex
     callbacks = [
         tf.keras.callbacks.LearningRateScheduler(lambda epoch: lr*(0.1**int(epoch/10))),
         tf.keras.callbacks.ReduceLROnPlateau(monitor='val_f1_score', factor=0.2, patience=10, verbose=0, mode='max', min_delta=0.0001, cooldown=0, min_lr=0.001),
-        tf.keras.callbacks.ModelCheckpoint(filepath=experiments_path+'best.hdf5', monitor='val_f1_score', verbose=1, save_best_only=True, save_weights_only=False, mode='max', period=1),
-        tf.keras.callbacks.TensorBoard(log_dir=experiments_path+'tensorboard', histogram_freq=0, write_graph=True, write_images=True),
-        tf.keras.callbacks.CSVLogger(filename=experiments_path+'training_log.csv', separator=',', append=False),
+        tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiments_path, 'best.hdf5'), monitor='val_f1_score', verbose=1, save_best_only=True, save_weights_only=False, mode='max', period=1),
+        tf.keras.callbacks.TensorBoard(log_dir=experiments_path, histogram_freq=0, write_graph=True, write_images=True),
+        tf.keras.callbacks.CSVLogger(filename=os.path.join(experiments_path, 'training_log.csv'), separator=',', append=False),
     ]
 
-    x_train, y_train = data.load_dataset(args.train)
-    x_validation, y_validation = data.load_dataset(args.validation)
+    x_train, y_train = data.load_dataset(train)
+    x_validation, y_validation = data.load_dataset(validation)
 
     model.fit_generator(
-        generator=data.BinaryLabelImageSequence(x_train, y_train, args.batch_size, True, preprocess_input),
+        generator=data.BinaryLabelImageSequence(x_train, y_train, batch_size, True, preprocess_input),
         epochs=epochs,
-        validation_data=data.BinaryLabelImageSequence(x_validation, y_validation, args.batch_size, False, preprocess_input),
+        validation_data=data.BinaryLabelImageSequence(x_validation, y_validation, batch_size, False, preprocess_input),
         shuffle=True,
         verbose=1,
         callbacks=callbacks,
