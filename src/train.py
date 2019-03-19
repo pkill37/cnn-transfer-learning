@@ -16,8 +16,8 @@ def train(experiments_path, train, validation, pretrained_model, extract_until, 
 
     callbacks = [
         tf.keras.callbacks.LearningRateScheduler(lambda epoch: lr*(0.1**int(epoch/10))),
-        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_f1_score', factor=0.2, patience=10, verbose=0, mode='max', min_delta=0.0001, cooldown=0, min_lr=0.001),
-        tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiments_path, 'best.hdf5'), monitor='val_f1_score', verbose=1, save_best_only=True, save_weights_only=False, mode='max', period=1),
+        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_f1', factor=0.2, patience=10, verbose=0, mode='max', min_delta=0.0001, cooldown=0, min_lr=0.001),
+        tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiments_path, 'best.hdf5'), monitor='val_f1', verbose=1, save_best_only=True, save_weights_only=False, mode='max', period=1),
         tf.keras.callbacks.TensorBoard(log_dir=experiments_path, histogram_freq=0, write_graph=True, write_images=True),
         tf.keras.callbacks.CSVLogger(filename=os.path.join(experiments_path, 'training_log.csv'), separator=',', append=False),
     ]

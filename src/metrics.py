@@ -65,7 +65,7 @@ class true_positive(layer):
     positive class.
     """
 
-    def __init__(self, name="true_positive", **kwargs):
+    def __init__(self, name="tp", **kwargs):
         super(true_positive, self).__init__(name=name, **kwargs)
         self.tp = K.variable(0, dtype="int32")
 
@@ -92,7 +92,7 @@ class true_negative(layer):
     negative class.
     """
 
-    def __init__(self, name="true_negative", **kwargs):
+    def __init__(self, name="tn", **kwargs):
         super(true_negative, self).__init__(name=name, **kwargs)
         self.tn = K.variable(0, dtype="int32")
 
@@ -122,7 +122,7 @@ class false_negative(layer):
     negative class.
     """
 
-    def __init__(self, name="false_negative", **kwargs):
+    def __init__(self, name="fn", **kwargs):
         super(false_negative, self).__init__(name=name, **kwargs)
         self.fn = K.variable(0, dtype="int32")
 
@@ -150,7 +150,7 @@ class false_positive(layer):
     positive class.
     """
 
-    def __init__(self, name="false_positive", **kwargs):
+    def __init__(self, name="fp", **kwargs):
         super(false_positive, self).__init__(name=name, **kwargs)
         self.fp = K.variable(0, dtype="int32")
 
@@ -177,7 +177,7 @@ class recall(layer):
     Recall measures proportion of actual positives that was identified correctly.
     """
 
-    def __init__(self, name="recall", **kwargs):
+    def __init__(self, name="r", **kwargs):
         super(recall, self).__init__(name=name, **kwargs)
 
         self.tp = true_positive()
@@ -208,7 +208,7 @@ class precision(layer):
     actually correct.
     """
 
-    def __init__(self, name="precision", **kwargs):
+    def __init__(self, name="p", **kwargs):
         super(precision, self).__init__(name=name, **kwargs)
 
         self.tp = true_positive()
@@ -238,7 +238,7 @@ class f1_score(layer):
     The F1 score is the harmonic mean of precision and recall.
     """
 
-    def __init__(self, name="f1_score", label=None, **kwargs):
+    def __init__(self, name="f1", label=None, **kwargs):
         super(f1_score, self).__init__(name=name, label=label, **kwargs)
 
         self.precision = precision(label=label)
