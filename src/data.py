@@ -132,8 +132,9 @@ if __name__ == '__main__':
         x, y = load_dataset(args.dataset)
 
     import matplotlib.pyplot as plt
-    fig = plt.figure(figsize=(4, 4))
-    rows = columns = 2
+    fig = plt.figure(figsize=(15, 20))
+    rows = 4
+    columns = 6
     for cell in range(1, columns*rows+1):
         i = np.random.randint(0, x.shape[0])
         plt.subplot(rows, columns, cell)
