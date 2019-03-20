@@ -3,6 +3,7 @@ import train
 import itertools
 import helpers
 import os
+import time
 
 
 if __name__ == '__main__':
@@ -31,6 +32,6 @@ if __name__ == '__main__':
 
             # Run this particular experiment
             print(f'Experiment {i} (pretrained model {pretrained_model}, extract until {extract_until}, freeze until {freeze_until}, epochs {epochs}, batch_size {batch_size}, lr {lr})')
-            experiment = os.path.join(args.experiments_path, f'{pretrained_model}_{extract_until}_{freeze_until}_{epochs}_{batch_size}_{lr}')
+            experiment = os.path.join(args.experiments_path, f'{pretrained_model}_{extract_until}_{freeze_until}_{epochs}_{batch_size}_{lr}_{int(time.time())}')
             helpers.create_or_recreate_dir(experiment)
             train.train(experiment, args.train_set, args.validation_set, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr)
