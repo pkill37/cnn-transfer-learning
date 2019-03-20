@@ -13,8 +13,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     configs = [
-        { 'model': ['vgg16'], 'extract_until': [3,6,10,14,18], 'freeze_until': [3,6,10,14,18], 'epochs': [1000], 'batch_size': [32], 'lr': [0.001], },
-        { 'model': ['inceptionv3'], 'extract_until': [41,64,87,101,133,165,197,229,249], 'freeze_until': [41,64,87,101,133,165,197,229,249], 'epochs': [1000], 'batch_size': [32], 'lr': [0.001], },
+        { 'model': ['vgg16'], 'extract_until': [3,6,10,14,18], 'freeze_until': [3,6,10,14,18], 'epochs': [300], 'batch_size': [32], 'lr': [0.001], },
+        { 'model': ['inceptionv3'], 'extract_until': [41,64,87,101,133,165,197,229,249], 'freeze_until': [41,64,87,101,133,165,197,229,249], 'epochs': [300], 'batch_size': [32], 'lr': [0.001], },
     ]
 
     for config in configs:
