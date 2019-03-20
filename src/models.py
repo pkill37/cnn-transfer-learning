@@ -16,14 +16,14 @@ def freeze(model, freeze_until):
     return model
 
 
-def classifier(x):
+def classifier(x, dropout, l1, l2):
     x = tf.keras.layers.GlobalAveragePooling2D(name='global_avg_pool')(x)
-    x = tf.keras.layers.Dropout(0.4)(x)
-    x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
+    x = tf.keras.layers.Dropout(dropout)(x)
+    x = tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1, l2=l2))(x)
     return x
 
 
-def vgg16(extract_until, freeze_until):
+def vgg16(extract_until, freeze_until, dropout, l1, l2):
     assert extract_until >= freeze_until
 
     img_height = img_width = 224
@@ -32,7 +32,7 @@ def vgg16(extract_until, freeze_until):
 
     x = freeze(vgg16, freeze_until)
     x = extract(vgg16, extract_until)
-    x = classifier(x)
+    x = classifier(x, dropout, l1, l2)
 
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='vgg16')
     model.compile(loss=LOSS, optimizer='adam', metrics=METRICS)

@@ -8,10 +8,10 @@ import data
 import helpers
 
 
-def train(experiments_path, train, validation, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr):
+def train(experiments_path, train, validation, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr, dropout, l1, l2):
     helpers.seed()
 
-    model, preprocess_input, (img_height, img_width) = getattr(models, pretrained_model)(extract_until=extract_until, freeze_until=freeze_until)
+    model, preprocess_input, (img_height, img_width) = getattr(models, pretrained_model)(extract_until=extract_until, freeze_until=freeze_until, dropout=dropout, l1=l1, l2=l2)
     model.summary()
 
     callbacks = [
