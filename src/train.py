@@ -16,19 +16,20 @@ def train(experiments_path, train, validation, pretrained_model, extract_until, 
 
     callbacks = [
         tf.keras.callbacks.LearningRateScheduler(lambda epoch: lr*(0.1**int(epoch/10))),
-        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_f1_score', factor=0.2, patience=10, verbose=0, mode='max', min_delta=0.0001, cooldown=0, min_lr=0.001),
-        tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiments_path, 'best.hdf5'), monitor='val_f1_score', verbose=1, save_best_only=True, save_weights_only=False, mode='max', period=1),
+        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_f1', factor=0.2, patience=10, verbose=0, mode='max', min_delta=0.0001, cooldown=0, min_lr=0.001),
+        tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiments_path, 'best.hdf5'), monitor='val_f1', verbose=1, save_best_only=True, save_weights_only=False, mode='max', period=1),
         tf.keras.callbacks.TensorBoard(log_dir=experiments_path, histogram_freq=0, write_graph=True, write_images=True),
         tf.keras.callbacks.CSVLogger(filename=os.path.join(experiments_path, 'training_log.csv'), separator=',', append=False),
     ]
 
-    x_train, y_train = data.load_dataset(train)
-    x_validation, y_validation = data.load_dataset(validation)
+    x_train, y_train, class_weights = data.load_dataset(train)
+    x_validation, y_validation, _ = data.load_dataset(validation)
 
     model.fit_generator(
         generator=data.BinaryLabelImageSequence(x_train, y_train, batch_size, True, preprocess_input),
         epochs=epochs,
         validation_data=data.BinaryLabelImageSequence(x_validation, y_validation, batch_size, False, preprocess_input),
+        class_weight=class_weights,
         shuffle=True,
         verbose=1,
         callbacks=callbacks,
