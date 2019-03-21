@@ -3,7 +3,7 @@ import metrics
 
 
 LOSS = 'binary_crossentropy'
-METRICS = [metrics.precision(), metrics.recall(), metrics.f1_score()]
+METRICS = [metrics.true_positive(), metrics.true_negative(), metrics.false_positive(), metrics.false_negative(), metrics.precision(), metrics.recall(), metrics.f1_score()]
 
 
 def extract(model, extract_until):
