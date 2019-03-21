@@ -132,9 +132,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.images and args.descriptions:
-        x, y = preprocess_dataset(args.images, args.descriptions, args.dataset, 224, 224)
+        x, y, _ = preprocess_dataset(args.images, args.descriptions, args.dataset, 224, 224)
     else:
-        x, y = load_dataset(args.dataset)
+        x, y, _ = load_dataset(args.dataset)
 
     import matplotlib.pyplot as plt
     fig = plt.figure(figsize=(15, 20))
