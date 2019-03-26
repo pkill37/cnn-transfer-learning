@@ -1,6 +1,5 @@
 import os
 import argparse
-import multiprocessing
 import tensorflow as tf
 import metrics
 import models
@@ -9,8 +8,6 @@ import helpers
 
 
 def train(experiments_path, train, validation, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr, l1, l2):
-    helpers.seed()
-
     model, preprocess_input, (img_height, img_width) = getattr(models, pretrained_model)(extract_until=extract_until, freeze_until=freeze_until, l1=l1, l2=l2)
     model.summary()
 
@@ -22,19 +19,18 @@ def train(experiments_path, train, validation, pretrained_model, extract_until, 
         tf.keras.callbacks.CSVLogger(filename=os.path.join(experiments_path, 'training_log.csv'), separator=',', append=False),
     ]
 
-    x_train, y_train, class_weights = data.load_dataset(train)
-    x_validation, y_validation, _ = data.load_dataset(validation)
+    x_train, y_train = data.load(train)
+    x_validation, y_validation = data.load(validation)
 
-    model.fit_generator(
-        generator=data.BinaryLabelImageSequence(x_train, y_train, batch_size, True, preprocess_input),
+    model.fit(
+        x=preprocess_input(x_train),
+        y=y_train,
+        batch_size=batch_size,
         epochs=epochs,
-        validation_data=data.BinaryLabelImageSequence(x_validation, y_validation, batch_size, False, preprocess_input),
-        class_weight=class_weights,
-        shuffle=True,
         verbose=1,
         callbacks=callbacks,
-        workers=multiprocessing.cpu_count()-1 or 1,
-        use_multiprocessing=True,
+        validation_data=(x_validation, y_validation),
+        shuffle=True,
     )
 
 

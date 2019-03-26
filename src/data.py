@@ -7,23 +7,24 @@ from tqdm import tqdm
 import helpers
 from PIL import Image
 import argparse
-import sklearn
+import matplotlib.pyplot as plt
+import itertools
+import models
 
 
-def load_image(filename, target_size, color_mode, preprocess_function=None):
-    # Read file into PIL Image instance
-    img = Image.open(filename).convert('RGB')
+AUGMENTATIONS = [
+    lambda x: x.transpose(Image.FLIP_LEFT_RIGHT),
+    lambda x: x.transpose(Image.FLIP_TOP_BOTTOM),
+    lambda x: x.transpose(Image.ROTATE_90),
+    lambda x: x.transpose(Image.ROTATE_180),
+    lambda x: x.transpose(Image.ROTATE_270),
+]
 
-    # Run image through preprocessing pipeline
-    if preprocess_function:
-        img = preprocess_function(img, target_size)
-
-    # Convert image to NumPy array
-    return np.asarray(img, dtype='float32')
+AUGMENTATIONS = [c for j in range(len(AUGMENTATIONS)+1) for c in itertools.combinations(AUGMENTATIONS, j)]
 
 
-def preprocess_image(img, target_size):
-    def _crop_center(img):
+def load_image(filename, target_size):
+    def _crop(img):
         width, height = img.size
         if width == height:
             return img
@@ -38,112 +39,86 @@ def preprocess_image(img, target_size):
         box = (left, upper, right, lower)
         return img.crop(box)
 
-    def _resize(img):
+    def _resize(img, target_size):
         return img.resize(target_size, Image.NEAREST)
 
-    return _resize(img)
+    img = Image.open(filename).convert('RGB')
+    img = _crop(img)
+    img = _resize(img, target_size)
+    return img
 
 
-def preprocess_dataset(images_path, descriptions_filename, preprocessed_dataset_filename, img_height, img_width):
+def augment(img, i):
+    for f in AUGMENTATIONS[i]:
+        img = f(img)
+    return img
+
+
+def process(images_path, descriptions_filename, target_size, augmentation_factor):
     with open(descriptions_filename, 'r', newline='') as f:
         x = []
         y = []
 
         # Dynamically build x and y by iterating through each line in the ground-truth CSV
-        for row in tqdm(csv.DictReader(f)):
+        for i, row in enumerate(tqdm(csv.DictReader(f))):
             # Construct image filename from the given images directory and the ISIC image ID in the CSV
             image_filename = os.path.join(images_path, row['image_id']+'.jpg')
 
-            # Load and preprocess the image in the aforementioned filename
-            x.append(load_image(image_filename, (img_height, img_width), 'rgb', preprocess_image))
+            # Read and decode the image and label in the aforementioned filename
+            img = load_image(image_filename, target_size)
+            label = int(float(row['melanoma']))
 
-            # Label of the first classification task (melanoma vs nevus and seborrheic keratosis)
-            y.append(int(float(row['melanoma'])))
+            # Repeat until we reach the desired augmentation factor
+            for j in range(augmentation_factor):
+                # Apply j-th augmentation
+                tmp = augment(img, j)
+                # Convert to array
+                tmp = np.asarray(tmp, dtype='float32')
+                x.append(tmp)
+                y.append(label)
 
         # Construct NumPy ndarrays out of the lists
         x = np.array(x, dtype='float32')
         y = np.array(y, dtype='float32')
         assert x.shape[0] == y.shape[0]
 
-        # Store final, preprocessed, compressed dataset
-        np.savez_compressed(preprocessed_dataset_filename, x=x, y=y)
         return x, y
 
 
-def load_dataset(preprocessed_dataset_filename):
+def load(preprocessed_dataset_filename):
     dataset = np.load(preprocessed_dataset_filename)
     x = dataset['x']
     y = dataset['y']
-    class_weights = sklearn.utils.class_weight.compute_class_weight('balanced', np.unique(y), y)
-
-    return x, y, class_weights
+    return x, y
 
 
-class BinaryLabelImageSequence(tf.keras.utils.Sequence):
-    def __init__(self, x, y, batch_size, augment, preprocess_input, seed=None):
-        self.x = x
-        self.y = y
-
-        self.batch_size = batch_size
-        self.augment = augment
-        self.seed = seed
-
-        self.imgaug = tf.keras.preprocessing.image.ImageDataGenerator(
-            # Standardization
-            preprocessing_function=preprocess_input,
-            rescale=None,
-            samplewise_center=False,
-            samplewise_std_normalization=False,
-            featurewise_center=False,
-            featurewise_std_normalization=False,
-            zca_whitening=False,
-
-            # Allowed transformations
-            horizontal_flip=True,
-            vertical_flip=True,
-            width_shift_range=0.1,
-            height_shift_range=0.1,
-            rotation_range=360,
-            zoom_range=0.2,
-        )
-
-    def __len__(self):
-        return int(math.ceil(len(self.x) / float(self.batch_size)))
-
-    def __getitem__(self, idx):
-        x_batch = self.x[idx*self.batch_size : (1+idx)*self.batch_size]
-        y_batch = self.y[idx*self.batch_size : (1+idx)*self.batch_size]
-
-        # Standardize and augment batch
-        for i in range(len(x_batch)):
-            x_batch[i] = self.imgaug.standardize(x_batch[i])
-            if self.augment:
-                params = self.imgaug.get_random_transform(x_batch[i].shape, self.seed)
-                x_batch[i] = self.imgaug.apply_transform(x_batch[i], params)
-
-        return x_batch, y_batch
+def plot(array, ncols):
+    nrows = np.math.ceil(len(array)/float(ncols))
+    cell_w = array.shape[2]
+    cell_h = array.shape[1]
+    channels = array.shape[3]
+    result = np.zeros((cell_h*nrows, cell_w*ncols, channels), dtype=array.dtype)
+    for i in range(0, nrows):
+        for j in range(0, ncols):
+            result[i*cell_h:(i+1)*cell_h, j*cell_w:(j+1)*cell_w, :] = array[i*ncols+j]
+    plt.figure()
+    plt.axis('off')
+    plt.imshow(result)
+    plt.show()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--images', type=str)
     parser.add_argument('--descriptions', type=str)
-    parser.add_argument('--dataset', type=str, required=True)
+    parser.add_argument('--pretrained-model', type=str, choices=['vgg16', 'inceptionv3'])
+    parser.add_argument('--augmentation-factor', type=int)
+    parser.add_argument('--output', type=str, required=True)
     args = parser.parse_args()
 
-    if args.images and args.descriptions:
-        x, y, _ = preprocess_dataset(args.images, args.descriptions, args.dataset, 224, 224)
-    else:
-        x, y, _ = load_dataset(args.dataset)
+    _, _, target_size = getattr(models, args.pretrained_model)(extract_until=1, freeze_until=0, l1=None, l2=None)
 
-    import matplotlib.pyplot as plt
-    fig = plt.figure(figsize=(15, 20))
-    rows = 4
-    columns = 6
-    for cell in range(1, columns*rows+1):
-        i = np.random.randint(0, x.shape[0])
-        plt.subplot(rows, columns, cell)
-        plt.title('Melanoma' if y[i] == 1 else 'Non melanoma')
-        plt.imshow(x[i]/255)
-        plt.axis('off')
-    plt.show()
+    x, y = process(args.images, args.descriptions, target_size, args.augmentation_factor)
+    np.savez_compressed(args.output, x=x, y=y)
+
+    plot(x/255, ncols=args.augmentation_factor)
