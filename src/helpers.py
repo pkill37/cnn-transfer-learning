@@ -2,6 +2,24 @@ import os
 import shutil
 
 
+def smallest(a, b):
+    if len(a) > len(b):
+        return b
+    elif len(a) < len(b):
+        return a
+    else:
+        return None
+
+
+def biggest(a, b):
+    if len(a) > len(b):
+        return a
+    elif len(a) < len(b):
+        return b
+    else:
+        return None
+
+
 def create_or_recreate_dir(dir_path):
     if os.path.isdir(dir_path):
         shutil.rmtree(dir_path)

@@ -20,7 +20,7 @@ AUGMENTATIONS = [
     lambda x: x.transpose(Image.ROTATE_270),
 ]
 
-AUGMENTATIONS = [c for j in range(len(AUGMENTATIONS)+1) for c in itertools.combinations(AUGMENTATIONS, j)]
+AUGMENTATIONS = [c for j in range(1, len(AUGMENTATIONS)+1) for c in itertools.combinations(AUGMENTATIONS, j)]
 
 
 def load_image(filename, target_size):
@@ -54,7 +54,7 @@ def augment(img, i):
     return img
 
 
-def process(images_path, descriptions_filename, target_size, augmentation_factor):
+def process(images_path, descriptions_filename, target_img_size, target_m):
     with open(descriptions_filename, 'r', newline='') as f:
         x = []
         y = []
@@ -65,21 +65,32 @@ def process(images_path, descriptions_filename, target_size, augmentation_factor
             image_filename = os.path.join(images_path, row['image_id']+'.jpg')
 
             # Read and decode the image and label in the aforementioned filename
-            img = load_image(image_filename, target_size)
+            img = load_image(image_filename, target_img_size)
             label = int(float(row['melanoma']))
+            x.append(img)
+            y.append(label)
 
-            # Repeat until we reach the desired augmentation factor
-            for j in range(augmentation_factor):
-                # Apply j-th augmentation
-                tmp = augment(img, j)
-                # Convert to array
-                tmp = np.asarray(tmp, dtype='float32')
-                x.append(tmp)
-                y.append(label)
+        assert len(x) == len(y)
+        assert target_m > len(y)
+
+        # Group data into classes for class balancing
+        positive = [(xv, yv) for (xv,yv) in zip(x,y) if yv == 1]
+        negative = [(xv, yv) for (xv,yv) in zip(x,y) if yv == 0]
+        minority = helpers.smallest(positive, negative)
+        majority = helpers.biggest(positive, negative)
+        assert minority and majority
+
+        # Augment minority until classes are balanced
+        if target_m:
+            for S in [minority, majority]:
+                augmentation_factor = (target_m//2) // len(S)
+                assert len(AUGMENTATIONS) >= augmentation_factor
+                S += [(augment(xv, j), yv) for (xv,yv) in S for j in range(augmentation_factor)]
 
         # Construct NumPy ndarrays out of the lists
-        x = np.array(x, dtype='float32')
-        y = np.array(y, dtype='float32')
+        total = minority + majority
+        x = np.array([np.asarray(xv, dtype='float32') for (xv,yv) in total], dtype='float32')
+        y = np.array([yv for (xv,yv) in total], dtype='float32')
         assert x.shape[0] == y.shape[0]
 
         return x, y
@@ -92,18 +103,18 @@ def load(preprocessed_dataset_filename):
     return x, y
 
 
-def plot(array, ncols):
-    nrows = np.math.ceil(len(array)/float(ncols))
-    cell_w = array.shape[2]
-    cell_h = array.shape[1]
-    channels = array.shape[3]
-    result = np.zeros((cell_h*nrows, cell_w*ncols, channels), dtype=array.dtype)
-    for i in range(0, nrows):
-        for j in range(0, ncols):
-            result[i*cell_h:(i+1)*cell_h, j*cell_w:(j+1)*cell_w, :] = array[i*ncols+j]
-    plt.figure()
-    plt.axis('off')
-    plt.imshow(result)
+def plot(x, y):
+    fig = plt.figure(figsize=(15, 20))
+    rows = 4
+    columns = 9
+    for cell in range(1, columns*rows+1):
+        plt.subplot(rows, columns, cell)
+        try:
+            plt.title('Melanoma' if y[cell] == 1 else 'Non melanoma')
+            plt.imshow(x[cell])
+        except:
+            pass
+        plt.axis('off')
     plt.show()
 
 
@@ -112,13 +123,13 @@ if __name__ == '__main__':
     parser.add_argument('--images', type=str)
     parser.add_argument('--descriptions', type=str)
     parser.add_argument('--pretrained-model', type=str, choices=['vgg16', 'inceptionv3'])
-    parser.add_argument('--augmentation-factor', type=int)
+    parser.add_argument('--total-samples', type=int)
     parser.add_argument('--output', type=str, required=True)
     args = parser.parse_args()
 
-    _, _, target_size = getattr(models, args.pretrained_model)(extract_until=1, freeze_until=0, l1=None, l2=None)
+    _, __, target_img_size = getattr(models, args.pretrained_model)(extract_until=1, freeze_until=0, l1=None, l2=None)
 
-    x, y = process(args.images, args.descriptions, target_size, args.augmentation_factor)
+    x, y = process(args.images, args.descriptions, target_img_size, args.total_samples)
     np.savez_compressed(args.output, x=x, y=y)
 
-    plot(x/255, ncols=args.augmentation_factor)
+    plot(x/255, y)
