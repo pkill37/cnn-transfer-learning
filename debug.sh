@@ -1,5 +1,7 @@
 #! /bin/bash
 
+. ./env/bin/activate
+
 rm -rf ./experiments/test/
 
 python ./src/train.py --experiments-path ./experiments/test/ \
