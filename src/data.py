@@ -71,28 +71,32 @@ def process(images_path, descriptions_filename, target_img_size, target_m):
             y.append(label)
 
         assert len(x) == len(y)
-        assert target_m > len(y)
 
-        # Group data into classes for class balancing
-        positive = [(xv, yv) for (xv,yv) in zip(x,y) if yv == 1]
-        negative = [(xv, yv) for (xv,yv) in zip(x,y) if yv == 0]
-        minority = helpers.smallest(positive, negative)
-        majority = helpers.biggest(positive, negative)
-        assert minority and majority
-
-        # Augment minority until classes are balanced
+        # Augment minority until classes are balanced and augmentation goal is reached
         if target_m:
+            assert target_m > len(y)
+
+            # Group data into classes for class balancing
+            positive = [(xv, yv) for (xv,yv) in zip(x,y) if yv == 1]
+            negative = [(xv, yv) for (xv,yv) in zip(x,y) if yv == 0]
+            minority = helpers.smallest(positive, negative)
+            majority = helpers.biggest(positive, negative)
+            assert minority and majority
+
             for S in [minority, majority]:
                 augmentation_factor = (target_m//2) // len(S)
                 assert len(AUGMENTATIONS) >= augmentation_factor
                 S += [(augment(xv, j), yv) for (xv,yv) in S for j in range(augmentation_factor)]
 
-        # Construct NumPy ndarrays out of the lists
-        total = minority + majority
-        x = np.array([np.asarray(xv, dtype='float32') for (xv,yv) in total], dtype='float32')
-        y = np.array([yv for (xv,yv) in total], dtype='float32')
-        assert x.shape[0] == y.shape[0]
+            # Construct NumPy ndarrays out of the lists
+            total = minority + majority
+            x = np.array([np.asarray(xv, dtype='float32') for (xv,yv) in total], dtype='float32')
+            y = np.array([yv for (xv,yv) in total], dtype='float32')
+        else:
+            x = np.array([np.asarray(xv, dtype='float32') for xv in x], dtype='float32')
+            y = np.array(y, dtype='float32')
 
+        assert x.shape[0] == y.shape[0]
         return x, y
 
 
@@ -131,5 +135,3 @@ if __name__ == '__main__':
 
     x, y = process(args.images, args.descriptions, target_img_size, args.total_samples)
     np.savez_compressed(args.output, x=x, y=y)
-
-    plot(x/255, y)
