@@ -38,7 +38,7 @@ def vgg16(extract_until, freeze_until, l1, l2):
     return model, tf.keras.applications.vgg16.preprocess_input, (img_height, img_width)
 
 
-def inceptionv3(extract_until, freeze_until):
+def inceptionv3(extract_until, freeze_until, l1, l2):
     assert extract_until >= freeze_until
 
     img_height = img_width = 299
@@ -46,7 +46,7 @@ def inceptionv3(extract_until, freeze_until):
     inceptionv3 = tf.keras.applications.inception_v3.InceptionV3(weights='imagenet', include_top=False, input_tensor=input_tensor)
     x = freeze(inceptionv3, freeze_until)
     x = extract(inceptionv3, extract_until)
-    x = classifier(x)
+    x = classifier(x, l1, l2)
 
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='inceptionv3')
     model.compile(loss=LOSS, optimizer='adam', metrics=METRICS)
