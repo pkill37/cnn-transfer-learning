@@ -1,6 +1,6 @@
 #! /bin/bash
 
-set -euo
+set -euo pipefail
 
 . ./env/bin/activate
 

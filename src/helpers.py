@@ -2,6 +2,20 @@ import os
 import shutil
 
 
+def is_dir(string):
+    if os.path.isdir(string):
+        return string
+    else:
+        raise NotADirectoryError(string)
+
+
+def is_file(string):
+    if os.path.isfile(string):
+        return string
+    else:
+        raise FileNotFoundError(string)
+
+
 def smallest(a, b):
     if len(a) > len(b):
         return b

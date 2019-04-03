@@ -151,8 +151,8 @@ def plot(x, y):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--images', type=str)
-    parser.add_argument('--descriptions', type=str)
+    parser.add_argument('--images', type=helpers.is_dir)
+    parser.add_argument('--descriptions', type=helpers.is_file)
     parser.add_argument('--pretrained-model', type=str, choices=['vgg16', 'inceptionv3'])
     parser.add_argument('--total-samples', type=int)
     parser.add_argument('--output', type=str, required=True)

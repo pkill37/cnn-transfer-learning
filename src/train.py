@@ -35,9 +35,9 @@ def train(experiments_path, train, validation, pretrained_model, extract_until, 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiments-path', type=str, required=True)
-    parser.add_argument('--train', type=str, required=True)
-    parser.add_argument('--validation', type=str, required=True)
+    parser.add_argument('--experiments-path', type=helpers.is_dir, required=True)
+    parser.add_argument('--train', type=helpers.is_file, required=True)
+    parser.add_argument('--validation', type=helpers.is_file, required=True)
     parser.add_argument('--pretrained-model', choices=['vgg16', 'inceptionv3'], required=True)
     parser.add_argument('--extract-until', type=int, required=True)
     parser.add_argument('--freeze-until', type=int, required=True)
