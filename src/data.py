@@ -42,9 +42,36 @@ def load_image(filename, target_size):
     def _resize(img, target_size):
         return img.resize(target_size, Image.NEAREST)
 
+    def _correct(img):
+        """
+        Normalize PIL image
+
+        Normalizes luminance to (mean,std)=(0,1), and applies a [1%, 99%] contrast stretch
+        """
+        img_y, img_b, img_r = img.convert('YCbCr').split()
+
+        img_y_np = np.asarray(img_y).astype(float)
+
+        img_y_np /= 255
+        img_y_np -= img_y_np.mean()
+        img_y_np /= img_y_np.std()
+        scale = np.max([np.abs(np.percentile(img_y_np, 1.0)),
+                        np.abs(np.percentile(img_y_np, 99.0))])
+        img_y_np = img_y_np / scale
+        img_y_np = np.clip(img_y_np, -1.0, 1.0)
+        img_y_np = (img_y_np + 1.0) / 2.0
+
+        img_y_np = (img_y_np * 255 + 0.5).astype(np.uint8)
+
+        img_y = Image.fromarray(img_y_np)
+
+        img_ybr = Image.merge('YCbCr', (img_y, img_b, img_r))
+        return img_ybr.convert('RGB')
+
     img = Image.open(filename).convert('RGB')
     img = _crop(img)
     img = _resize(img, target_size)
+    img = _correct(img)
     return img
 
 
@@ -131,7 +158,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=str, required=True)
     args = parser.parse_args()
 
-    _, __, target_img_size = getattr(models, args.pretrained_model)(extract_until=1, freeze_until=0, l1=None, l2=None)
+    target_img_size = models.IMG_SHAPE[args.pretrained_model]
 
     x, y = process(args.images, args.descriptions, target_img_size, args.total_samples)
     np.savez_compressed(args.output, x=x, y=y)
