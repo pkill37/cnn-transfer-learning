@@ -24,6 +24,8 @@ AUGMENTATIONS = [c for j in range(1, len(AUGMENTATIONS)+1) for c in itertools.co
 
 
 def load_image(filename, target_size):
+    assert target_size[0] == target_size[1]
+
     def _crop(img):
         width, height = img.size
         if width == height:
