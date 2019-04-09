@@ -1,9 +1,10 @@
 import argparse
-import train
 import itertools
-import helpers
 import os
 import time
+
+import train
+import helpers
 
 
 if __name__ == '__main__':

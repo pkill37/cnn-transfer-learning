@@ -1,23 +1,23 @@
-import tensorflow as tf
-import numpy as np
+import argparse
+import itertools
 import os
 import math
 import csv
-from tqdm import tqdm
+
+import tensorflow as tf
+import numpy as np
+import PIL
+
 import helpers
-from PIL import Image
-import argparse
-import matplotlib.pyplot as plt
-import itertools
 import models
 
 
 AUGMENTATIONS = [
-    lambda x: x.transpose(Image.FLIP_LEFT_RIGHT),
-    lambda x: x.transpose(Image.FLIP_TOP_BOTTOM),
-    lambda x: x.transpose(Image.ROTATE_90),
-    lambda x: x.transpose(Image.ROTATE_180),
-    lambda x: x.transpose(Image.ROTATE_270),
+    lambda x: x.transpose(PIL.Image.FLIP_LEFT_RIGHT),
+    lambda x: x.transpose(PIL.Image.FLIP_TOP_BOTTOM),
+    lambda x: x.transpose(PIL.Image.ROTATE_90),
+    lambda x: x.transpose(PIL.Image.ROTATE_180),
+    lambda x: x.transpose(PIL.Image.ROTATE_270),
 ]
 
 AUGMENTATIONS = [c for j in range(1, len(AUGMENTATIONS)+1) for c in itertools.combinations(AUGMENTATIONS, j)]
@@ -42,7 +42,7 @@ def load_image(filename, target_size):
         return img.crop(box)
 
     def _resize(img, target_size):
-        return img.resize(target_size, Image.NEAREST)
+        return img.resize(target_size, PIL.Image.NEAREST)
 
     def _correct(img):
         """
@@ -65,12 +65,12 @@ def load_image(filename, target_size):
 
         img_y_np = (img_y_np * 255 + 0.5).astype(np.uint8)
 
-        img_y = Image.fromarray(img_y_np)
+        img_y = PIL.Image.fromarray(img_y_np)
 
-        img_ybr = Image.merge('YCbCr', (img_y, img_b, img_r))
+        img_ybr = PIL.Image.merge('YCbCr', (img_y, img_b, img_r))
         return img_ybr.convert('RGB')
 
-    img = Image.open(filename).convert('RGB')
+    img = PIL.Image.open(filename).convert('RGB')
     img = _crop(img)
     img = _resize(img, target_size)
     img = _correct(img)
@@ -89,7 +89,9 @@ def process(images_path, descriptions_filename, target_img_size, target_m):
         y = []
 
         # Dynamically build x and y by iterating through each line in the ground-truth CSV
-        for i, row in enumerate(tqdm(csv.DictReader(f))):
+        for i, row in enumerate(csv.DictReader(f)):
+            print(i)
+
             # Construct image filename from the given images directory and the ISIC image ID in the CSV
             image_filename = os.path.join(images_path, row['image_id']+'.jpg')
 
@@ -136,31 +138,23 @@ def load(preprocessed_dataset_filename):
     return x, y
 
 
-def plot(x, y):
-    fig = plt.figure(figsize=(15, 20))
-    rows = 4
-    columns = 9
-    for cell in range(1, columns*rows+1):
-        plt.subplot(rows, columns, cell)
-        try:
-            plt.title('Melanoma' if y[cell] == 1 else 'Non melanoma')
-            plt.imshow(x[cell])
-        except:
-            pass
-        plt.axis('off')
-    plt.show()
+def save(x, y, output):
+    np.savez_compressed(os.path.join(output, os.path.basename(output)), x=x, y=y)
+
+    for i, (x, y) in enumerate(zip(x, y)):
+        print(i)
+        img = PIL.Image.fromarray(x.astype(np.uint8))
+        img.save(os.path.join(output, f'{i}_{y}.jpg'))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--images', type=helpers.is_dir)
-    parser.add_argument('--descriptions', type=helpers.is_file)
-    parser.add_argument('--pretrained-model', type=str, choices=['vgg16', 'inceptionv3'])
-    parser.add_argument('--total-samples', type=int)
-    parser.add_argument('--output', type=str, required=True)
+    parser.add_argument('--images', type=helpers.is_dir, required=True)
+    parser.add_argument('--descriptions', type=helpers.is_file, required=True)
+    parser.add_argument('--pretrained-model', type=str, choices=['vgg16', 'inceptionv3'], required=True)
+    parser.add_argument('--total-samples', type=int, required=False)
+    parser.add_argument('--output', type=helpers.is_dir, required=True)
     args = parser.parse_args()
 
-    target_img_size = models.IMG_SHAPE[args.pretrained_model]
-
-    x, y = process(args.images, args.descriptions, target_img_size, args.total_samples)
-    np.savez_compressed(args.output, x=x, y=y)
+    x, y = process(args.images, args.descriptions, models.IMG_SHAPE[args.pretrained_model], args.total_samples)
+    save(x, y, args.output)
