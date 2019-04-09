@@ -1,7 +1,5 @@
 #! /bin/bash
-
 set -euo pipefail
-
 . ./env/bin/activate
 
 for pretrained_model in vgg16 inceptionv3; do
