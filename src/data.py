@@ -142,7 +142,6 @@ def save(x, y, output):
     np.savez_compressed(os.path.join(output, os.path.basename(output)), x=x, y=y)
 
     for i, (x, y) in enumerate(zip(x, y)):
-        print(i)
         img = PIL.Image.fromarray(x.astype(np.uint8))
         img.save(os.path.join(output, f'{i}_{y}.jpg'))
 
