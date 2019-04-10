@@ -4,7 +4,7 @@ import metrics
 
 LOSS = 'binary_crossentropy'
 METRICS = [metrics.true_positive(), metrics.true_negative(), metrics.false_positive(), metrics.false_negative(), metrics.precision(), metrics.recall(), metrics.f1_score()]
-OPTIMIZER = tf.keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=1e-6, amsgrad=False)
+OPTIMIZER = lambda lr: tf.keras.optimizers.SGD(lr=lr, momentum=0.9, decay=10e-6, nesterov=True)
 IMG_SHAPE = { 'vgg19': (224, 224), 'inceptionv3': (299, 299) }
 
 
@@ -36,7 +36,7 @@ def vgg19(extract_until, freeze_until, lr, dropout):
     x = classifier(x, dropout)
 
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='vgg19')
-    model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS)
+    model.compile(loss=LOSS, optimizer=OPTIMIZER(lr), metrics=METRICS)
     return model, tf.keras.applications.vgg19.preprocess_input, IMG_SHAPE['vgg19']
 
 
@@ -51,5 +51,5 @@ def inceptionv3(extract_until, freeze_until, lr, dropout):
     x = classifier(x, dropout)
 
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='inceptionv3')
-    model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS)
+    model.compile(loss=LOSS, optimizer=OPTIMIZER(lr), metrics=METRICS)
     return model, tf.keras.applications.inception_v3.preprocess_input, IMG_SHAPE['inceptionv3']
