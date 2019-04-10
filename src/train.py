@@ -7,8 +7,8 @@ import data
 import helpers
 
 
-def train(experiments_path, train, validation, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr, l1, l2):
-    model, preprocess_input, (img_height, img_width) = getattr(models, pretrained_model)(extract_until=extract_until, freeze_until=freeze_until, lr=lr, l1=l1, l2=l2)
+def train(experiments_path, train, validation, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr, dropout):
+    model, preprocess_input, (img_height, img_width) = getattr(models, pretrained_model)(extract_until=extract_until, freeze_until=freeze_until, lr=lr, dropout=dropout)
     model.summary()
 
     callbacks = [
@@ -44,8 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, required=True)
     parser.add_argument('--batch-size', type=int, required=True)
     parser.add_argument('--lr', type=float, required=True)
-    parser.add_argument('--l1', type=float, required=True)
-    parser.add_argument('--l2', type=float, required=True)
+    parser.add_argument('--dropout', type=float, required=True)
     args = parser.parse_args()
 
-    train(args.experiments_path, args.train, args.validation, args.pretrained_model, args.extract_until, args.freeze_until, args.epochs, args.batch_size, args.lr, args.l1, args.l2)
+    train(args.experiments_path, args.train, args.validation, args.pretrained_model, args.extract_until, args.freeze_until, args.epochs, args.batch_size, args.lr, args.dropout)

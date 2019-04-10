@@ -14,5 +14,4 @@ python ./src/train.py --experiments-path ./experiments/debug_$timestamp/ \
                       --epochs 1000 \
                       --batch-size 32 \
                       --lr 0.001 \
-                      --l1 0.01 \
-                      --l2 0.01
+                      --dropout 0.4

@@ -22,8 +22,7 @@ if __name__ == '__main__':
             'epochs': [300],
             'batch_size': [32],
             'lr': [0.001],
-            'l1': [0.01],
-            'l2': [0.01],
+            'dropout': [0.4],
         },
         {
             'model': ['inceptionv3'],
@@ -32,8 +31,7 @@ if __name__ == '__main__':
             'epochs': [300],
             'batch_size': [32],
             'lr': [0.001],
-            'l1': [0.01],
-            'l2': [0.01],
+            'dropout': [0.4],
         },
     ]
 
