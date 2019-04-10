@@ -16,9 +16,9 @@ if __name__ == '__main__':
 
     configs = [
         {
-            'model': ['vgg16'],
-            'extract_until': [18,14,10,6,3],
-            'freeze_until': [18,14,10,6,3],
+            'model': ['vgg19'],
+            'extract_until': [21,16,11,6,3],
+            'freeze_until': [21,16,11,6,3],
             'epochs': [300],
             'batch_size': [32],
             'lr': [0.001],

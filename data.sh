@@ -3,7 +3,7 @@ set -euo pipefail
 . ./env/bin/activate
 echo "Please make sure to download the ISIC 2017 data from https://challenge.kitware.com/#challenge/n/ISIC_2017%3A_Skin_Lesion_Analysis_Towards_Melanoma_Detection to ./data/isic2017/"
 
-for pretrained_model in vgg16 inceptionv3; do
+for pretrained_model in vgg19 inceptionv3; do
     echo "Processing train data for $pretrained_model networks..."
     mkdir -p ./data/train_$pretrained_model/
     python ./src/data.py --images ./data/isic2017/ISIC-2017_Training_Data/ \

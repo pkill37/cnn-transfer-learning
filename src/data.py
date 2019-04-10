@@ -150,7 +150,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--images', type=helpers.is_dir, required=True)
     parser.add_argument('--descriptions', type=helpers.is_file, required=True)
-    parser.add_argument('--pretrained-model', type=str, choices=['vgg16', 'inceptionv3'], required=True)
+    parser.add_argument('--pretrained-model', type=str, choices=['vgg19', 'inceptionv3'], required=True)
     parser.add_argument('--total-samples', type=int, required=False)
     parser.add_argument('--output', type=helpers.is_dir, required=True)
     args = parser.parse_args()

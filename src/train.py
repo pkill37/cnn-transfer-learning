@@ -38,7 +38,7 @@ if __name__ == '__main__':
     parser.add_argument('--experiments-path', type=helpers.is_dir, required=True)
     parser.add_argument('--train', type=helpers.is_file, required=True)
     parser.add_argument('--validation', type=helpers.is_file, required=True)
-    parser.add_argument('--pretrained-model', choices=['vgg16', 'inceptionv3'], required=True)
+    parser.add_argument('--pretrained-model', choices=['vgg19', 'inceptionv3'], required=True)
     parser.add_argument('--extract-until', type=int, required=True)
     parser.add_argument('--freeze-until', type=int, required=True)
     parser.add_argument('--epochs', type=int, required=True)
