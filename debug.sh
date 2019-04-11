@@ -6,8 +6,8 @@ timestamp=$(date +%s)
 mkdir -p ./experiments/debug_$timestamp/
 
 python ./src/train.py --experiments-path ./experiments/debug_$timestamp/ \
-                      --train ./data/train_vgg19/train_vgg19.npz \
-                      --validation ./data/validation_vgg19/validation_vgg19.npz \
+                      --train ./data/vgg19_train/vgg19_train.npz \
+                      --validation ./data/vgg19_validation/vgg19_validation.npz \
                       --pretrained-model vgg19 \
                       --extract-until 21 \
                       --freeze-until 21 \
