@@ -1,6 +1,9 @@
 import os
 import argparse
+
 import tensorflow as tf
+import numpy as np
+
 import metrics
 import models
 import data
@@ -21,14 +24,17 @@ def train(experiments_path, train, validation, pretrained_model, extract_until, 
     x_train, y_train = data.load(train)
     x_validation, y_validation = data.load(validation)
 
+    x_train = preprocess_input(x_train)
+    x_validation = preprocess_input(x_validation)
+
     model.fit(
-        x=preprocess_input(x_train),
+        x=x_train,
         y=y_train,
         batch_size=batch_size,
         epochs=epochs,
         verbose=1,
         callbacks=callbacks,
-        validation_data=(preprocess_input(x_validation), y_validation),
+        validation_data=(x_validation, y_validation),
         shuffle=True,
     )
 
