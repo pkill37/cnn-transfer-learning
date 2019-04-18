@@ -1,7 +1,9 @@
 from functools import partial
+from operator import truediv
+
 from tensorflow.keras.layers import Layer
 import tensorflow.keras.backend as K
-from operator import truediv
+import tensorflow as tf
 
 
 class layer(Layer):
@@ -257,3 +259,7 @@ class f1_score(layer):
         self.add_update(self.recall.updates)
 
         return 2 * truediv(pr * rec, pr + rec + K.epsilon())
+
+
+METRICS = [f1_score()]
+tf.keras.utils.get_custom_objects().update({ m.__name__: m for m in METRICS })
