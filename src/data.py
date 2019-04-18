@@ -23,6 +23,18 @@ AUGMENTATIONS = [
 AUGMENTATIONS = [c for j in range(1, len(AUGMENTATIONS)+1) for c in itertools.combinations(AUGMENTATIONS, j)]
 
 
+def standardize(x, mean, std):
+    x[..., 0] -= mean[0]
+    x[..., 1] -= mean[1]
+    x[..., 2] -= mean[2]
+
+    x[..., 0] /= std[0]
+    x[..., 1] /= std[1]
+    x[..., 2] /= std[2]
+
+    return x
+
+
 def load_image(filename, target_size):
     assert target_size[0] == target_size[1]
 
