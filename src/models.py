@@ -3,7 +3,7 @@ import metrics
 
 
 LOSS = 'binary_crossentropy'
-METRICS = [metrics.true_positive(), metrics.true_negative(), metrics.false_positive(), metrics.false_negative(), metrics.precision(), metrics.recall(), metrics.f1_score()]
+METRICS = [metrics.f1_score()]; tf.keras.utils.get_custom_objects().update({ m.__name__: m for m in METRICS })
 OPTIMIZER = lambda lr: tf.keras.optimizers.SGD(lr=lr, momentum=0.9, decay=10e-6, nesterov=True)
 IMG_SHAPE = { 'vgg19': (224, 224), 'inceptionv3': (299, 299) }
 
