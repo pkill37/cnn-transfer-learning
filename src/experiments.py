@@ -22,6 +22,8 @@ if __name__ == '__main__':
             'epochs': [300],
             'batch_size': [32],
             'lr': [0.001],
+            'l1': [0.1],
+            'l2': [0.1],
             'dropout': [0.4],
         },
         {
@@ -31,6 +33,8 @@ if __name__ == '__main__':
             'epochs': [300],
             'batch_size': [32],
             'lr': [0.001],
+            'l1': [0.1],
+            'l2': [0.1],
             'dropout': [0.4],
         },
     ]
@@ -46,10 +50,10 @@ if __name__ == '__main__':
         # Run all experiments
         for i, parameters in enumerate(experiments):
             # Unpack parameters
-            pretrained_model, extract_until, freeze_until, epochs, batch_size, lr, l1, l2 = parameters
+            pretrained_model, extract_until, freeze_until, epochs, batch_size, lr, l1, l2, dropout = parameters
 
             # Run this particular experiment
-            print(f'Experiment {i} (pretrained model {pretrained_model}, extract until {extract_until}, freeze until {freeze_until}, epochs {epochs}, batch_size {batch_size}, lr {lr}, l1 {l1}, l2 {l2})')
-            experiment = os.path.join(args.experiments_path, f'{pretrained_model}_{extract_until}_{freeze_until}_{epochs}_{batch_size}_{lr}_{l1}_{l2}_{int(time.time())}')
+            print(f'Experiment {i} (pretrained model {pretrained_model}, extract until {extract_until}, freeze until {freeze_until}, epochs {epochs}, batch_size {batch_size}, lr {lr}, l1 {l1}, l2 {l2}, dropout {dropout})')
+            experiment = os.path.join(args.experiments_path, f'{pretrained_model}_{extract_until}_{freeze_until}_{epochs}_{batch_size}_{lr}_{l1}_{l2}_{dropout}_{int(time.time())}')
             helpers.create_or_recreate_dir(experiment)
-            train.train(experiment, args.train_set, args.validation_set, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr, l1, l2)
+            train.train(experiment, args.train_set, args.validation_set, pretrained_model, extract_until, freeze_until, epochs, batch_size, lr, l1, l2, dropout)

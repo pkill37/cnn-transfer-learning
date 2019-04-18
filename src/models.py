@@ -18,14 +18,17 @@ def freeze(model, freeze_until):
     return model
 
 
-def classifier(x, dropout):
+def classifier(x, l1, l2, dropout):
     x = tf.keras.layers.GlobalAveragePooling2D(name='global_avg_pool')(x)
-    x = tf.keras.layers.Dropout(dropout)(x)
+    x = tf.keras.layers.Dense(units=4096, activation='relu', kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1, l2=l2))(x)
+    x = tf.keras.layers.Dropout(rate=dropout)(x)
+    x = tf.keras.layers.Dense(units=4096, activation='relu', kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1, l2=l2))(x)
+    x = tf.keras.layers.Dropout(rate=dropout)(x)
     x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
     return x
 
 
-def vgg19(extract_until, freeze_until, lr, dropout):
+def vgg19(extract_until, freeze_until, lr, l1, l2, dropout):
     assert extract_until >= freeze_until
 
     input_tensor = tf.keras.layers.Input(shape=(*IMG_SHAPE['vgg19'], 3))
@@ -33,14 +36,14 @@ def vgg19(extract_until, freeze_until, lr, dropout):
 
     x = freeze(vgg19, freeze_until)
     x = extract(vgg19, extract_until)
-    x = classifier(x, dropout)
+    x = classifier(x, l1, l2, dropout)
 
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='vgg19')
     model.compile(loss=LOSS, optimizer=OPTIMIZER(lr), metrics=METRICS)
     return model, tf.keras.applications.vgg19.preprocess_input, IMG_SHAPE['vgg19']
 
 
-def inceptionv3(extract_until, freeze_until, lr, dropout):
+def inceptionv3(extract_until, freeze_until, lr, l1, l2, dropout):
     assert extract_until >= freeze_until
 
     input_tensor = tf.keras.layers.Input(shape=(*IMG_SHAPE['inceptionv3'], 3))
@@ -48,7 +51,7 @@ def inceptionv3(extract_until, freeze_until, lr, dropout):
 
     x = freeze(inceptionv3, freeze_until)
     x = extract(inceptionv3, extract_until)
-    x = classifier(x, dropout)
+    x = classifier(x, l1, l2, dropout)
 
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='inceptionv3')
     model.compile(loss=LOSS, optimizer=OPTIMIZER(lr), metrics=METRICS)

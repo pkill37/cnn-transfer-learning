@@ -12,6 +12,8 @@ python ./src/train.py --experiments-path ./experiments/debug_$timestamp/ \
                       --extract-until 21 \
                       --freeze-until 21 \
                       --epochs 1000 \
-                      --batch-size 32 \
-                      --lr 0.001 \
+                      --batch-size 64 \
+                      --lr 0.0001 \
+                      --l1 0.00001 \
+                      --l2 0.00001 \
                       --dropout 0.4
