@@ -26,6 +26,3 @@ for pretrained_model in vgg19 inceptionv3; do
                          --output ./data/"$pretrained_model"_test \
                          --pretrained-model $pretrained_model
 done
-
-cd ./data/
-python -m http.server 1338
