@@ -4,6 +4,7 @@ import os
 import math
 import csv
 
+import sklearn.model_selection
 import tensorflow as tf
 import numpy as np
 import PIL
@@ -85,7 +86,7 @@ def load_image(filename, target_size):
     img = PIL.Image.open(filename).convert('RGB')
     img = _crop(img)
     img = _resize(img, target_size)
-    img = _correct(img)
+    #img = _correct(img)
     return img
 
 
@@ -105,11 +106,11 @@ def process(images_path, descriptions_filename, target_img_size, target_m):
             print(i)
 
             # Construct image filename from the given images directory and the ISIC image ID in the CSV
-            image_filename = os.path.join(images_path, row['image_id']+'.jpg')
+            image_filename = os.path.join(images_path, row['image']+'.jpg')
 
             # Read and decode the image and label in the aforementioned filename
             img = load_image(image_filename, target_img_size)
-            label = int(float(row['melanoma']))
+            label = int(float(row['MEL']))
             x.append(img)
             y.append(label)
 
@@ -138,9 +139,10 @@ def process(images_path, descriptions_filename, target_img_size, target_m):
         else:
             x = np.array([np.asarray(xv, dtype='float32') for xv in x], dtype='float32')
             y = np.array(y, dtype='float32')
-
         assert x.shape[0] == y.shape[0]
-        return x, y
+
+        x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, train_size=0.9, shuffle=True, stratify=y)
+        return (x_train, y_train), (x_test, y_test)
 
 
 def load(preprocessed_dataset_filename):
@@ -167,5 +169,6 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=helpers.is_dir, required=True)
     args = parser.parse_args()
 
-    x, y = process(args.images, args.descriptions, models.IMG_SHAPE[args.pretrained_model], args.total_samples)
-    save(x, y, args.output)
+    (x_train, y_train), (x_test, y_test) = process(args.images, args.descriptions, models.IMG_SHAPE[args.pretrained_model], args.total_samples)
+    save(x_train, y_train, os.path.join(args.output, 'train'))
+    save(x_test, y_test, os.path.join(args.output, 'test'))
