@@ -10,8 +10,9 @@ import numpy as np
 import PIL
 
 import helpers
-import models
 
+
+IMG_SHAPE = { 'vgg19': (224, 224), 'inceptionv3': (299, 299) }
 
 AUGMENTATIONS = [
     lambda x: x.transpose(PIL.Image.FLIP_LEFT_RIGHT),
@@ -169,6 +170,6 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=helpers.is_dir, required=True)
     args = parser.parse_args()
 
-    (x_train, y_train), (x_test, y_test) = process(args.images, args.descriptions, models.IMG_SHAPE[args.pretrained_model], args.total_samples)
+    (x_train, y_train), (x_test, y_test) = process(args.images, args.descriptions, IMG_SHAPE[args.pretrained_model], args.total_samples)
     save(x_train, y_train, os.path.join(args.output, 'train'))
     save(x_test, y_test, os.path.join(args.output, 'test'))
