@@ -3,11 +3,10 @@ set -euo pipefail
 . ./env/bin/activate
 
 timestamp=$(date +%s)
-mkdir -p ./experiments/debug_$timestamp/
+mkdir -p ./experiments/vgg19_$timestamp/
 
-python ./src/train.py --experiments-path ./experiments/debug_$timestamp/ \
-                      --train ./data/vgg19_train/vgg19_train.npz \
-                      --validation ./data/vgg19_validation/vgg19_validation.npz \
+python ./src/train.py --experiments-path ./experiments/vgg19_$timestamp/ \
+                      --train ./data/isic2018/vgg19/train/train.npz \
                       --pretrained-model vgg19 \
                       --extract-until 21 \
                       --freeze-until 21 \
@@ -15,5 +14,4 @@ python ./src/train.py --experiments-path ./experiments/debug_$timestamp/ \
                       --batch-size 64 \
                       --lr 0.0001 \
                       --l1 0.00001 \
-                      --l2 0.00001 \
-                      --dropout 0.4
+                      --l2 0.00001
