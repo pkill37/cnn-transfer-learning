@@ -20,7 +20,7 @@ IMG_HEIGHT = 224
 IMG_CHANNELS = 3
 
 
-def cnn(lr=0.001, l1=0.001, l2=0.001):
+def cnn(lr=0.001, l2=0.001):
     tf.keras.backend.clear_session()
 
     m = tf.keras.models.Sequential([
@@ -31,8 +31,8 @@ def cnn(lr=0.001, l1=0.001, l2=0.001):
         tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
 
         tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1, l2=l2)),
-        tf.keras.layers.Dense(units=1, activation='sigmoid', name='lol'),
+        tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)),
+        tf.keras.layers.Dense(units=1, activation='sigmoid'),
     ])
     m.compile(loss=LOSS, optimizer=OPTIMIZER(lr), metrics=METRICS)
     return m
@@ -58,7 +58,7 @@ def train(experiments_path, train, validation, epochs, bs):
         shuffle=True,
     )
 
-    param_grid = dict(lr=np.logspace(-5, 1, 5), l1=np.logspace(-5, 5, 11), l2=np.logspace(-5, 5, 11))
+    param_grid = dict(lr=np.logspace(-5, 1, 5), l2=np.logspace(-5, 5, 11))
     gs = sklearn.model_selection.GridSearchCV(estimator=estimator, param_grid=param_grid, scoring='accuracy', n_jobs=1)
     skf = sklearn.model_selection.StratifiedKFold(n_splits=5, shuffle=True)
     results = sklearn.model_selection.cross_val_score(gs, x_train, y_train, scoring='accuracy', cv=skf, n_jobs=1, error_score='raise')

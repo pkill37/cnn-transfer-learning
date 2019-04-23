@@ -20,7 +20,7 @@ IMG_HEIGHT = 224
 IMG_CHANNELS = 3
 
 
-def vgg19(extract_until, freeze_until, lr, l1, l2):
+def vgg19(extract_until=21, freeze_until=21, lr=0.001, l2=0.001):
     tf.keras.backend.clear_session()
 
     assert extract_until >= freeze_until
@@ -37,8 +37,8 @@ def vgg19(extract_until, freeze_until, lr, l1, l2):
 
     # Classifier
     x = tf.keras.layers.GlobalAveragePooling2D(name='global_avg_pool')(x)
-    x = tf.keras.layers.Dense(units=4096, activation='relu', kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1, l2=l2))(x)
-    x = tf.keras.layers.Dense(units=4096, activation='relu', kernel_regularizer=tf.keras.regularizers.l1_l2(l1=l1, l2=l2))(x)
+    x = tf.keras.layers.Dense(units=4096, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2))(x)
+    x = tf.keras.layers.Dense(units=4096, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2))(x)
     x = tf.keras.layers.Dense(units=1, activation='sigmoid')(x)
 
     model = tf.keras.models.Model(inputs=input_tensor, outputs=x, name='vgg19')
