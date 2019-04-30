@@ -2,16 +2,21 @@
 set -euo pipefail
 . ./env/bin/activate
 
-timestamp=$(date +%s)
-mkdir -p ./experiments/vgg19_$timestamp/
+for extract in 21 16 11 6 3; do
+    for freeze in 21 16 11 6 3; do
+        experiment=$(echo ./experiments/vgg19_"$extract"_"$freeze"/)
+        rm -rf $experiment && mkdir -p $experiment && echo $experiment
 
-python ./src/train.py --experiments-path ./experiments/vgg19_$timestamp/ \
-                      --train ./data/isic2018/vgg19/train/train.npz \
-                      --pretrained-model vgg19 \
-                      --extract-until 21 \
-                      --freeze-until 21 \
-                      --epochs 1000 \
-                      --batch-size 64 \
-                      --lr 0.0001 \
-                      --l1 0.00001 \
-                      --l2 0.00001
+        python ./src/vgg19.py --experiment $experiment \
+                              --train ./data/isic2018/224/train/train.npz \
+                              --extract-until $extract \
+                              --freeze-until $freeze \
+                              --lr 0.0001 \
+                              --l2 0.0001 \
+                              --epochs 300 \
+                              --bs 64
+
+        python ./src/test.py --model $experiment/model.hdf5 \
+                             --test ./data/isic2018/224/test/test.npz
+    done
+done
