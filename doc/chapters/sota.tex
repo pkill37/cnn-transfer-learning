@@ -1,7 +1,70 @@
-\chapter{Artificial Neural Networks}
-\label{chapter:ann}
+\chapter{State of the Art}
+\label{chapter:sota}
 
 In this section we go over artificial neural networks.
+
+\section{Transfer Learning}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% INTRO
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Transfer learning emerges as a generalization of unsupervised pretraining techniques.
+
+The idea of representation learning is that the same representation may be useful in both settings. Using the same representation in both settings allows the representation to benefit from the training data that is available for both tasks
+
+Andrew Ng, renowned professor and data scientist, who has been associated with Google Brain, Baidu, Stanford and Coursera, recently gave an amazing tutorial in NIPS 2016 called ‘Nuts and bolts of building AI applications using Deep Learning’ where he mentioned,
+
+After supervised learning transfer learning will be the next driver of machine learning commercial success
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEFINITION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In their paper, A Survey on Transfer Learning, Pan and Yang use domain, task, and marginal probabilities to present a framework for understanding transfer learning. The framework is defined as follows:
+
+Transfer learning involves the concepts of a domain and a task. A domain $\mathcal{D}$ consists of a feature space $\mathcal{X}$ and a marginal probability distribution $P(X)$ over the feature space $X = {x_1, \cdots, x_n} \in \mathcal{X}$.
+
+Given a domain $\mathcal{D} = \{\mathcal{X},P(X)\}$, a task $\mathcal{T}$ consists of a label space $\mathcal{Y}$ and a conditional probability distribution $P(Y|X)$ that is typically learned from the training data consisting of pairs $x_i \in X$ and $y_i \in \mathcal{Y}$.
+
+Given a source domain $\mathcal{D}_S$, a corresponding source task $\mathcal{T}_S$, as well as a target domain $\mathcal{D}_T$ and a target task $\mathcal{T}_T$, the objective of transfer learning now is to enable us to learn the target conditional probability distribution $P(Y_T|X_T)$ in $\mathcal{D}_T$ with the information gained from $\mathcal{D}_S$ and $\mathcal{T}_S$ where $\mathcal{D}_S \neq \mathcal{D}_T$ or $\mathcal{T}_S \neq \mathcal{T}_T$. In most cases a limited number of labeled target examples which is exponentially smaller than the number of labeled source examples are assumed to be availble.
+
+As both the domain $\mathcal{D}$ and the task $\mathcal{T}$ are defined as tuples, these inequalities give rise to four transfer learning scenarios, which we will discuss below.
+
+Given source and target domains $\mathcal{D}_S$ and $\mathcal{D}_T$ where $\mathcal{D} = \{\mathcal{X},P(X)\}$ and source and target tasks $\mathcal{T}_S$ and $\mathcal{T}_T$ where $\mathcal{T} = \{\mathcal{Y}, P(Y|X)\}$ source and target conditions can vary in four ways:
+
+\begin{enumerate}
+    \item $\mathcal{X}_S \neq \mathcal{X}_T$. The feature spaces of the source and target domain are different, e.g. the documents are written in two different languages. In the context of natural language processing, this is generally referred to as cross-lingual adaptation.
+    \item $P(X_S) \neq P(X_T)$. The marginal probability distributions of source and target domain are different, e.g. the documents discuss different topics. This scenario is generally known as domain adaptation.
+    \item $\mathcal{Y}_S \neq \mathcal{Y}_T$. The label spaces between the two tasks are different, e.g. documents need to be assigned different labels in the target task. In practice, this scenario usually occurs with scenario 4, as it is extremely rare for two different tasks to have different label spaces, but exactly the same conditional probability distributions
+    \item $P(Y_S|X_S) \neq P(Y_T|X_T)$. The conditional probability distributions of the source and target tasks are different, e.g. source and target documents are unbalanced with regard to their classes. This scenario is quite common in practice and approaches such as over-sampling, under-sampling, or SMOTE [7] are widely used..
+\end{enumerate}
+
+To answer the question of what to transfer across these categories, some of the following approaches can be applied:
+
+\begin{enumerate}
+    \item Instance transfer: Reusing knowledge from the source domain to the target task is usually an ideal scenario. In most cases, the source domain data cannot be reused directly. Rather, there are certain instances from the source domain that can be reused along with target data to improve results. In case of inductive transfer, modifications such as AdaBoost by Dai and their co-authors help utilize training instances from the source domain for improvements in the target task.
+    \item Feature-representation transfer: This approach aims to minimize domain divergence and reduce error rates by identifying good feature representations that can be utilized from the source to target domains. Depending upon the availability of labeled data, supervised or unsupervised methods may be applied for feature-representation-based transfers.
+    \item Parameter transfer: This approach works on the assumption that the models for related tasks share some parameters or prior distribution of hyperparameters. Unlike multitask learning, where both the source and target tasks are learned simultaneously, for transfer learning, we may apply additional weightage to the loss of the target domain to improve overall performance.
+    \item Relational-knowledge transfer: Unlike the preceding three approaches, the relational-knowledge transfer attempts to handle non-IID data, such as data that is not independent and identically distributed. In other words, data, where each data point has a relationship with other data points; for instance, social network data utilizes relational-knowledge-transfer techniques.
+\end{enumerate}
+
+The following table clearly summarizes the relationship between different transfer learning strategies and what to transfer.
+
+\subsection{Types of Deep Transfer Learning}
+
+\subsubsection{Domain Adaptation}
+\subsubsection{Domain Confusion}
+\subsubsection{Multitask Learning}
+\subsubsection{One-shot Learning}
+\subsubsection{Zero-shot Learning}
+
+\subsection{Deep Transfer Learning Strategies}
+
+\subsubsection{Off-the-shelf Pre-trained Models as Feature Extractors}
+\subsubsection{Fine Tuning Off-the-shelf Pre-trained Models}
+\subsubsection{Freezing or Fine-tuning?}
+\subsubsection{Pre Trained Models}
 
 \section{Supervised Learning}
 
@@ -23,9 +86,19 @@ $$
 J(\theta) = \frac{1}{m} \sum_{i=1}^{m} L(x^{(i)}, y^{(i)}, \theta)
 $$
 
+\section{Initialization}
+
+The vector of parameters $\theta$ needs to be initialized, for which there are many strategies.
+
+Given a standardized input vector $x$ with zero mean and unit standard deviation, a reasonable approach would be to initialize all values of the vector $\theta$ to zero. However this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation, thus the gradients computed by backpropagation will also be the same and result in the same updates during gradient descent.
+
+However it is still desirable to have the parameter values be very small numbers close to zero.
+
+
+
 \section{Optimization}
 
-Given a cost function $J$, the goal is to find the optimal $\theta^*$ that minimizes the cost function, i.e. the optimization objective is 
+Given a cost function $J$ and initial parameters $\theta$, the goal is to find the optimal $\theta^*$ that minimizes the cost function, i.e. the optimization objective is 
 
 $$
 \theta^* = \argmin_{\theta} J(\theta)
@@ -80,10 +153,8 @@ Stochastic gradient descent can be seen as a special case of mini-batch gradient
 
 
 
-% TODO: Explain variations of GD
-% http://ruder.io/optimizing-gradient-descent/
-
-Gradient descent can be further optimized \cite{ruder2016}.
+% TODO: Explain briefly adaptive methods
+Gradient descent can be further developed into adaptive methods like Adam . See \cite{ruder2016}. However \cite{wilson2017} suggests that maybe pure SGD is a better idea and recommends best practices.
 
 \section{Comparison between gradient descent techniques}
 
@@ -195,5 +266,14 @@ $w^T \cdot x = 0$ defines a hyperplane in $p$-dimensional space of coordinates $
 
 The learning problem is to find a vector $w$ that provides such correct classification
 
-\section{ReLU}
-Lorem ipsum
+\section{Standardization}
+
+Since the range of values of raw data varies widely, in some machine learning algorithms, objective functions will not work properly without normalization. For example, the majority of classifiers calculate the distance between two points by the Euclidean distance. If one of the features has a broad range of values, the distance will be governed by this particular feature. Therefore, the range of all features should be normalized so that each feature contributes approximately proportionately to the final distance.
+
+Another reason why feature scaling is applied is that gradient descent converges much faster with feature scaling than without it.[1]
+
+n machine learning, we can handle various types of data, e.g. audio signals and pixel values for image data, and this data can include multiple dimensions. Feature standardization makes the values of each feature in the data have zero-mean (when subtracting the mean in the numerator) and unit-variance. This method is widely used for normalization in many machine learning algorithms (e.g., support vector machines, logistic regression, and artificial neural networks)[2][citation needed]. The general method of calculation is to determine the distribution mean and standard deviation for each feature. Next we subtract the mean from each feature. Then we divide the values (mean is already subtracted) of each feature by its standard deviation.
+
+{\displaystyle x'={\frac {x-{\bar {x}}}{\sigma }}} x' = \frac{x - \bar{x}}{\sigma}
+
+Where {\displaystyle x} x is the original feature vector, {\displaystyle {\bar {x}}={\text{average}}(x)} {\displaystyle {\bar {x}}={\text{average}}(x)} is the mean of that feature vector, and {\displaystyle \sigma } \sigma  is its standard deviation.

@@ -1,0 +1,165 @@
+\chapter{Methodology}
+\label{chapter:methodology}
+
+\section{Data}
+
+Our data was extracted from the ISIC 2017: Skin Lesion Analysis Towards Melanoma Detection grand challenge datasets \cite{Tschandl2018}\cite{isic2017} which provide
+
+% TODO: fix numbers, plot histograms
+\begin{itemize}
+    \item A training set with 2000 samples (divided into three classes: 374 melanoma, 254 seborrheic keratosis, and 1372 nevus)
+    \item A validation set with 150 samples
+    \item A test set with 600 samples
+\end{itemize}
+
+Our data was extracted from the ISIC 2018: Skin Lesion Analysis Towards Melanoma Detection grand challenge datasets \cite{ham10000} \cite{isic2017}.
+
+\subsection{Preprocessing}
+\label{subsection:preprocessing}
+
+The images in the dataset undergo a number of preprocessing steps.
+
+\begin{enumerate}
+    \item Most readily available pretrained models are of network architectures whose input tensor is of square dimensions (e.g. $224 \times 224 \times 3$). Since our dataset's images are of distinct non-square dimensions, it is necessary to resize them to a square. However, resizing them all naively to the network's input tensor dimensions without regards to the image's aspect ratio means that the input fed to the network is of varying distinct aspect ratios which does not constitute a good start. Therefore, the first step is to crop an arbitrarily-sized square of the center of the image which will likely (and, in fact, does) capture the skin lesion.
+    \item Resize the images to the target square dimensions. We resize them as soon as possible in the data pipeline in order to reduce the computational costs of any subsequent operations on the images.
+    \item Normalize the luminance and apply a 99\% contrast stretch which improves.
+\end{enumerate}
+
+\subsection{Class Imbalance}
+\label{subsection:classimbalance}
+
+In our binary classification task (melanoma vs nevus and seborrheic keratosis) the $m$ samples in the training set are highly imbalanced:
+
+\begin{itemize}
+    \item the majority class $S_{maj}$ has $|S_{maj}| = 1372$ samples;
+    \item the minority class $S_{min}$ has $|S_{min} = 374 + 253 = 627|$ samples where.
+\end{itemize}
+
+Obviously, we have that $|S_{maj}| > |S_{min}|$, and $|S_{maj}| + |S_{min}| = m$. We want
+
+
+An attractive first approach might be to use a weighted cost function that assigns weights to samples by taking into account their relative, e.g.
+
+$$
+J(\theta) = \frac{1}{m} \sum^{m}_{i=1} L(\hat{y}, y)
+$$
+
+This is highly desirable because it only requires changing the optimization objective (i.e. the cost function), not the data itself, which is much easier and is probably why frameworks like Keras offer this facility which is quite useful from the perspective of a rapid development framework. However this approach is only valid when we are doing batch gradient descent where the batch size $b$ is the same as the number of samples. The approximation does not hold when $b < m$.
+
+% TODO: check
+% class imbalance https://datascience.stackexchange.com/questions/44755/why-doesnt-class-weight-resolve-the-imbalanced-classification-problem
+$$
+J(\theta) = \frac{1}{m} \sum^{m}_{i=1} L(\hat{y}, y)
+$$
+
+$$
+J(\theta) = \frac{1}{m} \sum_{i=1}^{m} L(x^{(i)}, y^{(i)}, \theta)
+$$
+
+Thus
+
+\cite{haibo2009} provides a comprehensive survey of state-of-the-art class balancing algorithms, of which we have chosen to use oversampling of the minority class because it is the simplest and most natural. As an oversampling method we will augment the data as described in \ref{subsection:augmentation}.
+
+\subsection{Augmentation}
+\label{subsection:augmentation}
+
+The number of training samples $m = 2000$ is not enough. So we want to augment the data to a new total number of samples $m' \approx 8000$.
+
+With class imbalance in mind, we want the majority class to have a different number of samples $a'$ such that $a' + b' \approx m'$, i.e. $a' \approx b' \approx \frac{m'}{2}$.
+
+That means we must augment the minority class by a factor (i.e. number of transformations applied to each original sample) of $\frac{\frac{m'}{2}}{|S_{min}}$ and the majority class by a factor of $\frac{\frac{m'}{2}}{|S_{maj}}$.
+
+We consider a set $T$ of the transformations:
+
+\begin{itemize}
+    \item Horizontal flip
+    \item Vertical flip
+    \item 90º rotation
+    \item 180º rotation
+    \item 270º rotation
+\end{itemize}
+
+We did not consider transformations that change the color (e.g. contrast change, channel shift) or size (e.g. zoom) of features because it would unjustifiably allow the network to incorrectly learn from these misrepresented features. We did not verify this experimentally but it is a very reasonable heuristic because it would also interfere with an expert human diagnosis.
+
+The available augmentations are all k-combinations of the set $T$ for $k \in {1, ..., |T|}$, in other words all the possible ways in which you can combine the transformations from the set $T$.
+
+Affine transformations are not commutative under composition. Applying some transform $T_1$ followed by transform $T_2$ is in general different from applying $T_2$ followed by $T_1$, i.e. the order in which we apply the transforms matters.
+
+\section{Evaluation}
+
+Classifiers will be evaluated using common binary classification metrics:
+
+\begin{itemize}
+    \item sensitivity at 0.5 confidence threshold
+    \item specificity at 0.5 confidence threshold
+    \item accuracy at 0.5 confidence threshold
+    \item average precision evaluated at sensitivity of 100\%
+    \item specificity evaluated at a sensitivity of 82\%
+    \item specificity evaluated at a sensitivity of 89\%
+    \item specificity evaluated at a sensitivity of 95\%
+    \item area under the receiver operating characteristic curve (AUC)
+\end{itemize}
+
+\section{Architecture}
+
+We will conduct our experiments on models of VGG16 \cite{vgg16} and InceptionV3 \cite{inceptionv3} architectures pre-trained on ImageNet \cite{imagenet}.
+
+VGG16 has
+
+InceptionV3 builds up 8 blocks of con, so we will freeze layers up to
+
+We will play with layers
+
+        [18,14,10,6,3]
+        [41,64,87,101,133,165,197,229,249]
+
+We build a classifier on top of the extracted layers by including
+
+\begin{itemize}
+    \item global average pooling (see https://arxiv.org/pdf/1312.4400.pdf)
+    \item a fully connected layer with 1 neuron with sigmoid activation
+
+\section{Training}
+
+\begin{itemize}
+    \item Standardize training and validation samples relative to ImageNet
+    \item Weight initialization proposed by He et al \cite{HeWeightInit}
+    \item Early stopping with 50 patience
+    \item Adam optimizer with $\eta = 0.001$, $\beta_1 = 0.9$, $\beta_2 = 0.999$ and weight decay at a factor of $10^{-6}$
+    \item Batch size 64 (justify https://datascience.stackexchange.com/questions/31113/validation-showing-huge-fluctuations-what-could-be-the-cause)
+    \item 1000 epochs
+    \item Shuffle input every epoch
+    \item Explicit L1 and L2 regularization with $\lambda_{L1}$ and $\lambda_{L2}$
+    \item Binary cross entropy cost function
+\end{itemize}
+
+\section{Hardware}
+
+Deep learning is very computationally intensive in itself and even more important when we want to run multiple experiments with different architectures and hyperparameters.
+
+\subsection{GPU}
+\ac{CNN}, the core of most state-of-the-art deep learning applied to dermatology, are computationally complex and embarassingly parallel \cite{chang2017} which the architecture of general purpose \ac{GPU} are appropriate for \cite{gpu} and for which libraries like cuDNN \cite{cudnn} were developed to further leverage the characteristics of \ac{GPU} into even bigger performance improvements.
+
+There is a growing demand for domain-specific hardware designed specifically for the computations necessary in neural network training and inference, like Google's TPU custom ASIC \cite{tpu}, which naturally can achieve major improvements in cost-energy-performance when compared to general purpose hardware like \ac{GPU} that were originally designed for the demands of computer graphics which coincidentally also serve deep learning very well. Nonetheless, \ac{GPU} remain the best cost-effective commodity hardware for this type of computation, especially when not working at the scale of companies like Google and Facebook.
+
+\subsection{RAM}
+RAM clock rate is irrelevant for memory transfers between the CPU and the GPU because
+
+\begin{itemize}
+    \item x
+    \item x
+\end{itemize}
+
+RAM size should at least match GPU memory so as to avoid swapping to disk. Since RAM is quite cheap nowadays, it is reasonable to acquire more of it in advance to.
+
+\subsection{CPU}
+The CPU does little useful computation in a deep learning application where most of the computation is delegated to the GPU.
+
+\subsection{PSU}
+Lorem ipsum
+
+\subsection{Cooling}
+Lorem ipsum
+
+\subsection{Motherboard}
+The motherboard
