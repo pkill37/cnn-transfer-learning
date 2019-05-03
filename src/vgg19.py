@@ -19,6 +19,7 @@ def vgg19(extract_until=21, freeze_until=21, lr=0.001, l2=0.001):
 
     # Extract and freeze pre-trained model layers
     vgg19 = tf.keras.applications.vgg19.VGG19(weights='imagenet', include_top=False)
+    vgg19.summary()
     model = tf.keras.models.Sequential()
     for i in range(0, extract_until+1): # i=0 is the input layer, i>0 are the actual model layers
         vgg19.layers[i].trainable = True if i > freeze_until else False
@@ -37,7 +38,7 @@ def train(experiment, train, extract_until, freeze_until, lr, l2, epochs, bs):
     model.summary()
 
     callbacks = [
-        tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiment, 'model.hdf5'), monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
+        tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiment, 'model.h5'), monitor='loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
         tf.keras.callbacks.TensorBoard(log_dir=experiment, histogram_freq=0, write_graph=True, write_images=True),
         tf.keras.callbacks.CSVLogger(filename=os.path.join(experiment, 'log.csv'), separator=',', append=False),
     ]

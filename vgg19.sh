@@ -13,10 +13,10 @@ for extract in 21 16 11 6 3; do
                               --freeze-until $freeze \
                               --lr 0.0001 \
                               --l2 0.0001 \
-                              --epochs 300 \
+                              --epochs 1 \
                               --bs 64
 
-        python ./src/test.py --model $experiment/model.hdf5 \
+        python ./src/test.py --model $experiment/model.h5 \
                              --test ./data/isic2018/224/test/test.npz
     done
 done
