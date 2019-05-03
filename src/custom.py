@@ -1,12 +1,12 @@
 import os
 import argparse
+import itertools
 
 import tensorflow as tf
 import numpy as np
 import sklearn.model_selection
 
 import metrics
-import models
 import data
 import helpers
 
@@ -38,7 +38,7 @@ def cnn(lr=0.001, l2=0.001):
     return m
 
 
-def train(experiments_path, train, validation, epochs, bs):
+def train(experiments_path, train, epochs, bs):
     #callbacks = [
     #    #tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='min', baseline=None),
     #    tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiments_path, 'model.hdf5'), monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
@@ -47,23 +47,34 @@ def train(experiments_path, train, validation, epochs, bs):
     #]
 
     x_train, y_train = data.load(train)
+    x_train = x_train[:100]
+    y_train = y_train[:100]
     x_train = data.standardize(x_train, np.mean(x_train, axis=(0,1,2)), np.std(x_train, axis=(0,1,2)))
 
-    estimator = tf.keras.wrappers.scikit_learn.KerasClassifier(
-        build_fn=cnn,
-        batch_size=bs,
-        epochs=epochs,
-        verbose=1,
-        #callbacks=callbacks,
-        shuffle=True,
-    )
+    params = dict(lr=np.logspace(-5, 1, 5), l2=np.logspace(-5, 5, 5))
 
-    param_grid = dict(lr=np.logspace(-5, 1, 5), l2=np.logspace(-5, 5, 11))
-    gs = sklearn.model_selection.GridSearchCV(estimator=estimator, param_grid=param_grid, scoring='accuracy', n_jobs=1)
-    skf = sklearn.model_selection.StratifiedKFold(n_splits=5, shuffle=True)
-    results = sklearn.model_selection.cross_val_score(gs, x_train, y_train, scoring='accuracy', cv=skf, n_jobs=1, error_score='raise')
-    print("F1-score averaged over 3 folds: %.2f%% +- %.2f%%" % (results.mean(), results.std()))
+    for ofold, (otrain, otest) in enumerate(sklearn.model_selection.StratifiedKFold(n_splits=3, shuffle=True)):
+        x_trainval_fold, y_trainval_fold = x_train[otrain], y_train[otest]
+        x_test_fold, y_test_fold = x_train[otest], y_train[otest]
 
+        for (lr, l2) in itertools.product(*params.values()):
+
+            for ifold, (itrain, itest) in enumerate(sklearn.model_selection.StratifiedKFold(n_splits=3, shuffle=True)):
+                x_train_fold, y_train_fold = x_trainval_fold[itrain], y_trainval_fold[itest]
+                x_val_fold, y_val_fold = x_train[itest], y_train_fold[itest]
+
+                model.fit(
+                    x=x_train_fold,
+                    y=y_train_fold,
+                    validation_data=(x_val_fold, y_val_fold),
+                    batch_size=bs,
+                    epochs=epochs,
+                    verbose=1,
+                    callbacks=callbacks,
+                    shuffle=True,
+                )
+
+    index, value = max(enumerate(mean_scores), key=operator.itemgetter(1))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -73,4 +84,4 @@ if __name__ == '__main__':
     parser.add_argument('--bs', type=int, required=True)
     args = parser.parse_args()
 
-    train(args.experiments, args.train, args.validation, args.epochs, args.bs)
+    train(args.experiments, args.train, args.epochs, args.bs)

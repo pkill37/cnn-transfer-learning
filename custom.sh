@@ -3,10 +3,9 @@ set -euo pipefail
 . ./env/bin/activate
 
 timestamp=$(date +%s)
-mkdir -p ./experiments/debug_$timestamp/
+mkdir -p ./experiments/custom_$timestamp/
 
-python ./src/custom.py --experiments ./experiments/debug_$timestamp/ \
-                       --train ./data/vgg19_train/vgg19_train.npz \
-                       --validation ./data/vgg19_validation/vgg19_validation.npz \
+python ./src/custom.py --experiments ./experiments/custom_$timestamp/ \
+                       --train ./data/isic2018/224/train/train.npz \
                        --epochs 5 \
-                       --bs 32
+                       --bs 64
