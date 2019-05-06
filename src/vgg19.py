@@ -13,17 +13,23 @@ LOSS = 'binary_crossentropy'
 METRICS = metrics.METRICS
 OPTIMIZER = lambda lr: tf.keras.optimizers.SGD(lr=lr, momentum=0.9, decay=10e-6, nesterov=True)
 
+IMG_WIDTH = 224
+IMG_HEIGHT = 224
+IMG_CHANNELS = 3
+
 
 def vgg19(extract_until=21, freeze_until=21, lr=0.001, l2=0.001):
     assert extract_until >= freeze_until
 
     # Extract and freeze pre-trained model layers
-    vgg19 = tf.keras.applications.vgg19.VGG19(weights='imagenet', include_top=False)
+    vgg19 = tf.keras.applications.vgg19.VGG19(weights='imagenet', input_shape=(IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), include_top=False)
     vgg19.summary()
+
     model = tf.keras.models.Sequential()
     for i in range(0, extract_until+1): # i=0 is the input layer, i>0 are the actual model layers
-        vgg19.layers[i].trainable = True if i > freeze_until else False
-        model.add(vgg19.layers[i])
+        layer = vgg19.layers[i]
+        layer.trainable = True if i > freeze_until else False
+        model.add(layer)
 
     # Classifier
     model.add(tf.keras.layers.GlobalAveragePooling2D())
@@ -70,3 +76,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     train(args.experiment, args.train, args.extract_until, args.freeze_until, args.lr, args.l2, args.epochs, args.bs)
+    helpers.fix_layer0(os.path.join(args.experiment, 'model.h5'), (None, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), 'float32')

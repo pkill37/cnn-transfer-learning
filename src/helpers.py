@@ -65,3 +65,15 @@ def seed():
     numpy.random.seed(2)
     from tensorflow import set_random_seed
     set_random_seed(3)
+
+
+# https://github.com/keras-team/keras/issues/10417
+def fix_layer0(filename, batch_input_shape, dtype):
+    import h5py
+    import json
+    with h5py.File(filename, 'r+') as f:
+        model_config = json.loads(f.attrs['model_config'].decode('utf-8'))
+        layer0 = model_config['config']['layers'][0]['config']
+        layer0['batch_input_shape'] = batch_input_shape
+        layer0['dtype'] = dtype
+        f.attrs['model_config'] = json.dumps(model_config).encode('utf-8')
