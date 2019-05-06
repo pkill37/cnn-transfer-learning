@@ -13,7 +13,7 @@ for extract in 21 16 11 6 3; do
                               --freeze-until $freeze \
                               --lr 0.0001 \
                               --l2 0.0001 \
-                              --epochs 1 \
+                              --epochs 300 \
                               --bs 64
 
         python ./src/test.py --model $experiment/model.h5 \
