@@ -261,6 +261,5 @@ class f1_score(layer):
         return 2 * truediv(pr * rec, pr + rec + K.epsilon())
 
 
-#METRICS = [f1_score()]
-#tf.keras.utils.get_custom_objects().update({ m.__name__: m for m in METRICS })
-METRICS = ['accuracy']
+METRICS = [f1_score()]
+tf.keras.utils.get_custom_objects().update({ m.__name__: m for m in METRICS })

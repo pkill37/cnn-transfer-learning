@@ -5,6 +5,7 @@ import tensorflow as tf
 
 import data
 import helpers
+import metrics # imports metrics such that model can be loaded
 
 
 if __name__ == '__main__':
