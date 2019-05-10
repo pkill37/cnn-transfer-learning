@@ -11,7 +11,6 @@ import PIL
 
 import helpers
 
-
 IMG_SHAPE = { 'vgg19': (224, 224), 'inceptionv3': (299, 299) }
 
 AUGMENTATIONS = [
@@ -111,7 +110,7 @@ def process(images_path, descriptions_filename, target_img_size, target_m):
 
             # Read and decode the image and label in the aforementioned filename
             img = load_image(image_filename, target_img_size)
-            label = int(float(row['MEL']))
+            label = int(float(row['MEL'])) # 1 is melanoma, 0 is non-melanoma
             x.append(img)
             y.append(label)
 
