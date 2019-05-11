@@ -3,6 +3,7 @@ import argparse
 
 import tensorflow as tf
 import numpy as np
+import sklearn
 
 import data
 import helpers
@@ -15,7 +16,7 @@ LR_DECAY = 0.1
 L2 = 5*10e-4
 DROPOUT = 0.5
 BS = 256
-
+MIN_DELTA = 10e-3
 
 IMG_WIDTH = 224
 IMG_HEIGHT = 224
@@ -48,18 +49,20 @@ def train(experiment, train, extract_until, freeze_until, epochs, bs):
     model.summary()
 
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=1e-2, patience=20, verbose=1, mode='min', baseline=None),
-        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=LR_DECAY, patience=10, verbose=1, mode='min', min_delta=0.0001, cooldown=0, min_lr=0),
+        tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=MIN_DELTA, patience=20, verbose=1, mode='min', baseline=None),
+        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=LR_DECAY, patience=10, verbose=1, mode='min', min_delta=MIN_DELTA, cooldown=0, min_lr=0),
         tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiment, 'model.h5'), monitor='loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
         tf.keras.callbacks.CSVLogger(filename=os.path.join(experiment, 'train.csv'), separator=',', append=False),
     ]
 
     x_train, y_train = data.load(train)
     x_train = tf.keras.applications.vgg19.preprocess_input(x_train)
+    x_train, x_validation, y_train, y_validation = sklearn.model_selection.train_test_split(x_train, y_train, test_size=0.03, shuffle=True, stratify=y_train)
 
     model.fit(
         x=x_train,
         y=y_train,
+        validation_data=(x_validation, y_validation),
         batch_size=bs,
         epochs=epochs,
         verbose=1,
@@ -78,5 +81,6 @@ if __name__ == '__main__':
     parser.add_argument('--bs', type=int, required=True)
     args = parser.parse_args()
 
+    helpers.seed()
     train(args.experiment, args.train, args.extract_until, args.freeze_until, args.epochs, args.bs)
     helpers.fix_layer0(os.path.join(args.experiment, 'model.h5'), (None, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), 'float32')
