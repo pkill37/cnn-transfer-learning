@@ -50,7 +50,7 @@ def train(experiment, train, extract_until, freeze_until, epochs, bs):
     model.summary()
 
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=MIN_DELTA, patience=20, verbose=1, mode='min', baseline=None),
+        tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=MIN_DELTA, patience=30, verbose=1, mode='min', baseline=None),
         tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=LR_DECAY, patience=10, verbose=1, mode='min', min_delta=MIN_DELTA, cooldown=0, min_lr=0),
         tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiment, 'model.h5'), monitor='loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
         tf.keras.callbacks.CSVLogger(filename=os.path.join(experiment, 'train.csv'), separator=',', append=False),
