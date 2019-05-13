@@ -9,13 +9,14 @@ import data
 import helpers
 
 
+# VGG's original training conditions per https://arxiv.org/pdf/1409.1556.pdf
 LOSS = 'binary_crossentropy'
 METRICS = ['accuracy']
 OPTIMIZER = tf.keras.optimizers.SGD(lr=10e-2, momentum=0.9, decay=0.0, nesterov=False)
 LR_DECAY = 0.1
 L2 = 5*10e-4
 DROPOUT = 0.5
-BS = 256
+BATCH_SIZE = 256
 MIN_DELTA = 10e-3
 
 IMG_WIDTH = 224
@@ -31,15 +32,15 @@ def vgg19(extract_until=21, freeze_until=21):
     model = tf.keras.models.Sequential()
     for i in range(0, extract_until+1): # i=0 is the input layer, i>0 are the actual model layers
         layer = vgg19.layers[i]
-        layer.trainable = True if i > freeze_until else False
+        layer.trainable = True if (i > freeze_until) and (len(layer.get_weights()) > 0) else False
+        layer.kernel_regularizer = tf.keras.regularizers.l2(L2) if len(layer.get_weights()) > 0 else None
         model.add(layer)
 
     # Classifier
     model.add(tf.keras.layers.GlobalAveragePooling2D())
-    # TODO: is this regularizing the cost function?
     model.add(tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(L2)))
     model.add(tf.keras.layers.Dropout(rate=DROPOUT))
-    model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))
+    model.add(tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(L2)))
     model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS)
     return model
 
