@@ -63,23 +63,24 @@ def plot_train_loss(train_csv, target_file):
     plt.savefig(target_file)
 
 
-def plot_train_f1(train_csv, target_file):
-    f1 = []
+def plot_train_accuracy(train_csv, target_file):
+    acc = []
 
     with open(train_csv, 'r', newline='') as f:
         for i, row in enumerate(csv.DictReader(f)):
-            f1.append(float(row['f1']))
+            acc.append(float(row['acc']))
 
-    f1 = np.array(f1, dtype='float32')
-    epochs = range(len(f1))
+    acc = np.array(acc, dtype='float32')
+    epochs = range(len(acc))
 
     plt.figure()
-    plt.plot(epochs, f1, 'b', label='Train F1-score')
-    plt.ylabel('F1-score')
+    plt.plot(epochs, acc, 'b', label='Train Acc')
+    plt.ylabel('Acc')
     plt.xlabel('Epoch')
-    plt.title('Train F1-score')
+    plt.title('Train Acc')
     plt.legend()
     plt.savefig(target_file)
+    # TODO: also plot val_acc
 
 
 def plot_test_classification_report(y_true, y_pred, target_file):
@@ -88,15 +89,20 @@ def plot_test_classification_report(y_true, y_pred, target_file):
         json.dump(report, f)
 
 
+def plot_test_accuracy(y_true, y_pred, target_file):
+    acc = sklearn.metrics.accuracy_score(y_true, y_pred)
+    with open(target_file, 'w') as f:
+        f.write(str(acc))
+
+
 def plot(experiment):
-    try:
-        y_true, y_pred = load(os.path.join(experiment, 'predictions.npz'))
-        plot_train_loss(os.path.join(experiment, 'train.csv'), os.path.join(experiment, 'train_loss.png'))
-        plot_train_f1(os.path.join(experiment, 'train.csv'), os.path.join(experiment, 'train_f1.png'))
-        plot_test_confusion_matrix(y_true, y_pred, os.path.join(experiment, 'test_confusion_matrix.png'))
-        plot_test_classification_report(y_true, y_pred, os.path.join(experiment, 'test_classification_report.json'))
-    except Exception as e:
-        print(e)
+    y_true, y_pred = load(os.path.join(experiment, 'predictions.npz'))
+    plot_train_loss(os.path.join(experiment, 'train.csv'), os.path.join(experiment, 'train_loss.png'))
+    plot_train_accuracy(os.path.join(experiment, 'train.csv'), os.path.join(experiment, 'train_acc.png'))
+    plot_test_confusion_matrix(y_true, y_pred, os.path.join(experiment, 'test_confusion_matrix.png'))
+    plot_test_classification_report(y_true, y_pred, os.path.join(experiment, 'test_classification_report.json'))
+    plot_test_accuracy(y_true, y_pred, os.path.join(experiment, 'test_acc.txt'))
+    # TODO: plot latex table
 
 
 if __name__ == '__main__':
