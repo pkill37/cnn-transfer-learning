@@ -77,3 +77,7 @@ def fix_layer0(filename, batch_input_shape, dtype):
         layer0['batch_input_shape'] = batch_input_shape
         layer0['dtype'] = dtype
         f.attrs['model_config'] = json.dumps(model_config).encode('utf-8')
+
+
+def has_parameters(layer):
+    return len(layer.get_weights()) > 0

@@ -32,8 +32,8 @@ def vgg19(extract_until=21, freeze_until=21):
     model = tf.keras.models.Sequential()
     for i in range(0, extract_until+1): # i=0 is the input layer, i>0 are the actual model layers
         layer = vgg19.layers[i]
-        layer.trainable = True if (i > freeze_until) and (len(layer.get_weights()) > 0) else False
-        layer.kernel_regularizer = tf.keras.regularizers.l2(L2) if len(layer.get_weights()) > 0 else None
+        layer.trainable = True if (i > freeze_until) and helpers.has_parameters(layer) else False
+        layer.kernel_regularizer = tf.keras.regularizers.l2(L2) if helpers.has_parameters(layer) else None
         model.add(layer)
 
     # Classifier
