@@ -2,19 +2,19 @@
 set -euo pipefail
 . ./env/bin/activate
 
-vgg19=$(echo ./experiments/vgg19)
-rm -rf $vgg19
+vgg16=$(echo ./experiments/vgg16)
+rm -rf $vgg16
 
-for extract in 21 16 11 6 3; do
-    for freeze in 21 16 11 6 3 0; do
+for extract in 18 14 10 6 3; do
+    for freeze in 18 14 10 6 3 0; do
         if [ "$extract" -lt "$freeze" ]; then
             continue
         fi
 
-        experiment=$(echo $vgg19/extract"$extract"_freeze"$freeze")
+        experiment=$(echo $vgg16/extract"$extract"_freeze"$freeze")
         mkdir -p $experiment && echo $experiment
 
-        python ./src/vgg19.py --experiment $experiment \
+        python ./src/vgg16.py --experiment $experiment \
                               --train ./data/isic2018/224/train/train.npz \
                               --extract-until $extract \
                               --freeze-until $freeze \

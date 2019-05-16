@@ -11,7 +11,6 @@ import PIL
 
 import helpers
 
-IMG_SHAPE = { 'vgg19': (224, 224), 'inceptionv3': (299, 299) }
 
 AUGMENTATIONS = [
     lambda x: x.transpose(PIL.Image.FLIP_LEFT_RIGHT),

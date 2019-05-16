@@ -24,14 +24,14 @@ IMG_HEIGHT = 224
 IMG_CHANNELS = 3
 
 
-def vgg19(extract_until=21, freeze_until=21):
+def vgg16(extract_until=21, freeze_until=21):
     assert extract_until >= freeze_until
 
     # Extract and freeze pre-trained model layers
-    vgg19 = tf.keras.applications.vgg19.VGG19(weights='imagenet', input_shape=(IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), include_top=False)
+    vgg16 = tf.keras.applications.vgg16.VGG16(weights='imagenet', input_shape=(IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), include_top=False)
     model = tf.keras.models.Sequential()
     for i in range(0, extract_until+1): # i=0 is the input layer, i>0 are the actual model layers
-        layer = vgg19.layers[i]
+        layer = vgg16.layers[i]
         layer.trainable = True if (i > freeze_until) and helpers.has_parameters(layer) else False
         layer.kernel_regularizer = tf.keras.regularizers.l2(L2) if helpers.has_parameters(layer) else None
         model.add(layer)
@@ -46,7 +46,7 @@ def vgg19(extract_until=21, freeze_until=21):
 
 
 def train(experiment, train, extract_until, freeze_until, epochs, bs):
-    model = vgg19(extract_until, freeze_until)
+    model = vgg16(extract_until, freeze_until)
     model.summary()
 
     callbacks = [
@@ -57,7 +57,7 @@ def train(experiment, train, extract_until, freeze_until, epochs, bs):
     ]
 
     x_train, y_train = data.load(train)
-    x_train = tf.keras.applications.vgg19.preprocess_input(x_train)
+    x_train = tf.keras.applications.vgg16.preprocess_input(x_train)
     x_train, x_validation, y_train, y_validation = sklearn.model_selection.train_test_split(x_train, y_train, test_size=0.03, shuffle=True, stratify=y_train)
 
     model.fit(
