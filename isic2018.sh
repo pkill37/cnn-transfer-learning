@@ -1,5 +1,5 @@
 #! /bin/bash
-set -euxo pipefail
+set -euo pipefail
 . ./env/bin/activate
 
 # Download and unzip
@@ -10,12 +10,12 @@ unzip ./data/isic2018/ISIC2018_Task3_Training_Input.zip -d ./data/isic2018
 unzip ./data/isic2018/ISIC2018_Task3_Training_GroundTruth.zip -d ./data/isic2018
 
 # Process and compress
-for pretrained_model in vgg19; do
-    echo "Processing data for $pretrained_model networks..."
-    rm -rf ./data/isic2018/"$pretrained_model"
-    mkdir -p ./data/isic2018/"$pretrained_model"/{train,test}
+for target_size in 224; do
+    echo "Processing data for target size "$target_size"x"$target_size"..."
+    rm -rf ./data/isic2018/"$target_size"
+    mkdir -p ./data/isic2018/"$target_size"/{train,test}
     python ./src/data.py --images ./data/isic2018/ISIC2018_Task3_Training_Input \
                          --descriptions ./data/isic2018/ISIC2018_Task3_Training_GroundTruth/ISIC2018_Task3_Training_GroundTruth.csv \
-                         --output ./data/isic2018/"$pretrained_model" \
-                         --pretrained-model $pretrained_model
+                         --target-size "$target_size" \
+                         --output ./data/isic2018/"$target_size"
 done
