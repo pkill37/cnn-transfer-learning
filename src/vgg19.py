@@ -12,7 +12,7 @@ import helpers
 # VGG's original training conditions per https://arxiv.org/pdf/1409.1556.pdf
 LOSS = 'binary_crossentropy'
 METRICS = ['accuracy']
-OPTIMIZER = tf.keras.optimizers.SGD(lr=10e-2, momentum=0.9, decay=0.0, nesterov=False)
+OPTIMIZER = tf.keras.optimizers.SGD(lr=10e-4, momentum=0.9, decay=0.0, nesterov=False)
 LR_DECAY = 0.1
 L2 = 5*10e-4
 DROPOUT = 0.5
