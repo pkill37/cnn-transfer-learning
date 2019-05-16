@@ -141,8 +141,7 @@ def process(images_path, descriptions_filename, target_img_size, target_m):
             y = np.array(y, dtype='float32')
         assert x.shape[0] == y.shape[0]
 
-        x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, train_size=0.9, shuffle=True, stratify=y)
-        return (x_train, y_train), (x_test, y_test)
+        return x, y
 
 
 def load(preprocessed_dataset_filename):
@@ -154,7 +153,6 @@ def load(preprocessed_dataset_filename):
 
 def save(x, y, output):
     np.savez_compressed(os.path.join(output, os.path.basename(output)), x=x, y=y)
-
     for i, (x, y) in enumerate(zip(x, y)):
         img = PIL.Image.fromarray(x.astype(np.uint8))
         img.save(os.path.join(output, f'{i}_{y}.jpg'))
@@ -169,6 +167,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=helpers.is_dir, required=True)
     args = parser.parse_args()
 
-    (x_train, y_train), (x_test, y_test) = process(args.images, args.descriptions, IMG_SHAPE[args.pretrained_model], args.total_samples)
+    x, y = process(args.images, args.descriptions, IMG_SHAPE[args.pretrained_model], args.total_samples)
+    x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, train_size=0.9, shuffle=True, stratify=y)
     save(x_train, y_train, os.path.join(args.output, 'train'))
     save(x_test, y_test, os.path.join(args.output, 'test'))
