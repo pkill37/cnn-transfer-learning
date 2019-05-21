@@ -5,8 +5,8 @@ set -euo pipefail
 vgg16=$(echo ./experiments/vgg16)
 rm -rf $vgg16
 
-for extract in 18 14 10 6 3; do
-    for freeze in 18 14 10 6 3 0; do
+for extract in 18 14 10 06 03; do
+    for freeze in 18 14 10 06 03 00; do
         if [ "$extract" -lt "$freeze" ]; then
             continue
         fi
