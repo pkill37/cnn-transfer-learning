@@ -85,7 +85,7 @@ def load_image(filename, target_size):
     img = PIL.Image.open(filename).convert('RGB')
     img = _crop(img)
     img = _resize(img, target_size)
-    #img = _correct(img)
+    img = _correct(img)
     return img
 
 
@@ -113,11 +113,13 @@ def process(images_path, descriptions_filename, target_img_size, target_m):
             x.append(img)
             y.append(label)
 
+        # Ensure size consistency between lists
         assert len(x) == len(y)
 
         # Augment minority until classes are balanced and augmentation goal is reached
         if target_m:
             assert target_m > len(y)
+            print(f'Augmenting {len(y)} samples to approximately {target_m} class-balanced samples...')
 
             # Group data into classes for class balancing
             positive = [(xv, yv) for (xv,yv) in zip(x,y) if yv == 1]
@@ -138,7 +140,13 @@ def process(images_path, descriptions_filename, target_img_size, target_m):
         else:
             x = np.array([np.asarray(xv, dtype='float32') for xv in x], dtype='float32')
             y = np.array(y, dtype='float32')
+
+        # Ensure size consistency between x matrix and y vector
         assert x.shape[0] == y.shape[0]
+
+        # Ensure the preprocessed dataset's classes were reasonably balanced
+        _, counts = np.unique(y, return_counts=True)
+        assert abs(counts[0] - counts[1]) < 100
 
         return x, y
 
@@ -162,11 +170,11 @@ if __name__ == '__main__':
     parser.add_argument('--images', type=helpers.is_dir, required=True)
     parser.add_argument('--descriptions', type=helpers.is_file, required=True)
     parser.add_argument('--target-size', type=int, required=True)
-    parser.add_argument('--total-samples', type=int, required=False)
+    parser.add_argument('--target-samples', type=int, required=True)
     parser.add_argument('--output', type=helpers.is_dir, required=True)
     args = parser.parse_args()
 
-    x, y = process(args.images, args.descriptions, (args.target_size, args.target_size), args.total_samples)
+    x, y = process(args.images, args.descriptions, (args.target_size, args.target_size), args.target_samples)
     x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, train_size=0.9, shuffle=True, stratify=y)
     save(x_train, y_train, os.path.join(args.output, 'train'))
     save(x_test, y_test, os.path.join(args.output, 'test'))

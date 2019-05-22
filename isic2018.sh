@@ -17,5 +17,6 @@ for target_size in 224; do
     python ./src/data.py --images ./data/isic2018/ISIC2018_Task3_Training_Input \
                          --descriptions ./data/isic2018/ISIC2018_Task3_Training_GroundTruth/ISIC2018_Task3_Training_GroundTruth.csv \
                          --target-size "$target_size" \
+                         --target-samples 16000 \
                          --output ./data/isic2018/"$target_size"
 done
