@@ -110,4 +110,7 @@ if __name__ == '__main__':
     parser.add_argument('--experiment', type=helpers.is_dir, required=True)
     args = parser.parse_args()
 
-    plot(args.experiment)
+    try:
+        plot(args.experiment)
+    except:
+        print(f'Could not plot {args.experiment}, ignoring...')
