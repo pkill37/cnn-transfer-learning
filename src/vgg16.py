@@ -9,22 +9,22 @@ import data
 import helpers
 
 
-# VGG's original training conditions per https://arxiv.org/pdf/1409.1556.pdf
-LOSS = 'binary_crossentropy'
-METRICS = ['accuracy']
-OPTIMIZER = tf.keras.optimizers.SGD(lr=10e-4, momentum=0.9, decay=0.0, nesterov=False)
-LR_DECAY = 0.1
-L2 = 5*10e-4
-DROPOUT = 0.5
-BATCH_SIZE = 256
-MIN_DELTA = 10e-3
-
+EPSILON = 10e-3
 IMG_WIDTH = 224
 IMG_HEIGHT = 224
 IMG_CHANNELS = 3
 
+# VGG's original training conditions per https://arxiv.org/pdf/1409.1556.pdf
+LOSS = 'binary_crossentropy'
+METRICS = ['accuracy']
+OPTIMIZER = tf.keras.optimizers.SGD(lr=10e-4, momentum=0.9, decay=0.0, nesterov=False)
+LR_DECAY = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_acc', factor=0.1, patience=10, verbose=1, mode='max', min_delta=EPSILON, cooldown=0, min_lr=0)
+L2 = 10e-1
+DROPOUT = 0.8
+BATCH_SIZE = 64
 
-def vgg16(extract_until=21, freeze_until=21):
+
+def vgg16(extract_until, freeze_until):
     assert extract_until >= freeze_until
 
     # Extract and freeze pre-trained model layers
@@ -45,13 +45,13 @@ def vgg16(extract_until=21, freeze_until=21):
     return model
 
 
-def train(experiment, train, extract_until, freeze_until, epochs, bs):
+def train(experiment, train, extract_until, freeze_until, epochs):
     model = vgg16(extract_until, freeze_until)
     model.summary()
 
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(monitor='val_loss', min_delta=MIN_DELTA, patience=30, verbose=1, mode='min', baseline=None),
-        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=LR_DECAY, patience=10, verbose=1, mode='min', min_delta=MIN_DELTA, cooldown=0, min_lr=0),
+        LR_DECAY,
+        tf.keras.callbacks.EarlyStopping(monitor='loss', min_delta=EPSILON, patience=30, verbose=1, mode='min', baseline=None),
         tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(experiment, 'model.h5'), monitor='loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
         tf.keras.callbacks.CSVLogger(filename=os.path.join(experiment, 'train.csv'), separator=',', append=False),
     ]
@@ -64,7 +64,7 @@ def train(experiment, train, extract_until, freeze_until, epochs, bs):
         x=x_train,
         y=y_train,
         validation_data=(x_validation, y_validation),
-        batch_size=bs,
+        batch_size=BATCH_SIZE,
         epochs=epochs,
         verbose=1,
         callbacks=callbacks,
@@ -79,9 +79,8 @@ if __name__ == '__main__':
     parser.add_argument('--extract-until', type=int, required=True)
     parser.add_argument('--freeze-until', type=int, required=True)
     parser.add_argument('--epochs', type=int, required=True)
-    parser.add_argument('--bs', type=int, required=True)
     args = parser.parse_args()
 
     helpers.seed()
-    train(args.experiment, args.train, args.extract_until, args.freeze_until, args.epochs, args.bs)
+    train(args.experiment, args.train, args.extract_until, args.freeze_until, args.epochs)
     helpers.fix_layer0(os.path.join(args.experiment, 'model.h5'), (None, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), 'float32')

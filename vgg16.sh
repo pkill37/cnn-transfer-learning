@@ -18,8 +18,7 @@ for extract in 18 14 10 06 03; do
                               --train ./data/isic2018/224/train/train.npz \
                               --extract-until $extract \
                               --freeze-until $freeze \
-                              --epochs 500 \
-                              --bs 64
+                              --epochs 500
 
         python ./src/test.py --model $experiment/model.h5 \
                              --test ./data/isic2018/224/test/test.npz
