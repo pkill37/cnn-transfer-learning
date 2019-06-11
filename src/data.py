@@ -175,6 +175,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     x, y = process(args.images, args.descriptions, (args.target_size, args.target_size), args.target_samples)
-    x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, train_size=0.9, shuffle=True, stratify=y)
+    x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, train_size=0.85, shuffle=True, stratify=y)
     save(x_train, y_train, os.path.join(args.output, 'train'))
     save(x_test, y_test, os.path.join(args.output, 'test'))
