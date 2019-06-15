@@ -153,16 +153,14 @@ def process(images_path, descriptions_filename, target_img_size, target_m):
 
 def load(preprocessed_dataset_filename):
     dataset = np.load(preprocessed_dataset_filename)
-    x = dataset['x']
-    y = dataset['y']
-    return x, y
+    return dataset['x'], dataset['y']
 
 
 def save(x, y, output):
     np.savez_compressed(os.path.join(output, os.path.basename(output)), x=x, y=y)
-    for i, (x, y) in enumerate(zip(x, y)):
-        img = PIL.Image.fromarray(x.astype(np.uint8))
-        img.save(os.path.join(output, f'{i}_{y}.jpg'))
+    for i, (x_i, y_i) in enumerate(zip(x, y)):
+        img = PIL.Image.fromarray(x_i.astype(np.uint8))
+        img.save(os.path.join(output, f'{i}_{y_i}.jpg'))
 
 
 if __name__ == '__main__':
@@ -176,5 +174,7 @@ if __name__ == '__main__':
 
     x, y = process(args.images, args.descriptions, (args.target_size, args.target_size), args.target_samples)
     x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, train_size=0.85, shuffle=True, stratify=y)
+    del x
+    del y
     save(x_train, y_train, os.path.join(args.output, 'train'))
     save(x_test, y_test, os.path.join(args.output, 'test'))
