@@ -86,6 +86,8 @@
 %Math symbols
 \usepackage{amsmath}
 \usepackage{amssymb}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 
 %Graphics
 \usepackage{graphicx}
@@ -294,11 +296,12 @@
 %Line spacing: 1.5 pt
 \OnehalfSpacing
 
-%\include{chapters/introduction}
+\include{chapters/introduction}
 \include{chapters/sota}
+\include{chapters/neuralnetworks}
 \include{chapters/methodology}
-%\include{chapters/results}
-%\include{chapters/conclusion}
+\include{chapters/results}
+\include{chapters/conclusion}
 
 
 % End of Thesis text ---------------------------------------------------------

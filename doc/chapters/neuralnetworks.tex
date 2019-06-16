@@ -1,0 +1,276 @@
+\chapter{Neural Networks}
+\label{chapter:neuralnetworks}
+
+In this section we briefly go over some relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as the state-of-the-art work that we will review. It assumes basic knowledge of algorithms, calculus, and machine learning.
+
+\section{Supervised Learning}
+
+In a supervised learning problem our data has the correct output for every input.
+
+More formally, it is a problem in which we have $m$ labeled samples $(x^{(i)}, y^{(i)})$ where $x^{(i)} \in \mathbb{R}^n$ and $y^{(i)} \in \mathbb{R}^n$.
+
+\section{Training, Validation, and Test Sets}
+Lorem ipsum
+% TODO: reorder cross validation up here maybe
+
+\section{Loss Function}
+
+Let $L \colon \mathbb{R}^n \to \mathbb{R}$ be a function, called the loss function, which quantifies the quality of a particular set of parameters $\theta$ relative to a single data sample.
+
+Let $J \colon \mathbb{R}^n \to \mathbb{R}$ be a function, called the cost function, which quantifies the quality of a particular set of parameters $\theta$ relative to all the samples in the training set.
+
+$$
+J(\theta) = \frac{1}{m} \sum_{i=1}^{m} L(x^{(i)}, y^{(i)}, \theta)
+$$
+
+% TODO: examples of loss functions
+
+\section{Binary Classification}
+
+In a binary classification problem we have that,
+
+\begin{itemize}
+    \item $y^{(i)} \in \{0, 1\}$
+\end{itemize}
+
+
+\section{Optimization}
+
+Given a cost function $J$ and initial parameters $\theta$, the goal is to find the optimal $\theta^*$ that minimizes the cost function, i.e. the optimization objective is
+
+$$
+\theta^{*} = \argmin_{\theta} J(\theta)
+$$
+
+In the deep learning high-dimensional optimization landscape, the objective function is highly non-convex w.r.t. the parameters, so one can't use any of the tools from the convex optimization literature. Using calculus to find the minimum analytically is only feasible for trivial, low-dimensional, convex functions.
+
+\subsection{Brute-force Search}
+
+A naive first approach is to systematically and exhaustively enumerate and evaluate many candidate solutions while keeping track of the best one. This simple solution, arguably the simplest metaheuristic, is infeasible in the context of deep neural networks due to the curse of dimensionality.
+
+\subsection{Random Optimization}
+
+Rather than try all solutions exhaustively, another approach is to try random values of $\theta$ in a loop and record the running best until some stopping criteria.
+
+\subsection{Random Local Search}
+
+A slightly better strategy is to start with random $\theta$ and iteratively refine the best-found solution (hence the local in local search) until some stopping criteria.
+
+\subsection{Batch Gradient Descent}
+
+Random local search forms a good basis for optimization, but there is no need to move randomly in search-space. The negative of the gradient of the cost function $\nabla_{\theta} J(\theta)$ w.r.t. the parameters $\theta$ over all $m$ training samples gives the direction of steepest descent (i.e. the direction in which the cost function decreases):
+
+$$
+\nabla_{\theta} J(\theta) = \frac{1}{m} \sum_{i=1}^{m} \nabla_{\theta} L(x^{(i)}, y^{(i)}, \theta)
+$$
+
+A parameter $\eta \in \mathbb{{R}^{+}}$, called the learning rate, controls the size of the step to take in the direction of the gradient. Thus emerges a very simple and natural update rule for our parameters:
+
+$$
+\theta^{t+1} = \theta^t - \eta \nabla_{\theta} J(\theta)
+$$
+
+% TODO: needs a bit more
+The learning rate $\eta$ must be set carefully to ensure convergence.
+
+\subsection{Mini-Batch Gradient Descent}
+
+Computing the gradient $\nabla J$ with respect to all the $m$ training samples is computationally intensive for very big $m$. Instead $\nabla J_x$ for $m'$ randomly chosen training inputs. By averaging over this small sample it turns out that we can quickly get a good estimate of the true gradient $\nabla J$, and this helps speed up gradient descent, and thus learning.
+
+To make these ideas more precise, stochastic gradient descent works by randomly picking out a small number $m$ of randomly chosen training inputs. 
+
+\begin{eqnarray}
+  \frac{\sum_{j=1}^m \nabla C_{X_{j}}}{m} \approx \frac{\sum_x \nabla C_x}{n} = \nabla C,
+\end{eqnarray}
+
+% SGD is faster approximation
+
+\subsection{Stochastic Gradient Descent}
+
+Stochastic gradient descent can be seen as a special case of mini-batch gradient descent when the batch size is 1.
+
+% TODO: Explain briefly adaptive methods
+Gradient descent can be further developed into adaptive methods like Adam . See \cite{ruder2016}. However \cite{wilson2017} suggests that maybe pure SGD is a better idea and recommends best practices.
+
+\section{Initialization}
+
+The vector of parameters $\theta$ needs to be initialized, for which there are many strategies.
+
+Given a standardized input vector $x$ with zero mean and unit standard deviation, a reasonable approach would be to initialize all values of the vector $\theta$ to zero. However this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation, thus the gradients computed by backpropagation will also be the same and result in the same updates during gradient descent.
+
+However it is still desirable to have the parameter values be very small numbers close to zero.
+
+\section{Standardization}
+
+For some machine learning algorithms, optimization will not conv
+Some machine learning algorithms
+
+
+Since the range of values of raw data varies widely, in some machine learning algorithms, objective functions will not work properly without normalization. For example, the majority of classifiers calculate the distance between two points by the Euclidean distance. If one of the features has a broad range of values, the distance will be governed by this particular feature. Therefore, the range of all features should be normalized so that each feature contributes approximately proportionately to the final distance.
+
+Another reason why feature scaling is applied is that gradient descent converges much faster with feature scaling than without it.[1]
+
+n machine learning, we can handle various types of data, e.g. audio signals and pixel values for image data, and this data can include multiple dimensions. Feature standardization makes the values of each feature in the data have zero-mean (when subtracting the mean in the numerator) and unit-variance. This method is widely used for normalization in many machine learning algorithms (e.g., support vector machines, logistic regression, and artificial neural networks)[2][citation needed]. The general method of calculation is to determine the distribution mean and standard deviation for each feature. Next we subtract the mean from each feature. Then we divide the values (mean is already subtracted) of each feature by its standard deviation.
+
+$$
+x' = \frac{x - \bar{x}}{\sigma}
+$$
+
+Where $x$ is the original feature vector, $\bar{x}$ is the mean of that feature vector, and $\sigma$ is its standard deviation.
+
+\section{Class Imbalance}
+\label{subsection:classimbalance}
+
+It is said that a dataset has class imbalance when there is a significant difference between the number of samples of one class compared to other classes.
+
+In classification tasks it is common to see datasets in which classes are imbalanced, because it reflects the real world distribution (e.g. there are more benign cases of .
+
+%TODO: why?
+A lot of machine learning algorithms do not perform well under class imbalance. 
+
+In our binary classification task (melanoma vs non-melanoma) the $m$ samples in the training set are highly imbalanced:
+
+\begin{itemize}
+    \item the majority class $S_{maj}$ constitutes 89\% of the samples;
+    \item the minority class $S_{min}$ constitutes 11\% of the samples.
+\end{itemize}
+
+We have that $|S_{maj}| > |S_{min}|$ and $|S_{maj}| + |S_{min}| = m$. We want
+
+% TODO: class imbalance https://datascience.stackexchange.com/questions/44755/why-doesnt-class-weight-resolve-the-imbalanced-classification-problem
+An attractive first approach might be to use a weighted cost function that assigns weights to samples by taking into account their classes and , e.g.
+
+Let $C_i$ denote the total number of samples of the class which sample $i$ belongs to.
+$$
+J(\theta) = \sum_{i=1}^{m} \frac{1}{C_i} L(x^{(i)}, y^{(i)}, \theta)
+$$
+
+This is highly desirable because it only requires changing the optimization objective (i.e. the loss function), not the data itself, which is much easier and is why frameworks like Keras offer this facility which is quite useful from the perspective of a rapid development framework. However this approximation is only entirely valid when we are doing batch gradient descent where the batch size $b$ is the same as the number of samples.
+
+
+The approximation does not hold when $b < m$ because samples may appear in different batches.
+
+$$
+J(\theta) = \frac{1}{m} \sum_{i=1}^{m} L(x^{(i)}, y^{(i)}, \theta)
+$$
+
+\cite{haibo2009} provides a comprehensive survey of state-of-the-art class balancing algorithms, of which we have chosen to use oversampling of the minority class because it is the simplest and most natural. As an oversampling method we will augment the data as described in \ref{subsection:augmentation}.
+
+\section{L2 Regularization}
+
+% Source: http://mlwiki.org/index.php/Regularization#Cost_Function
+
+%When we find the optimum for our cost function J we have two goals:
+
+%we would like to fit the training data well
+%1st term of the expression reflects that:
+%∑mi=1(cost(hθ(x(i))),y(i))
+
+%we want to keep the parameters small
+%2nd term ensures that:
+%λ∑nj=1θ2j
+
+\section{Cross Validation}
+
+Often we want to tune the parameters of a model (for example, C in a support vector machine). That is, we want to find the value of a parameter that minimizes our loss function. The best way to do this is cross validation:
+
+1. Set the parameter you want to tune to some value.
+2. Split your data into K ‘folds’ (sections).
+3. Train your model using K-1 folds using the parameter value.
+4. Test your model on the remaining fold.
+5. Repeat steps 3 and 4 so that every fold is the test data once.
+6. Repeat steps 1 to 5 for every possible value of the parameter.
+7. Report the parameter that produced the best result.
+
+However, as Cawley and Talbot point out in their 2010 paper, since we used the test set to both select the values of the parameter and evaluate the model, we risk optimistically biasing our model evaluations. For this reason, if a test set is used to select model parameters, then we need a different test set to get an unbiased evaluation of that selected model.
+
+One way to overcome this problem is to have nested cross validations. First, an inner cross validation is used to tune the parameters and select the best model. Second, an outer cross validation is used to evaluate the model selected by the inner cross validation.
+
+% TODO: https://arxiv.org/pdf/1809.09446.pdf
+However fixed validation is sometimes okay.
+
+\section{Neuron}
+
+% TODO: definitely needs figure here, for illustration
+A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$ which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = f(\sum^{i=1}_{n} W_{i}x_{i} + b) = f(W^Tx + b)$.
+
+% TODO: table of common activation functions
+An activation function $f \colon \mathbb{R} \to \mathbb{R}$ must be differentiable for backpropagation to work. Sigmoid function is any bounded, differentiable, real function (e.g. logistic, tanh).
+The activation function $f$ is what characterizes the neuron. If the activation function $f$ is the step function, the neuron is reduced to the perceptron presented in 1950-1960 by Rosenblatt\cite{perceptron}.
+
+\section{Neural Network}
+
+Lorem ipsum
+
+\section{Convolutional Neural Network}
+
+To summarize, a convolutional layer:
+
+\begin{enumerate}
+    \item Accepts a volume of size $W_1 \times H_1 \times D_1$
+    \item Requires four hyperparameters:
+    \begin{enumerate}
+        \item Number of filters $K$,
+        \item their spatial extent $F$,
+        \item the stride $S$,
+        \item the amount of zero padding $P$.
+    \end{enumerate}
+    \item Produces a volume of size $W_2 \times H_2 \times D_2$ where:
+    \begin{enumerate}
+        \item $W_2 = H_2 = \frac{W_1 - F + 2P}{S} + 1$
+        \item $D_2 = K$
+    \end{enumerate}
+    \item With parameter sharing, it introduces $F F D_1$ weights per filter, for a total of $(F F D_1) K$ weights and $K$ biases.
+    \item In the output volume, the $d$-th depth slice (of size $W_2 \times H_2$) is the result of performing a valid convolution of the $d$-th filter over the input volume with a stride of $S$, and then offset by $d$-th bias.
+\end{enumerate}
+
+\section{Transfer Learning}
+
+Supervised training of deep neural networks requires vast amounts of labeled data, which is very expensive and time consuming in itself, as well as immense computational and time resources which is often equally or more expensive. In practice, transfer learning emerges as a technique that can be used to reduce the costs or time constraints of training these deep neural networks.
+
+Transfer learning is a machine learning technique that seeks to leverage (or transfer) the knowledge gained from solving one problem to another (ideally related) problem. In the context of deep neural networks it means to transfer the weights of a model trained on a very large dataset (e.g. ImageNet\cite{imagenet}) and re-purpose them for another model.
+
+% TODO: needs citations
+% TODO: assuming we wrote about CNNs briefly
+
+In image classification problems \ac{CNN} models are used to build progressively more specific feature maps in layers, where lower layers represent abstract, problem independent features (e.g. squares, circles) and higher layers represent specific, problem dependent features (e.g. car, dog). With that in mind, transfer learning for current state-of-the-art image classification techniques boils down to:
+
+\begin{enumerate}
+    \item choosing up to which layers should features be extracted
+    \item connecting it to a classifier
+    \item deciding which layers' weights should be trained (i.e. updated during gradient descent) and which should remain frozen (i.e. not updated during gradient descent)
+\end{enumerate}
+
+\subsection{Transfer Learning by Total Feature Extraction}
+
+In the simplest scenario:
+
+\begin{enumerate}
+    \item extract all the convolutional layers of the pre-trained model
+    \item freeze the weights of all the extracted layers
+    \item build a classifier on top of the extracted features and only train the weights of the classifier layers
+\end{enumerate}
+
+\subsection{Transfer Learning by Partial Feature Extraction}
+
+When the source and target domains are not very similar, extracting higher layers will yield features that are too specific to the source domain. For example, if the source domain is cars but the target domain is dogs, then the higher layers likely represent features very specific to dogs (e.g. dog eyes, dog tails, dog legs), whereas some arbitrary middle layer might represent more abstract shape-like features that can still be used as a solid starting point for the cars domain.
+
+For this reason it is often counter-productive to extract all the features. Instead features can be extracted up to an arbitrary middle layer which likely represents more useful features that are still relevant for the target domain. The precise point up to which features should be extracted needs to be studied and tested empirically for each problem and chosen based on whichever yields the highest generalization performance.
+
+Like the previous strategy, the classifier is built on top of the extracted features and only the weights of the classifier layers are trained.
+
+\subsection{Transfer Learning by Fine-Tuning}
+
+The weights of the extracted layers (regardless if they were all extracted or only partially) do not all need to remain frozen. Given sufficient computational and time resources, further training the weights of the extracted layers can yield even higher generalization performance because we are, in some sense, fine-tuning the weights of the extracted features to better fit the target dataset.
+
+For this fine-tuning one should be very careful and make sure to use a very slow (i.e. low) learning rate so as to not suddenly disrupt the learned features, because we are actually updating weights transfered from another model.
+
+\subsection{Classifier}
+
+The classifier is commonly based on:
+
+\begin{itemize}
+    \item Fully connected layers
+    \item Global average pooling
+    \item SVM
+\end{itemize}

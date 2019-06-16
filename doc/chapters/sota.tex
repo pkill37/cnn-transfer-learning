@@ -1,279 +1,34 @@
 \chapter{State of the Art}
 \label{chapter:sota}
 
-In this section we go over artificial neural networks.
+In this section we go over the cutting edge of deep learning techniques applied to skin lesion classification (or other related work) and present results.
 
-\section{Transfer Learning}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% INTRO
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Transfer learning emerges as a generalization of unsupervised pretraining techniques.
-
-The idea of representation learning is that the same representation may be useful in both settings. Using the same representation in both settings allows the representation to benefit from the training data that is available for both tasks
-
-Andrew Ng, renowned professor and data scientist, who has been associated with Google Brain, Baidu, Stanford and Coursera, recently gave an amazing tutorial in NIPS 2016 called ‘Nuts and bolts of building AI applications using Deep Learning’ where he mentioned,
-
-After supervised learning transfer learning will be the next driver of machine learning commercial success
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% DEFINITION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-In their paper, A Survey on Transfer Learning, Pan and Yang use domain, task, and marginal probabilities to present a framework for understanding transfer learning. The framework is defined as follows:
-
-Transfer learning involves the concepts of a domain and a task. A domain $\mathcal{D}$ consists of a feature space $\mathcal{X}$ and a marginal probability distribution $P(X)$ over the feature space $X = {x_1, \cdots, x_n} \in \mathcal{X}$.
-
-Given a domain $\mathcal{D} = \{\mathcal{X},P(X)\}$, a task $\mathcal{T}$ consists of a label space $\mathcal{Y}$ and a conditional probability distribution $P(Y|X)$ that is typically learned from the training data consisting of pairs $x_i \in X$ and $y_i \in \mathcal{Y}$.
-
-Given a source domain $\mathcal{D}_S$, a corresponding source task $\mathcal{T}_S$, as well as a target domain $\mathcal{D}_T$ and a target task $\mathcal{T}_T$, the objective of transfer learning now is to enable us to learn the target conditional probability distribution $P(Y_T|X_T)$ in $\mathcal{D}_T$ with the information gained from $\mathcal{D}_S$ and $\mathcal{T}_S$ where $\mathcal{D}_S \neq \mathcal{D}_T$ or $\mathcal{T}_S \neq \mathcal{T}_T$. In most cases a limited number of labeled target examples which is exponentially smaller than the number of labeled source examples are assumed to be availble.
-
-As both the domain $\mathcal{D}$ and the task $\mathcal{T}$ are defined as tuples, these inequalities give rise to four transfer learning scenarios, which we will discuss below.
-
-Given source and target domains $\mathcal{D}_S$ and $\mathcal{D}_T$ where $\mathcal{D} = \{\mathcal{X},P(X)\}$ and source and target tasks $\mathcal{T}_S$ and $\mathcal{T}_T$ where $\mathcal{T} = \{\mathcal{Y}, P(Y|X)\}$ source and target conditions can vary in four ways:
-
-\begin{enumerate}
-    \item $\mathcal{X}_S \neq \mathcal{X}_T$. The feature spaces of the source and target domain are different, e.g. the documents are written in two different languages. In the context of natural language processing, this is generally referred to as cross-lingual adaptation.
-    \item $P(X_S) \neq P(X_T)$. The marginal probability distributions of source and target domain are different, e.g. the documents discuss different topics. This scenario is generally known as domain adaptation.
-    \item $\mathcal{Y}_S \neq \mathcal{Y}_T$. The label spaces between the two tasks are different, e.g. documents need to be assigned different labels in the target task. In practice, this scenario usually occurs with scenario 4, as it is extremely rare for two different tasks to have different label spaces, but exactly the same conditional probability distributions
-    \item $P(Y_S|X_S) \neq P(Y_T|X_T)$. The conditional probability distributions of the source and target tasks are different, e.g. source and target documents are unbalanced with regard to their classes. This scenario is quite common in practice and approaches such as over-sampling, under-sampling, or SMOTE [7] are widely used..
-\end{enumerate}
-
-To answer the question of what to transfer across these categories, some of the following approaches can be applied:
-
-\begin{enumerate}
-    \item Instance transfer: Reusing knowledge from the source domain to the target task is usually an ideal scenario. In most cases, the source domain data cannot be reused directly. Rather, there are certain instances from the source domain that can be reused along with target data to improve results. In case of inductive transfer, modifications such as AdaBoost by Dai and their co-authors help utilize training instances from the source domain for improvements in the target task.
-    \item Feature-representation transfer: This approach aims to minimize domain divergence and reduce error rates by identifying good feature representations that can be utilized from the source to target domains. Depending upon the availability of labeled data, supervised or unsupervised methods may be applied for feature-representation-based transfers.
-    \item Parameter transfer: This approach works on the assumption that the models for related tasks share some parameters or prior distribution of hyperparameters. Unlike multitask learning, where both the source and target tasks are learned simultaneously, for transfer learning, we may apply additional weightage to the loss of the target domain to improve overall performance.
-    \item Relational-knowledge transfer: Unlike the preceding three approaches, the relational-knowledge transfer attempts to handle non-IID data, such as data that is not independent and identically distributed. In other words, data, where each data point has a relationship with other data points; for instance, social network data utilizes relational-knowledge-transfer techniques.
-\end{enumerate}
-
-The following table clearly summarizes the relationship between different transfer learning strategies and what to transfer.
-
-\subsection{Types of Deep Transfer Learning}
-
-\subsubsection{Domain Adaptation}
-\subsubsection{Domain Confusion}
-\subsubsection{Multitask Learning}
-\subsubsection{One-shot Learning}
-\subsubsection{Zero-shot Learning}
-
-\subsection{Deep Transfer Learning Strategies}
-
-\subsubsection{Off-the-shelf Pre-trained Models as Feature Extractors}
-\subsubsection{Fine Tuning Off-the-shelf Pre-trained Models}
-\subsubsection{Freezing or Fine-tuning?}
-\subsubsection{Pre Trained Models}
-
-\section{Supervised Learning}
-
-A supervised learning problem is one where we have $m$ labeled training samples $(x^{(i)}, y^{(i)})$ where $x^{(i)} \in \mathbb{R}^n$ and $y^{(i)} \in {0, 1}$.
-
-\ac{ANN} are most used in supervised learning, but can also be used in unsupervised learning problems.
-
-\section{Classification}
-
-In a classification problem, $J \colon \mathbb{R}^n \to \mathbb{R}$.
-
-\section{Cost Function}
-
-Let $L \colon \mathbb{R}^n \to \mathbb{R}$ be a function, called the loss function, which quantifies the quality of a particular set of parameters $\theta$ relative to a single data sample.
-
-Let $J \colon \mathbb{R}^n \to \mathbb{R}$ be a function, called the cost function, which quantifies the quality of a particular set of parameters $\theta$ relative to all the data samples in the training data.
-
-$$
-J(\theta) = \frac{1}{m} \sum_{i=1}^{m} L(x^{(i)}, y^{(i)}, \theta)
-$$
-
-\section{Initialization}
-
-The vector of parameters $\theta$ needs to be initialized, for which there are many strategies.
-
-Given a standardized input vector $x$ with zero mean and unit standard deviation, a reasonable approach would be to initialize all values of the vector $\theta$ to zero. However this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation, thus the gradients computed by backpropagation will also be the same and result in the same updates during gradient descent.
-
-However it is still desirable to have the parameter values be very small numbers close to zero.
-
-
-
-\section{Optimization}
-
-Given a cost function $J$ and initial parameters $\theta$, the goal is to find the optimal $\theta^*$ that minimizes the cost function, i.e. the optimization objective is 
-
-$$
-\theta^* = \argmin_{\theta} J(\theta)
-$$
-
-In the deep learning high-dimensional optimization landscape, the objective function is non-convex w.r.t. the parameters, so one can't use any of the tools from the convex optimization literature. Using calculus to find the minimum analytically is only feasible for trivial, low-dimensional, convex functions.
-
-\subsection{Brute-force Search}
-
-A naive first approach is to systematically and exhaustively enumerate and evaluate many candidate solutions while keeping track of the best one. This simple solution, arguably the simplest metaheuristic, is infeasible in the context of deep neural networks due to the curse of dimensionality.
-
-\subsection{Random Optimization}
-
-Rather than try all solutions exhaustively, another approach is to try random values of $\theta$ in a loop and record the running best until some stopping criteria.
-
-\subsection{Random Local Search}
-
-A slightly better strategy is to start with random $\theta$ and iteratively refine the best-found solution (hence the local in local search) until some stopping criteria.
-
-\subsection{Gradient Descent}
-
-Random local search forms a good basis for optimization, but there is no need to move randomly in search-space. The negative of the gradient of the cost function $\nabla_{\theta} J(\theta)$ w.r.t. the parameters $\theta$ over all $m$ training samples gives the direction of steepest descent (i.e. the direction in which the cost function decreases):
-
-$$
-\nabla_{\theta} J(\theta) = \frac{1}{m} \sum_{i=1}^{m} \nabla_{\theta} L(x^{(i)}, y^{(i)}, \theta)
-$$
-
-A parameter $\eta \in \mathbb{{R}^{+}}$ (called the learning rate) controls the size of the step to take in the direction of the gradient. Thus emerges a very simple and natural update rule for our parameters:
-
-$$
-\theta^{t+1} = \theta^t - \eta \nabla_{\theta} J(\theta)
-$$
-
-% TODO: needs a bit more
-The learning rate $\eta$ must be set carefully to ensure convergence.
-
-\subsection{Mini-Batch Gradient Descent}
-
-Computing the gradient $\nabla J$ with respect to all the $m$ training samples is computationally intensive. Instead $\nabla J_x$ for $m'$ randomly chosen training inputs. By averaging over this small sample it turns out that we can quickly get a good estimate of the true gradient $\nabla C$, and this helps speed up gradient descent, and thus learning.
-
-To make these ideas more precise, stochastic gradient descent works by randomly picking out a small number $m$ of randomly chosen training inputs. 
-
-\begin{eqnarray}
-  \frac{\sum_{j=1}^m \nabla C_{X_{j}}}{m} \approx \frac{\sum_x \nabla C_x}{n} = \nabla C,
-\end{eqnarray}
-
-% SGD is faster approximation
-
-\subsection{Stochastic Gradient Descent}
-
-Stochastic gradient descent can be seen as a special case of mini-batch gradient descent when the batch size is 1.
-
-
-
-% TODO: Explain briefly adaptive methods
-Gradient descent can be further developed into adaptive methods like Adam . See \cite{ruder2016}. However \cite{wilson2017} suggests that maybe pure SGD is a better idea and recommends best practices.
-
-\section{Comparison between gradient descent techniques}
-
-% https://datascience.stackexchange.com/questions/16807/why-mini-batch-size-is-better-than-one-single-batch-with-all-training-data
-
-The key advantage of using minibatch as opposed to the full dataset goes back to the fundamental idea of stochastic gradient descent1.
-
-In batch gradient descent, you compute the gradient over the entire dataset, averaging over potentially a vast amount of information. It takes lots of memory to do that. But the real handicap is the batch gradient trajectory land you in a bad spot (saddle point).
-
-In pure SGD, on the other hand, you update your parameters by adding (minus sign) the gradient computed on a single instance of the dataset. Since it's based on one random data point, it's very noisy and may go off in a direction far from the batch gradient. However, the noisiness is exactly what you want in non-convex optimization, because it helps you escape from saddle points or local minima(Theorem 6 in [2]). The disadvantage is it's terribly inefficient and you need to loop over the entire dataset many times to find a good solution.
-
-The minibatch methodology is a compromise that injects enough noise to each gradient update, while achieving a relative speedy convergence.
-
-%[1] Bottou, L. (2010). Large-scale machine learning with stochastic gradient descent. In Proceedings of COMPSTAT'2010 (pp. 177-186). Physica-Verlag HD.
-%[2] Ge, R., Huang, F., Jin, C., & Yuan, Y. (2015, June). Escaping From Saddle Points-Online Stochastic Gradient for Tensor Decomposition. In COLT (pp. 797-842).
-
-\section{Cross Validation}
-
-% https://chrisalbon.com/machine_learning/model_evaluation/nested_cross_validation/
-
-Often we want to tune the parameters of a model (for example, C in a support vector machine). That is, we want to find the value of a parameter that minimizes our loss function. The best way to do this is cross validation:
-
-1. Set the parameter you want to tune to some value.
-2. Split your data into K ‘folds’ (sections).
-3. Train your model using K-1 folds using the parameter value.
-4. Test your model on the remaining fold.
-5. Repeat steps 3 and 4 so that every fold is the test data once.
-6. Repeat steps 1 to 5 for every possible value of the parameter.
-7. Report the parameter that produced the best result.
-
-However, as Cawley and Talbot point out in their 2010 paper, since we used the test set to both select the values of the parameter and evaluate the model, we risk optimistically biasing our model evaluations. For this reason, if a test set is used to select model parameters, then we need a different test set to get an unbiased evaluation of that selected model.
-
-One way to overcome this problem is to have nested cross validations. First, an inner cross validation is used to tune the parameters and select the best model. Second, an outer cross validation is used to evaluate the model selected by the inner cross validation.
-
-
-
-\section{Neuron}
-
-% TODO: definitely needs figure here, for illustration
-A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$ which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = f(\sum^{i=1}_{n} W_{i}x_{i} + b) = f(W^Tx + b)$.
-
-An activation function $f \colon \mathbb{R} \to \mathbb{R}$ must be differentiable for backpropagation to work. Sigmoid function is any bounded, differentiable, real function (e.g. logistic, tanh).
-
-% TODO: table of common activation functions
-The activation function $f$ is what characterizes the neuron.
-
-% Explain why weights and biases matrix is declared the way it is (i.e. to take advantage of fast matrix math).
-By the way, it's this expression that motivates the quirk in the wljk notation mentioned earlier. If we used j to index the input neuron, and k to index the output neuron, then we'd need to replace the weight matrix in Equation (25) by the transpose of the weight matrix. That's a small change, but annoying, and we'd lose the easy simplicity of saying (and thinking) "apply the weight matrix to the activations".
-
-
-\subsubsection{Perceptron}
-
-If the activation function $f$ is the step function, the neuron is reduced to the perceptron presented in 1950-1960 by Rosenblatt [x]. However the step function is shit because
-
-Perceptron is the simplest neural network for classification of patterns that are linearly separable (which it is limited to).
-
-
-
-If patterns are linearly separable then perecptron learning algorithm converges and represents a decision hyperplane separating the two classes
-
-Patterns must be linearly separable in order to achieve accurate classification
-
-%--------
-
-We can see that there are two classification regions separated by a hyperplane in $m$-dimensional space:
-
-$$
-\sum_{j=1}^{m} w_j x_j + \theta = 0
-$$
-
-Neuron bias can be shown to be an additional input with a fixed value $1$ and weight $\theta$.
-
-Let $p+1$-dimensional input vector be:
-
-\begin{align}
-x &= \begin{bmatrix}
-    1 \\
-    x_{1} \\
-    x_{2} \\
-    \vdots \\
-    x_{p}
-    \end{bmatrix}
-\end{align}
-
-Let $p+1$-dimensional weight vector be:
-
-\begin{align}
-w &= \begin{bmatrix}
-    \theta \\
-    w_{1} \\
-    w_{2} \\
-    \vdots \\
-    w_{p}
-    \end{bmatrix}
-\end{align}
-
-The internal neuron activity $z$ is the dot product of the weight vector $w$ and input vector $x$:
-
-$$
-z = w^T \cdot x
-$$
-
-$w^T \cdot x = 0$ defines a hyperplane in $p$-dimensional space of coordinates $x_1$, $x_2$, ..., $x_p$. If two pattern classes are linearly separable there exists weight vector $w$ so that:
+\section{ISIC 2017 Part 3: Lesion Classification}
+In part 3 of the ISIC 2017 challenge participants were asked to develop two binary classifiers to distinguish between:
 
 \begin{itemize}
-    \item $w^T \cdot x \geq 0$ for each $x$ belonging to class $C_1$
-    \item $w^T \cdot x < 0$ for each $x$ belonging to $C_2$
+    \item melanoma vs nevus and seborrheic keratosis
+    \item seborrheic keratosis vs nevus and melanoma
 \end{itemize}
 
-The learning problem is to find a vector $w$ that provides such correct classification
+Participants were given a training set of 2000 images (374 melanoma, 254 seborrheic keratosis, and the remaining 1372 benign nevi), a validation set of 150 images and a test set of 600 images. The images were of questionable quality and required a lot of preprocessing effort, which they could also complement by gathering their own data. Participants were ranked and awarded based only on AUC, but other metrics were reported for scientific completeness.
 
-\section{Standardization}
+First place was a joint effort between Casio and Shinshu University presented by Kazuhisa Matsunaga et al\cite{isic2017first}. In their work they adopted ensembles of their own variant of ResNet-50 that they trained presumably end-to-end (using RMSProp\cite{rmsprop} and AdaGrad\cite{adagrad}) on data from the challenge as well as data they gathered independently, which was normalized in such a way to exploit color constancy and of which multiple geometric transformations were input in parallel to the networks.
 
-Since the range of values of raw data varies widely, in some machine learning algorithms, objective functions will not work properly without normalization. For example, the majority of classifiers calculate the distance between two points by the Euclidean distance. If one of the features has a broad range of values, the distance will be governed by this particular feature. Therefore, the range of all features should be normalized so that each feature contributes approximately proportionately to the final distance.
+The metadata available in the training set showed that melanoma and seborrheic keratosis were both uncommon in young ages. From this observation they implemented a simple thresholding by age, which improved performance for seborrheic keratosis classification from 0.957 to 0.960 AUC in cross-validation but not for melanoma classification. They noted that a more careful thresholding implementation is necessary from a clinical point of view. In the end, the mean performance of the two classifiers on the validation set was 0.958 AUC and, after the paper was published, 0.911 on the test set.
 
-Another reason why feature scaling is applied is that gradient descent converges much faster with feature scaling than without it.[1]
+Second place TODO
 
-n machine learning, we can handle various types of data, e.g. audio signals and pixel values for image data, and this data can include multiple dimensions. Feature standardization makes the values of each feature in the data have zero-mean (when subtracting the mean in the numerator) and unit-variance. This method is widely used for normalization in many machine learning algorithms (e.g., support vector machines, logistic regression, and artificial neural networks)[2][citation needed]. The general method of calculation is to determine the distribution mean and standard deviation for each feature. Next we subtract the mean from each feature. Then we divide the values (mean is already subtracted) of each feature by its standard deviation.
+Third place was an effort by Afonso Menegola et al\cite{isic2017second} from RECOD Lab. who collected several datasets which they cleaned and filtered, resulting in two sets of 9640 and 7544 images with differing performances on the two different binary classification tasks that they decided to keep in consideration throughout their experiments. They adopted a transfer learning approach and decided to focus on ResNet-101 and Inception-V4 models trained on ImageNet on top of which they experimented many things:
 
-{\displaystyle x'={\frac {x-{\bar {x}}}{\sigma }}} x' = \frac{x - \bar{x}}{\sigma}
+\begin{itemize}
+    \item Curriculum learning scheme in which they schedule the samples during training such that easier samples are batched first and harder samples are batched later. However in practice this was worse than a traditional learning scheme.
+\end{itemize}
 
-Where {\displaystyle x} x is the original feature vector, {\displaystyle {\bar {x}}={\text{average}}(x)} {\displaystyle {\bar {x}}={\text{average}}(x)} is the mean of that feature vector, and {\displaystyle \sigma } \sigma  is its standard deviation.
+\section{ISIC 2018 Part 3: Lesion Classification}
+
+First place.
+
+Second place.
+
+Third place.

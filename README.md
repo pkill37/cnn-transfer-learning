@@ -12,30 +12,25 @@ pip install -r requirements.txt
 
 ## Data
 
-1. Download the datasets from the [ISIC 2017](https://challenge.kitware.com/#challenge/n/ISIC_2017%3A_Skin_Lesion_Analysis_Towards_Melanoma_Detection) Part 3 challenge.
-
-2. Preprocess them to obtain the final compressed datasets.
-
 ```
-./data.sh
+./isic2018.sh
 ```
 
 ## Train
 
-Run the experiments:
-
 ```
-./experiments.sh
-```
-
-Monitor training:
-
-```
-./monitor.sh
+./train.sh $1 $2
 ```
 
 ## Test
 
 ```
-python ./src/test.py --model ./experiments/debug_1554919063/model.hdf5 --test ./data/vgg19_test/vgg19_test.npz
+./test.sh ./experiments_vgg16_base/
+```
+
+## Thesis
+
+```
+cd doc
+make
 ```
