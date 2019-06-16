@@ -14,7 +14,6 @@ import helpers
 CLASSES = ['Non Melanoma', 'Melanoma']
 
 
-# TODO: refactor this function
 def load(predictions):
     data = np.load(predictions)
     y_true = data['y_true']
@@ -102,6 +101,7 @@ def plot(experiment):
     plot_test_confusion_matrix(y_true, y_pred, os.path.join(experiment, 'test_confusion_matrix.png'))
     plot_test_classification_report(y_true, y_pred, os.path.join(experiment, 'test_classification_report.json'))
     plot_test_accuracy(y_true, y_pred, os.path.join(experiment, 'test_acc.txt'))
+    # TODO: plot learning curve
     # TODO: plot latex table
 
 

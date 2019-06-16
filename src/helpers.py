@@ -1,5 +1,8 @@
 import os
 import shutil
+import time
+
+import tensorflow as tf
 
 
 def is_dir(string):
@@ -81,3 +84,11 @@ def fix_layer0(filename, batch_input_shape, dtype):
 
 def has_parameters(layer):
     return len(layer.get_weights()) > 0
+
+
+class TrainingTimeLogger(tf.keras.callbacks.Callback):
+    def on_epoch_begin(self, batch, logs={}):
+        self.epoch_time_start = time.time()
+
+    def on_epoch_end(self, batch, logs={}):
+        logs['time'] = time.time() - self.epoch_time_start

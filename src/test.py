@@ -29,7 +29,7 @@ def test(model, test):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', type=helpers.is_file, required=True)
-    parser.add_argument('--test', type=helpers.is_file, required=True)
+    parser.add_argument('--test-set', type=helpers.is_file, required=True)
     args = parser.parse_args()
 
-    test(args.model, args.test)
+    test(args.model, args.test_set)
