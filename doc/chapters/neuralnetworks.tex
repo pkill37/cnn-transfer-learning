@@ -156,19 +156,63 @@ $$
 
 \cite{haibo2009} provides a comprehensive survey of state-of-the-art class balancing algorithms, of which we have chosen to use oversampling of the minority class because it is the simplest and most natural. As an oversampling method we will augment the data as described in \ref{subsection:augmentation}.
 
+\section{Bias-Variance Tradeoff}
+
+The goal of supervised learning is to find a function $\hat{f}(x)$ that approximates the true function $f(x)$ in the underlying relationship between the data $x$ and associated labels $y$. For this approximation to be useful it should simultaneously
+
+\begin{itemize}
+    \item accurately capture the training data
+    \item generalize to new data
+\end{itemize}
+
+It turns out this is very difficult to do simultaneously. Decomposition of the expectation $E$ of the error on an unseen sample $x$ yields
+
+$$
+{\displaystyle {\begin{aligned}\operatorname {E} &={\Big (}\operatorname {Bias} {\big [}{\hat {f}}(x){\big ]}{\Big )}^{2}+\operatorname {Var} {\big [}{\hat {f}}(x){\big ]}+\sigma ^{2}\\\end{aligned}}}
+$$
+
+where
+
+\begin{itemize}
+    \item the bias of the approximation is the error caused by the simplifying assumptions inherent to the approximation
+    \item the variance of the approximation is the error caused by how much the approximation $\hat{f}(x)$ will try to fit the data $x$ exactly
+    \item the error $\sigma^2$ is the variance of the noise within the data, which forms a lower bound on the expected error since all other equated terms are necessarily non-negative and the error $\sigma^2$ is irreducible
+\end{itemize}
+
+This formulation causes a tradeoff that models must make between bias and variance among the following possible scenarios:
+
+\begin{itemize}
+    \item high-variance low-bias models represent the training data well but risk overfitting to noise
+    \item low-variance high-bias models are simpler but risk underfitting the training data, failing to capture the underlying signal
+\end{itemize}
+
+An underfitting (low variance) problem can be identified when the training error is high and the validation error is roughly equally high, which can be fixed by
+
+\begin{itemize}
+    \item training with more features
+    \item decreasing regularization
+\end{itemize}
+
+On the other hand, an overfitting (high variance) problem can be identified when the training error is high and the validation error is comparatively much higher, which can be fixed by
+
+\begin{itemize}
+    \item training with more data
+    \item training with less features
+    \item increasing regularization
+\end{itemize}
+
 \section{L2 Regularization}
 
 % Source: http://mlwiki.org/index.php/Regularization#Cost_Function
-
 %When we find the optimum for our cost function J we have two goals:
+    %we would like to fit the training data well
+        %1st term of the expression reflects that:
+        %∑mi=1(cost(hθ(x(i))),y(i))
+    %we want to keep the parameters small
+        %2nd term ensures that:
+        %λ∑nj=1θ2j
 
-%we would like to fit the training data well
-%1st term of the expression reflects that:
-%∑mi=1(cost(hθ(x(i))),y(i))
-
-%we want to keep the parameters small
-%2nd term ensures that:
-%λ∑nj=1θ2j
+%Slides bias/variance as function of regularization parameter
 
 \section{Cross Validation}
 
