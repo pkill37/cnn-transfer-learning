@@ -6,7 +6,7 @@ script=$(echo "$1")
 
 # Where to store results
 timestamp=$(echo $(($(date +%s%N)/1000000)))
-name=$(echo $2)
+name=$(basename "$1" .py)
 experiments="experiments_${timestamp}_${name}"
 echo $experiments
 rm -rf $experiments && mkdir -p $experiments
