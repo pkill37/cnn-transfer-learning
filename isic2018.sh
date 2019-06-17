@@ -1,6 +1,5 @@
 #! /bin/bash
 set -euo pipefail
-. ./env/bin/activate
 
 # Download and unzip
 rm -rf ./data/isic2018/ && mkdir -p ./data/isic2018/

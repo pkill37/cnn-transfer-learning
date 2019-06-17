@@ -1,6 +1,5 @@
 #! /bin/bash
 set -euo pipefail
-. ./env/bin/activate
 
 experiments=$(echo "$1")
 mkdir -p $experiments

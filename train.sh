@@ -1,6 +1,5 @@
 #! /bin/bash
 set -euo pipefail
-. ./env/bin/activate
 
 # Which script to run
 script=$(echo "$1")
