@@ -94,11 +94,16 @@ Gradient descent can be further developed into adaptive methods like Adam . See 
 
 \section{Initialization}
 
-The vector of parameters $\theta$ needs to be initialized, for which there are many strategies.
+Optimization algorithms for deep learning are usually iterative, hence the matrix $\theta$ needs to be initialized. This initialization determines how quickly optimization converges or whether it converges at all, which is why it is so important.
 
-Given a standardized input vector $x$ with zero mean and unit standard deviation, a reasonable approach would be to initialize all values of the vector $\theta$ to zero. However this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation, thus the gradients computed by backpropagation will also be the same and result in the same updates during gradient descent.
+A reasonable first approach would be to initialize all values of the matrix $\theta$ to zero. However this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation (assuming all neurons use the same activation function), thus the gradients computed by backpropagation will also be the same and result in the exact same updates during gradient descent. Therefore parameters must be chosen in such a way that they break this symmetry, which is what motivates the use of random initialization. However simply drawing random parameters (e.g. from a Gaussian distribution with 0 mean and 1 standard deviation) might result in too small or too big parameter values and very wide in range which originate a vanishing or exploding gradient problem where different layers effectively learn at different speeds.
 
-However it is still desirable to have the parameter values be very small numbers close to zero.
+Modern initialization techniques are heuristic based and designed around the activation functions themselves to counter these problems by, essentially, guaranteeing the activations mean to be $0$ and the activations variance to be the same across different layers. Under these conditions the backpropagated gradient will not be multiplied by very small or very big values (which would lead to vanishing or exploding problems, respectively). Specifically,
+
+\begin{itemize}
+    \item for tanh activation functions, Xavier et al.\cite{xavierinit} recommends drawing parameters from either $\mathcal{N}(0, \frac{1}{n_{in}})$ or $\mathcal{N}(0, \frac{2}{n_{in}+n_{out}})$ where $n_{in}$ is the number of input neurons and $n_{out}$ the number of output neurons in that layer;
+    \item for ReLU activation functions, He et al.\cite{heinit} suggests drawing from $\mathcal{N}(0, \frac{2}{n_{in}})$.
+\end{itemize}
 
 \section{Standardization}
 
@@ -125,8 +130,7 @@ It is said that a dataset has class imbalance when there is a significant differ
 
 In classification tasks it is common to see datasets in which classes are imbalanced, because it reflects the real world distribution (e.g. there are more benign cases of .
 
-%TODO: why?
-A lot of machine learning algorithms do not perform well under class imbalance. 
+A lot of machine learning algorithms do not perform well under class imbalance.
 
 In our binary classification task (melanoma vs non-melanoma) the $m$ samples in the training set are highly imbalanced:
 
