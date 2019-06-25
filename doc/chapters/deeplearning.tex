@@ -1,7 +1,7 @@
-\chapter{Neural Networks}
-\label{chapter:neuralnetworks}
+\chapter{Deep Learning}
+\label{chapter:deeplearning}
 
-In this section we briefly go over some relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as the state-of-the-art work that we will review. It assumes basic knowledge of algorithms, calculus, and machine learning.
+In this section we briefly go over some relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as the state-of-the-art work that we will review in \ref{chapter:sota}. It assumes basic knowledge of calculus, algorithms, and machine learning.
 
 \section{Supervised Learning}
 
@@ -205,18 +205,55 @@ On the other hand, an overfitting (high variance) problem can be identified when
     \item increasing regularization
 \end{itemize}
 
-\section{L2 Regularization}
+\section{Regularization}
 
-% Source: http://mlwiki.org/index.php/Regularization#Cost_Function
-%When we find the optimum for our cost function J we have two goals:
-    %we would like to fit the training data well
-        %1st term of the expression reflects that:
-        %∑mi=1(cost(hθ(x(i))),y(i))
-    %we want to keep the parameters small
-        %2nd term ensures that:
-        %λ∑nj=1θ2j
+In the optimization literature, regularization is seen as a modification $J_R(\theta)$ to the original objective function $J(\theta)$ that penalises large parameter values $\theta$ using some criteria $R(\theta)$ such that
 
-%Slides bias/variance as function of regularization parameter
+$$
+J_R(\theta) = J(\theta) + R(\theta)
+$$
+
+which, in a sense, redefines the optimization goal to simultaneously
+
+\begin{itemize}
+    \item fit the training data well (i.e. the $J(\theta$ term) and
+    \item keep the parameters small (i.e. the $R(\theta)$ term).
+\end{itemize}
+
+In the case of L1 regularization, also known as Lasso Regression,
+
+$$
+R(\theta) = \lambda \sum_{j=1}^{n} |x_j|
+$$
+
+which in essence
+
+\begin{itemize}
+    \item penalizes the absolute value of parameters, which tends to shrink parameters to be close to zero;
+    \item effectively does feature selection because some of the parameters can be zero;
+    \item consequently produces sparse matrices of parameters, which can be relevant;
+    \item generally produces simpler and interpretable models.
+\end{itemize}
+
+Whereas in the case of L2 regularization, also known as Ridge Regression,
+
+$$
+R(\theta) = \lambda \sum_{j=1}^{n} x_j^2
+$$
+
+which basically
+
+\begin{itemize}
+    \item penalizes the sum of squared parameters, which tends to shrink parameters to be close to zero;
+    \item does not do feature selection and does not produce sparse matrices;
+    \item generally produces more complex models.
+\end{itemize}
+
+In practice, we control the regularization strength via the $\lambda$ parameter. Put simply, in a high variance (overfitting) scenario we should increase $\lambda$ and in a high bias (underfitting) situation we should decrease $\lambda$.
+
+More recently, Dropout\cite{dropout} is another regularization technique designed specifically to prevent neural networks from overfitting by randomly dropping neuron (and their connections) from the network during training which prevents complex co-adaptations on training data.
+
+\citeauthor{regularizationsurvey} present a much broader and more modern view of regularization in machine learning in their \citeyear{regularizationsurvey} paper\cite{regularizationsurvey}, where they define regularization more abstractly as any technique that allows the model to generalize better (i.e. perform better on the test set). They go over implicit regularization via data augmentation, network architecture, and the optimization algorithm itself as well as various explicit regularization techniques that penalize large weights (e.g. L1 and L2 regularization).
 
 \section{Cross Validation}
 
