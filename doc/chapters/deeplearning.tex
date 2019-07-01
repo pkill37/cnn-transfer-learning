@@ -81,7 +81,7 @@ $$
 
 This idea is interchangeably referred to as mini-batch gradient descent or \ac{SGD} (in some literature only when $m' = 1$).
 
-More recently, gradient descent methods have been further developed to find individual learning rates per parameter which are adapted using estimations of the first and second moments of the gradient. \citeauthor{ruder2016} \cite{ruder2016} present an extensive review of these adaptive variations of gradient descent. Despite the popularity of these methods, sometimes they offer marginal value versus the classic \ac{SGD}. Wilson et al. \cite{wilson2017} show that the solutions found by adaptive methods usually generalize worse when compared to \ac{SGD}, which suggests that machine learning practicioners should reconsider the use of adaptive methods and try other methods too.
+More recently, gradient descent methods have been further developed to find individual learning rates per parameter which are adapted using estimations of the first and second moments of the gradient. \citeauthor{ruder2016} \cite{ruder2016} presents an extensive review of these adaptive variations of gradient descent. Despite the popularity of these methods, sometimes they offer marginal value versus the classic \ac{SGD}. Wilson et al. \cite{wilson2017} show that the solutions found by adaptive methods usually generalize worse when compared to \ac{SGD}, which suggests that machine learning practicioners should reconsider the use of adaptive methods and try other methods too.
 
 \section{Initialization}
 
@@ -100,7 +100,6 @@ Modern initialization techniques are heuristic based and designed around the act
 
 For some machine learning algorithms, optimization will not conv
 Some machine learning algorithms
-
 
 Since the range of values of raw data varies widely, in some machine learning algorithms, objective functions will not work properly without normalization. For example, the majority of classifiers calculate the distance between two points by the Euclidean distance. If one of the features has a broad range of values, the distance will be governed by this particular feature. Therefore, the range of all features should be normalized so that each feature contributes approximately proportionately to the final distance.
 
@@ -267,16 +266,92 @@ However fixed validation is sometimes okay.
 
 \section{Neuron}
 
-% TODO: definitely needs figure here, for illustration
-A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$ which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = f(\sum^{i=1}_{n} W_{i}x_{i} + b) = f(W^Tx + b)$.
+% TODO: switchup to effectively introduce W,b notation here, problem solved
+A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$ which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = f(\sum^{i=1}_{n} W_{i}x_{i} + b) = f(W^Tx + b)$. Or, if we use homogeneous coordinates, it can be said to be parametrized by a single matrix $\theta$ and outputs $h_{\theta} = f(\theta x)$.
 
 % TODO: table of common activation functions
-An activation function $f \colon \mathbb{R} \to \mathbb{R}$ must be differentiable for backpropagation to work. Sigmoid function is any bounded, differentiable, real function (e.g. logistic, tanh).
+An activation function $f \colon \mathbb{R} \to \mathbb{R}$ must be differentiable for backpropagation \ref{subsection:backwardpass} to work. Sigmoid function is any bounded, differentiable, real function (e.g. logistic, tanh).
 The activation function $f$ is what characterizes the neuron. If the activation function $f$ is the step function, the neuron is reduced to the perceptron presented in 1950-1960 by Rosenblatt\cite{perceptron}.
 
 \section{Neural Network}
 
-Lorem ipsum
+Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to our data and are composed of several neurons.
+
+\subsection{Forward Pass}
+
+An $L$-layer neural network's activations can be recursively defined
+
+$$
+a^{l} =
+\begin{dcases}
+    f(W^{l-1}a^{l-1} + b^{l-1}),& \text{if } 1 < l \leq L\\
+    x,              & \text{if } l = 1
+\end{dcases}
+$$
+
+Let us also define the weighted inputs to the activation function, which is of importance when deriving the backpropagation equations.
+
+$$
+z^{l} = W^{l-1}a^{l-1} + b^{l-1}
+$$
+
+\subsection{Backward Pass}
+
+Backpropagation is a way of computing the gradient through recursive application of the chain rule from calculus.
+
+A network should be able to infer the right outputs given the right weights and biases. To learn these correct weights and biases, the network must be able to adjust them.
+
+Small changes in weights $\Delta w_j$ and biases $\Delta b$ should only cause small changes in neuron output $\Delta a^L_i$. This is in fact the case. By the tangent line approximation
+
+$$
+\Delta a^L_i \approx \sum_j \frac{\partial a^L_i}{\partial w_j} \Delta w_j + \frac{\partial a^L_i}{\partial b} \Delta b
+$$
+
+Backpropagation is about understanding how changing the weights and biases in a network changes the cost function, which is precisely represented by $\frac{\partial C}{\partial w^l_{jk}}$ and $\frac{\partial C}{\partial b^l_j}$.
+
+But to compute those, we first introduce an intermediate quantity, $\delta^l_j$, which we call the error in the $j$th neuron in the $l$th layer. Backpropagation will give us a procedure to compute the error $\delta^l_j$, which will then relate $\delta^l_j$ to $\frac{\partial C}{\partial w^l_{jk}}$ and $\frac{\partial C}{\partial b^l_j}$.
+
+
+%% TODO: refactor, word engineering
+
+The intuition behind the backpropagation algorithm is as follows. Given a training example $(x, y)$ we will first run a forward pass to compute all the activations throughout the network, namely the output of the network $h_{W,b}(x)$. Then, for each node $i$ in layer $l$, we would like to compute the error $\delta^{l}_i$ as a measure of how much that node was responsible for the error in the output $\delta^{L}_i$. For any of the nodes at the output of the neural network, this can be directly measured as the difference between the activation of a node and the labeled value.
+The error that
+
+Backpropagation relies on two important assumptions about the cost function:
+
+\begin{itemize}
+    \item it can be written as an average of cost per individual training sample $x$, i.e. $C = \frac{1}{m} \sum_x C_x$, because backpropagation can only compute $\frac{\partial C_x}{\partial w}$  and $\frac{\partial C_x}{\partial b}$ for a single training example $x$ which can then be averaged to obtain $\frac{\partial C}{\partial w}$  and $\frac{\partial C}{\partial b}$.
+    \item it can be written as a function of the output at the neural network, i.e. $C = C(a^{L})$, which it otherwise
+\end{itemize}
+
+
+The error at the output layer $L$ is given by:
+
+$$
+\delta^L = \nabla_{a^L} C(a^L) \odot \sigma'(z^L)
+$$
+
+The error at an arbitrary hidden layer $l$ is given in terms of the error in layer $l+1$:
+
+$$
+\delta^l = ((w^{l+1})^T \delta^{l+1}) \odot \sigma'(z^L)
+$$
+
+Finally we can relate the error back to the gradient we wanted to compute:
+
+$$
+\frac{\partial C}{\partial b^l_j} = \delta^l_j
+$$
+
+$$
+\frac{\partial C}{\partial w^l_{jk}} = a^{l-1}_k \delta^l_j
+$$
+
+The gradient descent update rules then become:
+
+$$
+1337
+$$
 
 \section{Convolutional Neural Network}
 
@@ -300,14 +375,25 @@ To summarize, a convolutional layer:
     \item In the output volume, the $d$-th depth slice (of size $W_2 \times H_2$) is the result of performing a valid convolution of the $d$-th filter over the input volume with a stride of $S$, and then offset by $d$-th bias.
 \end{enumerate}
 
+AlexNet\cite{alexnet} won the ImageNet Large Scale Visual Recognition Challenge \cite{imagenet} in 2012 by a very large margin, introducing a breakthrough in computer vision which proved that learned features could be better than hand-designed features chosen heuristically. The network employed an 8-layer \ac{CNN} that stacked many convolutional layers producing progressively smaller convolutional windows, followed by two fully-connected layers with 4096 outputs and finally a softmax layer for classification in ImageNet. In its design they also used Dropout regularization and the ReLU activation function, which today are very popular and essential tools in deep learning.
+
+Later the \ac{VGG} further pushed the state-of-the-art by designing an architecture that used repeated blocks of layers to build progressively more abstract features, shifting thinking in terms of layers to blocks. This basic building block consists of
+
+\begin{enumerate}
+    \item a convolutional layer with padding to maintain resolution
+    \item a nonlinearity (i.e. ReLU)
+    \item pooling for downsampling the features
+\end{enumerate}
+
+In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convolutions and $2 \times 2$ max pooling with stride $S = 2$, essentially halving the resolution after each one of these blocks.
+
+GoogLeNet\cite{inceptionv1} (also known as Inception V1) won the ImageNet Large Scale Visual Recognition Challenge \cite{imagenet} in 2014 which introduced the Inception block that establishes four parallel paths that use convolutional layers of different windows and max pooling layers. Furthermore it exhibited lower computational complexity when compared to other models with similar generalization performance. This influenced many later versions of Inception \cite{inceptionv2_3}\cite{inceptionv4}.
+
 \section{Transfer Learning}
 
 Supervised training of deep neural networks requires vast amounts of labeled data, which is very expensive and time consuming in itself, as well as immense computational and time resources which is often equally or more expensive. In practice, transfer learning emerges as a technique that can be used to reduce the costs or time constraints of training these deep neural networks.
 
 Transfer learning is a machine learning technique that seeks to leverage (or transfer) the knowledge gained from solving one problem to another (ideally related) problem. In the context of deep neural networks it means to transfer the weights of a model trained on a very large dataset (e.g. ImageNet\cite{imagenet}) and re-purpose them for another model.
-
-% TODO: needs citations
-% TODO: assuming we wrote about CNNs briefly
 
 In image classification problems \ac{CNN} models are used to build progressively more specific feature maps in layers, where lower layers represent abstract, problem independent features (e.g. squares, circles) and higher layers represent specific, problem dependent features (e.g. car, dog). With that in mind, transfer learning for current state-of-the-art image classification techniques boils down to:
 
