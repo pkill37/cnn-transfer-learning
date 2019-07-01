@@ -1,13 +1,11 @@
 import os
 import re
-import itertools
 import argparse
 import csv
 import json
 
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
 import sklearn.metrics
 
 import helpers
