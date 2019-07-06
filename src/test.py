@@ -65,6 +65,7 @@ def reduce(experiment):
     csv_stats = read_csv(os.path.join(experiment, 'train.csv'))
 
     return {
+        'id': experiment,
         'hyperparameters': hyperparameters_from_dirname(os.path.basename(experiment)),
         'train_loss': csv_stats['loss'],
         'val_loss': csv_stats['val_loss'],
@@ -76,12 +77,13 @@ def reduce(experiment):
 
 
 def main(experiments, test_set):
-    stats = {}
+    stats = []
     subdirs = next(os.walk(experiments))[1]
 
     for subdir in subdirs:
         test(os.path.join(experiments, subdir, 'model.h5'), test_set)
-        stats[subdir] = reduce(os.path.join(experiments, subdir))
+        stats.append(reduce(os.path.join(experiments, subdir)))
+
         with open(os.path.join(experiments, 'stats.json'), 'w') as f:
             json.dump(stats, f)
 
