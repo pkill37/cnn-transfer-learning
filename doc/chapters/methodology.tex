@@ -62,12 +62,12 @@ We are skeptical of transfer learning, thus our overarching goal is to conclude 
 \subsection{Transfer Learning Experiments}
 \label{subsection:transferlearningexperiments}
 
-In our transfer learning approach we take models of VGG16 \cite{vgg16} and InceptionV3\cite{inceptionv3} architectures pre-trained on ImageNet \cite{imagenet} and transfer the weights to a new model based on techniques we introduced in \ref{section:transferlearning}.
+In our transfer learning approach we take models of VGG16 \cite{vgg16} and InceptionV3\cite{inceptionv2_3} architectures pre-trained on ImageNet \cite{imagenet} and transfer the weights to a new model based on techniques we introduced in \ref{section:transferlearning}.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\textwidth]{figs/vgg16.jpg}
-    \caption{VGG16 architecture, taken from https://neurohive.io}
+    \caption{VGG16 architecture, from neurohive.io}
     \label{fig:vgg16}
 \end{figure}
 
@@ -105,9 +105,11 @@ For comparison, in the second set of experiments we design a custom architecture
     \item Explicit L2 regularization with $\lambda$
 \end{itemize}
 
+Parameters are initialized according to Xavier initialization\cite{xavierinit}.
+
 \section{Evaluation}
 
-Classifiers will be evaluated and compared using F1-score \ref{chapter:binary_classification_metrics}.
+Classifiers will be evaluated and compared using F1-score.
 
 \section{Hardware}
 
@@ -119,4 +121,8 @@ There is a growing demand for domain-specific hardware designed specifically for
 
 The CPU does little useful computation in a deep learning application where most of the computation is delegated to the GPU.
 
-% TODO: describe machines we used
+TODO: describe machines we used, deeplar, irislab
+
+\section{Software}
+
+TensorFlow, Keras API, conda, environment

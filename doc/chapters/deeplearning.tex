@@ -1,38 +1,82 @@
 \chapter{Deep Learning}
 \label{chapter:deeplearning}
 
-In this section we briefly go over some relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as the state-of-the-art work that we will review in \ref{chapter:sota}. It assumes basic knowledge of calculus, algorithms, and machine learning.
+In this section we briefly go over some relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as the state-of-the-art work that we will review in chapter \ref{chapter:sota}.
 
 \section{Supervised Learning}
 
-In a supervised learning problem our data has the correct output for every input.
+In a supervised learning problem the data has the correct expected output for every input.
 
-More formally, it is a problem in which we have $m$ labeled samples $(x^{(i)}, y^{(i)})$ where $x^{(i)} \in \mathbb{R}^n$ and $y^{(i)} \in \mathbb{R}^n$.
+More formally, it is a problem in which there are $m$ labeled pairs $(x^{(i)}, y^{(i)})$, also denoted as samples, where $x^{(i)} \in \mathbb{R}^n$ (i.e. the input vectors, commonly referred to as features) and $y^{(i)} \in \mathbb{R}^n$ (i.e. the corresponding output vector, usually called the target or label) which have some relationship expressed by some function.
 
-\section{Training, Validation, and Test Sets}
-Lorem ipsum
-% TODO: reorder cross validation up here maybe
+The goal of supervised learning is to find a function $h_{\theta}(x)$ (sometimes called the hypothesis) that usefully approximates the true function in the underlying relationship between the input $x$ and associated output $y$.
 
-\section{Loss Function}
+\section{Training, Validation, and Test}
 
-Let $L \colon \mathbb{R}^n \to \mathbb{R}$ be a function, called the loss function, which quantifies the quality of a particular set of parameters $\theta$ relative to a single data sample.
+In machine learning, the data samples are commonly split into three separate sets with different intents and used exclusively for that purpose:
 
-Let $J \colon \mathbb{R}^n \to \mathbb{R}$ be a function, called the cost function, which quantifies the quality of a particular set of parameters $\theta$ relative to all the samples in the training set.
+\begin{itemize}
+    \item Training Set: samples used for actually fitting the model's parameters (e.g. weights and biases of a neural network);
+    \item Validation Set: samples used to select the best model by testing different sets of hyperparameters or architectures;
+    \item Test Set: samples used to assess the final performance of the final model.
+\end{itemize}
 
-$$
-J(\theta) = \frac{1}{m} \sum_{i=1}^{m} L(x^{(i)}, y^{(i)}, \theta)
-$$
+It is important to follow this hierarchy carefully and not use the different sets for the different tasks interchangeably. As \citeauthor{crossvalidationbias} point out in their \citeyear{crossvalidationbias} paper, if, for example, we use the test set to simultaneously tune hyperparameters and assess its generalization performance we risk optimistically biasing the model. As such, if we use any one set to tune hyperparameters, we must use a different set for evaluation to get an unbiased assessment of the model's generalization performance.
 
-% TODO: examples of loss functions
+However, this technique (typically referred to as the holdout method) has its downsides:
+
+\begin{itemize}
+    \item using an arbitrary fixed split of the dataset means that we are completely setting aside data for validation and testing which will not be used for fitting the model and vice versa, thus wasting data in some sense
+    \item without averaging over multiple runs (i.e. different splits) with different initial conditions, results may be biased and misleading
+\end{itemize}
+
+$K$-fold cross-validation is a common cross-validation technique that randomly partitions the data into $K$ equally sized subsamples, of which a single subsample is used for testing and the remaining $K-1$ subsamples for fitting the model, a process which is repeated $K$ times to yield $K$ performance estimations that can be averaged over to produce one estimation that can be referred to. In this way all samples are used for training and testing, which is an advantage over repeated random sub-sampling which does not systematically use all samples for training and testing.
+
+Nested cross-validation techniques are required when, in addition to estimating a model's generalization performance (i.e. performance on the test set), it is also necessary to select the best model among many (e.g. with different hyperparameters)\cite{crossvalidationbias}. A truly nested variant will use an inner loop of $L$ folds to tune the hyperparameters and select the best model, and an outer loop of $K$ folds to evaluate the models selected by the inner loop. A simpler (albeit not really nested) will follow a scheme similar to the $K$-fold cross-validation we described above, except that, of the $K$ equally sized subsamples, we take 1 subsample for validation, another 1 subsample for testing, and the remaining $K-2$ subsamples are used for training. However, in practice, nested cross-validation when selecting classifiers is overzealous and too expensive for most applications\cite{nestedcvoverzealous}.
 
 \section{Binary Classification}
 
-In a binary classification problem we have that,
+In general, let
 
 \begin{itemize}
-    \item $y^{(i)} \in \{0, 1\}$
+    \item $L \colon \mathbb{R}^n \to \mathbb{R}$ be a function, called the loss function, which quantifies the quality of a particular set of parameters $\theta$ relative to a single data sample $(x^{(i)}, y^{(i)})$;
+    \item $J \colon \mathbb{R}^n \to \mathbb{R}$ be a function, called the cost function, which quantifies the quality of a particular set of parameters $\theta$ relative to all the $m$ samples in the training set. $$J(\theta) = \frac{1}{m} \sum_{i=1}^{m} L(h_{\theta}(x^{(i)}), y^{(i)})$$
 \end{itemize}
 
+The linear regression cost function can be easily understood as the summation of the differences between the predictions and the ground truth labels:
+
+$$
+J(\theta) = \frac{1}{2m} \sum_{i=1}^{m} (h_{\theta}(x^{(i)}) - y^{(i)})^2
+$$
+
+In a binary classification problem specifically we have that $y^{(i)} \in \{0, 1\}$. Unfortunately, as it turns out, the linear regression cost function is unsuitable for binary classification because it would be a non-convex function with many local minima, which in turn would make optimization very difficult.
+
+Essentially, binary classification requires a cost function that penalizes very confident wrong predictions and rewards confident and right predictions, i.e.,
+
+\begin{itemize}
+    \item if the prediction is $h_{\theta}(x) = 0$ and the ground-truth label is $y = 0$, $J(\theta)$ is low;
+    \item if the prediction is $h_{\theta}(x) = 0$ and the ground-truth label is $y = 1$, $J(\theta)$ is high;
+    \item if the prediction is $h_{\theta}(x) = 1$ and the ground-truth label is $y = 0$, $J(\theta)$ is high;
+    \item if the prediction is $h_{\theta}(x) = 1$ and the ground-truth label is $y = 1$, $J(\theta)$ is low.
+\end{itemize}
+
+Whereas in linear regression the hypothesis is of the form $h_{\theta} = \theta^Tx$, in binary classification (or logistic regression) the hypothesis is of the form $h_{\theta}(x) = \sigma(\theta^Tx)$ to squash predictions to the interval $[0, 1]$, hence the name logistic regression, because it uses the sigmoid-shaped logistic function $\sigma(z) = \frac{1}{1 + e^{-z}}$.
+
+A useful loss function (sometimes called binary cross-entropy in some literature) for logistic regression that takes these requirements into consideration is
+
+$$
+L(h_{\theta}(x^{(i)}), y^{(i)}) =
+\begin{dcases}
+    -\log(h_{\theta}(x^{(i)})),& \text{if } y^{(i)} = 1\\
+    -\log(1 - h_{\theta}(x^{(i)})),& \text{if } y^{(i)} = 0
+\end{dcases}
+$$
+
+or, cleverly arranging things algebraically,
+
+$$
+J(\theta) = -\frac{1}{m} \sum_{i=0}^{m} ( y^{(i)}\log(h_{\theta}(x^{(i)})) + (1 - y^{(i)})\log(1 - h_{\theta}(x^{(i)})) )
+$$
 
 \section{Optimization}
 
@@ -61,7 +105,7 @@ A slightly better strategy is to start with random $\theta$ and iteratively refi
 Random local search forms a good basis for optimization, but there is no need to move randomly in search-space. The negative of the gradient of the cost function w.r.t. the parameters $\theta$ over all $m$ training samples gives the direction of steepest descent (i.e. the direction in which the cost function decreases):
 
 $$
-\nabla_{\theta} J(\theta) = \frac{1}{m} \sum_{i=1}^{m} \nabla_{\theta} L(x^{(i)}, y^{(i)}, \theta)
+\nabla_{\theta} J(\theta) = \frac{1}{m} \sum_{i=1}^{m} \nabla_{\theta} L(h_{\theta}(x^{(i)}), y^{(i)})
 $$
 
 A parameter $\eta \in \mathbb{{R}^{+}}$, called the learning rate, controls the size of the step to take in the direction of the gradient.
@@ -118,9 +162,7 @@ Where $x$ is the original feature vector, $\bar{x}$ is the mean of that feature 
 
 It is said that a dataset has class imbalance when there is a significant difference between the number of samples of one class compared to other classes.
 
-In classification tasks it is common to see datasets in which classes are imbalanced, because it reflects the real world distribution (e.g. there are more benign cases of .
-
-A lot of machine learning algorithms do not perform well under class imbalance.
+In classification tasks it is common to see datasets in which classes are highly imbalanced, simply because it reflects the real world distribution (e.g. there are more benign moles than actual melanoma cases). A lot of machine learning algorithms do not perform well under class imbalance.
 
 In our binary classification task (melanoma vs non-melanoma) the $m$ samples in the training set are highly imbalanced:
 
@@ -203,7 +245,7 @@ $$
 J_R(\theta) = J(\theta) + R(\theta)
 $$
 
-which, in a sense, redefines the optimization goal to simultaneously
+This regularization penalty can be seen as a form of Occam's razor that prefers simpler functions. In a sense, this redefines the optimization goal to simultaneously
 
 \begin{itemize}
     \item fit the training data well (i.e. the $J(\theta$ term) and
@@ -245,39 +287,21 @@ More recently, Dropout\cite{dropout} is another regularization technique designe
 
 \citeauthor{regularizationsurvey} present a much broader and more modern view of regularization in machine learning in their \citeyear{regularizationsurvey} paper\cite{regularizationsurvey}, where they define regularization more abstractly as any technique that allows the model to generalize better (i.e. perform better on the test set). They go over implicit regularization via data augmentation, network architecture, and the optimization algorithm itself as well as various explicit regularization techniques that penalize large weights (e.g. L1 and L2 regularization).
 
-\section{Cross Validation}
+\section{Neural Network}
 
-Often we want to tune the parameters of a model (for example, C in a support vector machine). That is, we want to find the value of a parameter that minimizes our loss function. The best way to do this is cross validation:
-
-1. Set the parameter you want to tune to some value.
-2. Split your data into K ‘folds’ (sections).
-3. Train your model using K-1 folds using the parameter value.
-4. Test your model on the remaining fold.
-5. Repeat steps 3 and 4 so that every fold is the test data once.
-6. Repeat steps 1 to 5 for every possible value of the parameter.
-7. Report the parameter that produced the best result.
-
-However, as Cawley and Talbot point out in their 2010 paper, since we used the test set to both select the values of the parameter and evaluate the model, we risk optimistically biasing our model evaluations. For this reason, if a test set is used to select model parameters, then we need a different test set to get an unbiased evaluation of that selected model.
-
-One way to overcome this problem is to have nested cross validations. First, an inner cross validation is used to tune the parameters and select the best model. Second, an outer cross validation is used to evaluate the model selected by the inner cross validation.
-
-% TODO: https://arxiv.org/pdf/1809.09446.pdf
-However fixed validation is sometimes okay.
+Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to our data and are composed of several neurons.
 
 \section{Neuron}
 
-% TODO: switchup to effectively introduce W,b notation here, problem solved
+% TODO: switchup notation order to effectively introduce W,b notation here, problem solved
 A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$ which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = f(\sum^{i=1}_{n} W_{i}x_{i} + b) = f(W^Tx + b)$. Or, if we use homogeneous coordinates, it can be said to be parametrized by a single matrix $\theta$ and outputs $h_{\theta} = f(\theta x)$.
 
 % TODO: table of common activation functions
 An activation function $f \colon \mathbb{R} \to \mathbb{R}$ must be differentiable for backpropagation \ref{subsection:backwardpass} to work. Sigmoid function is any bounded, differentiable, real function (e.g. logistic, tanh).
 The activation function $f$ is what characterizes the neuron. If the activation function $f$ is the step function, the neuron is reduced to the perceptron presented in 1950-1960 by Rosenblatt\cite{perceptron}.
 
-\section{Neural Network}
-
-Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to our data and are composed of several neurons.
-
 \subsection{Forward Pass}
+\label{subsection:forwardpass}
 
 An $L$-layer neural network's activations can be recursively defined
 
@@ -296,6 +320,7 @@ z^{l} = W^{l-1}a^{l-1} + b^{l-1}
 $$
 
 \subsection{Backward Pass}
+\label{subsection:backwardpass}
 
 Backpropagation is a way of computing the gradient through recursive application of the chain rule from calculus.
 
@@ -323,7 +348,6 @@ Backpropagation relies on two important assumptions about the cost function:
     \item it can be written as an average of cost per individual training sample $x$, i.e. $C = \frac{1}{m} \sum_x C_x$, because backpropagation can only compute $\frac{\partial C_x}{\partial w}$  and $\frac{\partial C_x}{\partial b}$ for a single training example $x$ which can then be averaged to obtain $\frac{\partial C}{\partial w}$  and $\frac{\partial C}{\partial b}$.
     \item it can be written as a function of the output at the neural network, i.e. $C = C(a^{L})$, which it otherwise
 \end{itemize}
-
 
 The error at the output layer $L$ is given by:
 
@@ -354,6 +378,24 @@ $$
 $$
 
 \section{Convolutional Neural Network}
+
+A \ac{CNN} is a class of deep, feed-forward artificial neural network, originally designed for computer vision problems where it is most popular. A \ac{CNN} consists of an input and an output layer, as well as multiple hidden layers. The hidden layers of a \ac{CNN} are typically comprised of:
+
+\begin{itemize}
+    \item Convolutional base composed by a stack of convolutional and pooling layers. Convolutional layers comprise a set of n independent filters which are independently convolved with the input volume to obtain an output volume of n feature maps. Pooling layers progressively reduce the spatial size of an input volume to reduce the amount of parameters and computation in the network. Pooling layers operate on each feature map independently. The main goal of the convolutional base is to generate features from the image.
+    \item Classifier composed by fully connected layers. The main goal of the classifier is to classify the image based on the detected features. A fully connected layer is a layer whose neurons have full connections to all activation in the previous layer.
+\end{itemize}
+
+For a particular feature map (the output received on convolving the image with a particular filter is called a feature map), each neuron is connected only to a small chunk of the input image and all the neurons have the same connection weights
+
+Two key ideas in convolutional neural networks:
+
+\begin{itemize}
+    \item Parameter sharing is sharing of weights by all neurons in a particular feature map.
+    \item Local connectivity is the concept of each neural connected only to a subset of the input image (unlike a neural network where all the neurons are fully connected)
+\end{itemize}
+
+This helps to reduce the number of parameters in the network and makes the computation more efficient.
 
 To summarize, a convolutional layer:
 
@@ -389,7 +431,10 @@ In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convo
 
 GoogLeNet\cite{inceptionv1} (also known as Inception V1) won the ImageNet Large Scale Visual Recognition Challenge \cite{imagenet} in 2014 which introduced the Inception block that establishes four parallel paths that use convolutional layers of different windows and max pooling layers. Furthermore it exhibited lower computational complexity when compared to other models with similar generalization performance. This influenced many later versions of Inception \cite{inceptionv2_3}\cite{inceptionv4}.
 
+% TODO: resnets
+
 \section{Transfer Learning}
+\label{section:transferlearning}
 
 Supervised training of deep neural networks requires vast amounts of labeled data, which is very expensive and time consuming in itself, as well as immense computational and time resources which is often equally or more expensive. In practice, transfer learning emerges as a technique that can be used to reduce the costs or time constraints of training these deep neural networks.
 
@@ -402,6 +447,14 @@ In image classification problems \ac{CNN} models are used to build progressively
     \item connecting it to a classifier
     \item deciding which layers' weights should be trained (i.e. updated during gradient descent) and which should remain frozen (i.e. not updated during gradient descent)
 \end{enumerate}
+
+The classifier is commonly based on:
+
+\begin{itemize}
+    \item Fully connected layers
+    \item Global average pooling
+    \item SVM
+\end{itemize}
 
 \subsection{Transfer Learning by Total Feature Extraction}
 
@@ -426,13 +479,3 @@ Like the previous strategy, the classifier is built on top of the extracted feat
 The weights of the extracted layers (regardless if they were all extracted or only partially) do not all need to remain frozen. Given sufficient computational and time resources, further training the weights of the extracted layers can yield even higher generalization performance because we are, in some sense, fine-tuning the weights of the extracted features to better fit the target dataset.
 
 For this fine-tuning one should be very careful and make sure to use a very slow (i.e. low) learning rate so as to not suddenly disrupt the learned features, because we are actually updating weights transfered from another model.
-
-\subsection{Classifier}
-
-The classifier is commonly based on:
-
-\begin{itemize}
-    \item Fully connected layers
-    \item Global average pooling
-    \item SVM
-\end{itemize}
