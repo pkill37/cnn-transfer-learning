@@ -417,21 +417,13 @@ To summarize, a convolutional layer:
     \item In the output volume, the $d$-th depth slice (of size $W_2 \times H_2$) is the result of performing a valid convolution of the $d$-th filter over the input volume with a stride of $S$, and then offset by $d$-th bias.
 \end{enumerate}
 
-AlexNet\cite{alexnet} won the ImageNet Large Scale Visual Recognition Challenge \cite{imagenet} in 2012 by a very large margin, introducing a breakthrough in computer vision which proved that learned features could be better than hand-designed features chosen heuristically. The network employed an 8-layer \ac{CNN} that stacked many convolutional layers producing progressively smaller convolutional windows, followed by two fully-connected layers with 4096 outputs and finally a softmax layer for classification in ImageNet. In its design they also used Dropout regularization and the ReLU activation function, which today are very popular and essential tools in deep learning.
+AlexNet\cite{alexnet} won the \ac{ILSVRC} \cite{imagenet} in 2012 by a very large margin, introducing a breakthrough in computer vision which proved that learned features could be better than hand-designed features chosen heuristically. The network employed an 8-layer \ac{CNN} that stacked many convolutional layers producing progressively smaller convolutional windows, followed by two fully-connected layers with 4096 outputs and finally a softmax layer for classification in ImageNet. In its design they also used Dropout regularization and the ReLU activation function, which today are very popular and essential tools in deep learning.
 
-Later the \ac{VGG} further pushed the state-of-the-art by designing an architecture that used repeated blocks of layers to build progressively more abstract features, shifting thinking in terms of layers to blocks. This basic building block consists of
+Later the \ac{VGG} designed an architecture that used repeated blocks of layers to build progressively more abstract features, shifting thinking in terms of layers to blocks. This basic building block consists of a convolutional layer with padding to maintain resolution, a nonlinearity (i.e. ReLU), pooling for downsampling the features. In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convolutions and $2 \times 2$ max pooling with stride $S = 2$, essentially halving the resolution after each one of these blocks.
 
-\begin{enumerate}
-    \item a convolutional layer with padding to maintain resolution
-    \item a nonlinearity (i.e. ReLU)
-    \item pooling for downsampling the features
-\end{enumerate}
+GoogLeNet\cite{inceptionv1} (also known as Inception V1) won the \ac{ILSVRC} \cite{imagenet} in 2014 which introduced the Inception block that establishes four parallel paths that use convolutional layers of different windows and max pooling layers. Furthermore it exhibited lower computational complexity when compared to other models with similar generalization performance. This influenced many later versions of Inception \cite{inceptionv2_3}\cite{inceptionv4}.
 
-In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convolutions and $2 \times 2$ max pooling with stride $S = 2$, essentially halving the resolution after each one of these blocks.
-
-GoogLeNet\cite{inceptionv1} (also known as Inception V1) won the ImageNet Large Scale Visual Recognition Challenge \cite{imagenet} in 2014 which introduced the Inception block that establishes four parallel paths that use convolutional layers of different windows and max pooling layers. Furthermore it exhibited lower computational complexity when compared to other models with similar generalization performance. This influenced many later versions of Inception \cite{inceptionv2_3}\cite{inceptionv4}.
-
-% TODO: resnets
+More recently \citeauthor{resnet} have pushed the state-of-the-art by introducing residual neural networks\cite{resnet}. Motivated by avoiding the problem of vanishing gradients, residual networks allow the use of skip connections (or short cuts) to arbitrarily jump over layers (effectively reusing activations from previous layers in its forward pass) which significantly speeds up learning by reducing the impact of vanishing gradients since there are less layers to backpropagate through. An ensemble of these networks achieved 3.57\% error on ImageNet, a result which won 1st place on \ac{ILSVRC} 2015.
 
 \section{Transfer Learning}
 \label{section:transferlearning}
