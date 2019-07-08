@@ -1,7 +1,7 @@
 \chapter{Deep Learning}
 \label{chapter:deeplearning}
 
-In this section we briefly go over some relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as the state-of-the-art work that we will review in chapter \ref{chapter:sota}.
+In this section we briefly introduce relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as the state-of-the-art work that we will review in chapter \ref{chapter:sota}.
 
 \section{Supervised Learning}
 
@@ -43,7 +43,7 @@ In general, let
     \item $J \colon \mathbb{R}^n \to \mathbb{R}$ be a function, called the cost function, which quantifies the quality of a particular set of parameters $\theta$ relative to all the $m$ samples in the training set. $$J(\theta) = \frac{1}{m} \sum_{i=1}^{m} L(h_{\theta}(x^{(i)}), y^{(i)})$$
 \end{itemize}
 
-The linear regression cost function can be easily understood as the summation of the differences between the predictions and the ground truth labels:
+In particular, the linear regression cost function can be easily understood as the summation of the differences between the predictions and the ground truth labels:
 
 $$
 J(\theta) = \frac{1}{2m} \sum_{i=1}^{m} (h_{\theta}(x^{(i)}) - y^{(i)})^2
@@ -76,6 +76,32 @@ or, cleverly arranging things algebraically,
 
 $$
 J(\theta) = -\frac{1}{m} \sum_{i=0}^{m} ( y^{(i)}\log(h_{\theta}(x^{(i)})) + (1 - y^{(i)})\log(1 - h_{\theta}(x^{(i)})) )
+$$
+
+\section{Evaluation}
+
+Recall is the number of items correctly identified as positive out of total true positives
+
+$$
+Recall = \frac{TP}{TP+FN}
+$$
+
+Precision is the number of items correctly identified as positive out of total items identified as positive
+
+$$
+Precision = \frac{TP}{TP+FP}
+$$
+
+Accuracy is the percentage of total items classified correctly given by
+
+$$
+Accuracy = \frac{TP+TN}{TP+FP+TN+FN}
+$$
+
+Accuracy should be avoided in cases where there is a class imbalance in the dataset. Instead F1 Score should be preferred. F1 score is the harmonic mean of precision and recall given by
+
+$$
+F_1 = 2 \times \frac{Precision \times Recall}{Precision + Recall}
 $$
 
 \section{Optimization}
@@ -131,7 +157,7 @@ More recently, gradient descent methods have been further developed to find indi
 
 Optimization algorithms for deep learning are usually iterative, hence the matrix $\theta$ needs to be initialized. This initialization determines how quickly optimization converges or whether it converges at all, which is why it is so important.
 
-A reasonable first approach would be to initialize all values of the matrix $\theta$ to zero. However this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation (assuming all neurons use the same activation function), thus the gradients computed by backpropagation will also be the same and result in the exact same updates during gradient descent. Therefore parameters must be chosen in such a way that they break this symmetry, which is what motivates the use of random initialization. However simply drawing random parameters (e.g. from a Gaussian distribution with 0 mean and 1 standard deviation) might result in too small or too big parameter values and very wide in range which originate a vanishing or exploding gradient problem where different layers effectively learn at different speeds.
+A reasonable first approach would be to initialize all values of the matrix $\theta$ to zero. However, e.g. in a neural network this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation (assuming all neurons use the same activation function), thus the gradients computed by backpropagation will also be the same and result in the exact same updates during gradient descent. Therefore parameters must be chosen in such a way that they break this symmetry, which is what motivates the use of random initialization. However simply drawing random parameters (e.g. from a Gaussian distribution with 0 mean and 1 standard deviation) might result in too small or too big parameter values and very wide in range which originate a vanishing or exploding gradient problem where different layers effectively learn at different speeds.
 
 Modern initialization techniques are heuristic based and designed around the activation functions themselves to counter these problems by, essentially, guaranteeing the activations mean to be $0$ and the activations variance to be the same across different layers. Under these conditions the backpropagated gradient will not be multiplied by very small or very big values (which would lead to vanishing or exploding problems, respectively). Specifically,
 
@@ -140,57 +166,35 @@ Modern initialization techniques are heuristic based and designed around the act
     \item for ReLU activation functions, He et al.\cite{heinit} suggests drawing from $\mathcal{N}(0, \frac{2}{n_{in}})$.
 \end{itemize}
 
-\section{Standardization}
+\section{Feature Scaling}
 
-For some machine learning algorithms, optimization will not conv
-Some machine learning algorithms
-
-Since the range of values of raw data varies widely, in some machine learning algorithms, objective functions will not work properly without normalization. For example, the majority of classifiers calculate the distance between two points by the Euclidean distance. If one of the features has a broad range of values, the distance will be governed by this particular feature. Therefore, the range of all features should be normalized so that each feature contributes approximately proportionately to the final distance.
-
-Another reason why feature scaling is applied is that gradient descent converges much faster with feature scaling than without it.[1]
-
-n machine learning, we can handle various types of data, e.g. audio signals and pixel values for image data, and this data can include multiple dimensions. Feature standardization makes the values of each feature in the data have zero-mean (when subtracting the mean in the numerator) and unit-variance. This method is widely used for normalization in many machine learning algorithms (e.g., support vector machines, logistic regression, and artificial neural networks)[2][citation needed]. The general method of calculation is to determine the distribution mean and standard deviation for each feature. Next we subtract the mean from each feature. Then we divide the values (mean is already subtracted) of each feature by its standard deviation.
+Some machine learning algorithms rely on the distance between the features in a feature vector $x$ and assume the values are on the same scale. Min-max normalization rescales $x$ to $x'$ to be on the interval $[0, 1]$, i.e.
 
 $$
-x' = \frac{x - \bar{x}}{\sigma}
+x' = \frac{x - \min{(x)}}{\max{(x)} - \min{(x)}}
 $$
 
-Where $x$ is the original feature vector, $\bar{x}$ is the mean of that feature vector, and $\sigma$ is its standard deviation.
+Other machine learning algorithms assume that the feature vector $x$ follows a Gaussian distribution (i.e. zero mean and unit-variance). Standardization (sometimes more intuitively called normalization) is the process of rescaling $x$ (where $\mu_x$ is the mean of each feature vector $x$ and $\sigma_x$ its standard deviation) to $x'$ to follow a Gaussian distribution, i.e.
+
+$$
+x' = \frac{x - \mu_x}{\sigma_x}
+$$
+
+In practice, gradient descent converges much faster with features that follow a normal distribution \cite{batchnormalization}.
 
 \section{Class Imbalance}
 \label{subsection:classimbalance}
 
-It is said that a dataset has class imbalance when there is a significant difference between the number of samples of one class compared to other classes.
+In binary classification problems, it is said that a dataset of $m$ samples has class imbalance when there is a majority class with $|S_{maj}|$ samples and a minority class with $|S_{min}|$ samples where $|S_{maj}| > |S_{min}|$, in other words when there is a significant difference between the number of samples of one class compared to the other. It is very common to see datasets in which classes are highly imbalanced, simply because it reflects the real world distribution (e.g. there are more benign moles than actual melanoma cases).
 
-In classification tasks it is common to see datasets in which classes are highly imbalanced, simply because it reflects the real world distribution (e.g. there are more benign moles than actual melanoma cases). A lot of machine learning algorithms do not perform well under class imbalance.
+A lot of machine learning algorithms do not perform well under this imbalance. When a dataset is imbalanced, machine learning algorithms will typically over-classify the majority group due to its increased prior probability. Thus, the samples in the minority group are misclassifed more often than the majority group \cite{Johnson2019}.
 
-In our binary classification task (melanoma vs non-melanoma) the $m$ samples in the training set are highly imbalanced:
+\citeauthor{haibo2009} provide a comprehensive survey of class balancing algorithms \cite{haibo2009}, of which oversampling of the minority class is the simplest and most natural. In practice the minority class must be oversampled by a factor (i.e. number of transformations applied to each original sample) of $\frac{|S_{maj}|}{|S_{min}|}$. Sometimes, in addition to balancing the dataset, it is also necessary to augment the total number of samples $m$ (perhaps because of an overfitting problem) to a new total number of samples $m'$, in which case
 
 \begin{itemize}
-    \item the majority class $S_{maj}$ constitutes 89\% of the samples;
-    \item the minority class $S_{min}$ constitutes 11\% of the samples.
+    \item the minority class must be oversampled by augmenting its samples  by a factor of $\frac{\frac{m'}{2}}{|S_{min}|}$
+    \item and the majority class must also be augmented by a factor of $\frac{\frac{m'}{2}}{|S_{maj}|}$
 \end{itemize}
-
-We have that $|S_{maj}| > |S_{min}|$ and $|S_{maj}| + |S_{min}| = m$. We want
-
-% TODO: class imbalance https://datascience.stackexchange.com/questions/44755/why-doesnt-class-weight-resolve-the-imbalanced-classification-problem
-An attractive first approach might be to use a weighted cost function that assigns weights to samples by taking into account their classes and , e.g.
-
-Let $C_i$ denote the total number of samples of the class which sample $i$ belongs to.
-$$
-J(\theta) = \sum_{i=1}^{m} \frac{1}{C_i} L(x^{(i)}, y^{(i)}, \theta)
-$$
-
-This is highly desirable because it only requires changing the optimization objective (i.e. the loss function), not the data itself, which is much easier and is why frameworks like Keras offer this facility which is quite useful from the perspective of a rapid development framework. However this approximation is only entirely valid when we are doing batch gradient descent where the batch size $b$ is the same as the number of samples.
-
-
-The approximation does not hold when $b < m$ because samples may appear in different batches.
-
-$$
-J(\theta) = \frac{1}{m} \sum_{i=1}^{m} L(x^{(i)}, y^{(i)}, \theta)
-$$
-
-\cite{haibo2009} provides a comprehensive survey of state-of-the-art class balancing algorithms, of which we have chosen to use oversampling of the minority class because it is the simplest and most natural. As an oversampling method we will augment the data as described in \ref{subsection:augmentation}.
 
 \section{Bias-Variance Tradeoff}
 
@@ -471,3 +475,21 @@ Like the previous strategy, the classifier is built on top of the extracted feat
 The weights of the extracted layers (regardless if they were all extracted or only partially) do not all need to remain frozen. Given sufficient computational and time resources, further training the weights of the extracted layers can yield even higher generalization performance because we are, in some sense, fine-tuning the weights of the extracted features to better fit the target dataset.
 
 For this fine-tuning one should be very careful and make sure to use a very slow (i.e. low) learning rate so as to not suddenly disrupt the learned features, because we are actually updating weights transfered from another model.
+
+\section{Deep Learning Hardware}
+
+Deep learning is very computationally intensive in itself and even more so when we want to run multiple experiments with hyperparameters or even completely different architectures.
+
+\ac{CNN}, the core of most state-of-the-art deep learning applied to computer vision, are computationally complex and embarassingly parallel \cite{chang2017} which the architecture of general purpose \ac{GPU} are appropriate for \cite{gpu} and for which libraries like cuDNN \cite{cudnn} were developed to further leverage the characteristics of \ac{GPU} into even bigger performance improvements.
+
+There is a growing demand for domain-specific hardware designed specifically for the computations necessary in neural network training and inference, like Google's TPU custom ASIC \cite{tpu}, which naturally can achieve major improvements in cost-energy-performance when compared to general purpose hardware like \ac{GPU} that were originally designed for the demands of computer graphics which coincidentally also serve deep learning reasonably well. Nonetheless, \ac{GPU} remain the best cost-effective commodity hardware for this type of computation, especially when not working at the scale of companies like Google and Facebook. In a typical scenario, the CPU does little useful computation in a deep learning application where most of the computation is delegated to the GPU.
+
+% TODO: write more
+
+\section{Deep Learning Software Frameworks}
+
+TensorFlow is an open source software library for numerical computation using data flow graphs. The graph nodes represent mathematical operations, while the graph edges represent the tensors that flow between them. This flexible architecture enables you to deploy computation to one or more CPU or GPU in a desktop, server, or mobile device without rewriting code \cite{tensorflow}.
+
+Keras is a high-level neural networks API, written in Python and capable of running on top of TensorFlow, CNTK or Theano. It was developed with a focus on fast experimentation which enables easy and fast prototyping through user friendliness, modularity, and extensibility. This API was more recently adopted by TensorFlow itself in the tf.keras namespace which is given a lot more attention in TensorFlow 2.0 (following the criticism of TensorFlow's convoluted API).
+
+% TODO: write more
