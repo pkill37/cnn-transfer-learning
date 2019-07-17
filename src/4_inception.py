@@ -22,17 +22,18 @@ LR_DECAY = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_acc', factor=0.1, p
 
 
 def inceptionv3(l2):
-    # Extract and freeze pre-trained model layers
+    # Freeze pre-trained model layers
     inceptionv3 = tf.keras.applications.inception_v3.InceptionV3(weights='imagenet', input_shape=(IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), include_top=False)
-    model = tf.keras.models.Sequential()
     for layer in inceptionv3.layers:
         layer.trainable = False
-        model.add(layer)
 
     # Classifier
-    model.add(tf.keras.layers.GlobalAveragePooling2D())
-    model.add(tf.keras.layers.Dense(units=1024, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)))
-    model.add(tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(l2)))
+    y = inceptionv3.output
+    y = tf.keras.layers.GlobalAveragePooling2D()(y)
+    y = tf.keras.layers.Dense(units=1024, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2))(y)
+    y = tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(l2))(y)
+
+    model = tf.keras.models.Model(inputs=inceptionv3.input, outputs=y)
     model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS)
     return model
 
