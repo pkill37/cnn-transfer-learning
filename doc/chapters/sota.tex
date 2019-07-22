@@ -1,10 +1,30 @@
 \chapter{State of the Art}
 \label{chapter:sota}
 
-In this section we go over the cutting edge of deep learning techniques applied to skin lesion classification (or other related work) and present results.
+In this chapter we review current state-of-the-art results in skin lesion classification and medical image analysis in general to get an overview of the work related to this dissertation.
+
+In \citeyear{nature2017} \citeauthor{nature2017} \cite{nature2017} achieved perhaps the most famous result in skin lesion classification using deep learning, making it to the Nature scientific journal. Their dataset combines biopsy-proven data from the ISIC Archive, Edinburgh Dermofit Library, and the Stanford Hospital, totalling an astonishing 129450 samples (after going through data augmentation of random flips, rotations, crops) which remains one of the biggest efforts in data collection in the area. They build an undirected graph connecting images that were deemed to be similar and made sure that the connected components of this graph were separated and distributed between the train, validation, and test sets in order to create a more effective and diverse split of the data. The authors follow a transfer learning approach by leveraging the weights of the InceptionV3 network trained on ImageNet, on top of which they build their own classifier and fine-tune previous layers carefully using the RMSProp optimizer. They evaluate the performance of the network by pitting it against 21 board-certified dermatologists on biopsy-proven medically-relevant cases of keratinocyte carcinomas versus benign seborrheic keratoses and malignant melanomas versus benign nevi, attaining performance on par with experts.
+
+The work by \citeauthor{hand_sparse_deeplearning_ensemble} \cite{hand_sparse_deeplearning_ensemble} combines different techniques into a classification framework that basically:
+
+\begin{enumerate}
+    \item extracts various features across two input scales (an area cropped around the segmented lesion, and the entire original dermoscopic image)
+    \begin{itemize}
+        \item hand-engineered rule-based features like color histogram, edge histogram, and color local binary patterns;
+        \item unsupervised learning features from a sparse coded representation;
+        \item features extracted from two deep residual networks trained on ImageNet and fine-tuned on the target dataset;
+        \item the segmentation produced by their U-Net segmentation network is also used as a shape descriptor feature.
+    \end{itemize}
+    \item trains nonlinear \ac{SVM} (with a histogram intersection kernel and sigmoid feature normalization) to learn a classifier for each extracted set of features, whose output was calibrated to produce a score between 0\% and 100\%;
+    \item averages the output of each classifier in an ensemble to produce a final classification.
+\end{enumerate}
+
+When compared to an average of 8 dermatologists' predictions on 100 test images, they produce a higher accuracy and specificity evaluated at an equivalent sensitivity.
+
+\citeauthor{Brinker2018} \cite{Brinker2018} present the first systematic review of the cutting edge in lesion classification with deep convolutional neural networks, which remains the fundamental technique in state-of-the-art results. They review 13 papers that use \ac{CNN}, most of which transfer weights from networks trained on \ac{ILSVRC} to the target task, which speeds up training and reduces costs by leveraging previous knowledge. In conclusion they note that \ac{CNN} are currently the state-of-the-art in skin lesion classification, but that it was rather difficult to compare results given the heterogeneity of datasets (some of which are not public) making reproduceability difficult. This motivated the initiative by the ISIC Archive to collect and uniformize data as well as organize challenges to push new results.
 
 \section{ISIC 2017 Part 3: Lesion Classification}
-In part 3 of the ISIC 2017 challenge participants were asked to develop two binary classifiers to distinguish between:
+In part 3 of the ISIC 2017 \cite{isic2017} challenge participants were asked to develop two binary classifiers to distinguish between:
 
 \begin{itemize}
     \item melanoma vs nevus and seborrheic keratosis
@@ -13,22 +33,76 @@ In part 3 of the ISIC 2017 challenge participants were asked to develop two bina
 
 Participants were given a training set of 2000 images (374 melanoma, 254 seborrheic keratosis, and the remaining 1372 benign nevi), a validation set of 150 images and a test set of 600 images. The images were of questionable quality and required a lot of preprocessing effort, which they could also complement by gathering their own data. Participants were ranked and awarded based only on AUC, but other metrics were reported for scientific completeness.
 
+% first place
 First place was a joint effort between Casio and Shinshu University presented by Kazuhisa Matsunaga et al\cite{isic2017first}. In their work they adopted ensembles of their own variant of ResNet-50 that they trained presumably end-to-end (using RMSProp\cite{rmsprop} and AdaGrad\cite{adagrad}) on data from the challenge as well as data they gathered independently, which was normalized in such a way to exploit color constancy and of which multiple geometric transformations were input in parallel to the networks.
 
 The metadata available in the training set showed that melanoma and seborrheic keratosis were both uncommon in young ages. From this observation they implemented a simple thresholding by age, which improved performance for seborrheic keratosis classification from 0.957 to 0.960 AUC in cross-validation but not for melanoma classification. They noted that a more careful thresholding implementation is necessary from a clinical point of view. In the end, the mean performance of the two classifiers on the validation set was 0.958 AUC and, after the paper was published, 0.911 on the test set.
 
-Second place TODO
+% second place
+Iván from the Universidad Carlos III de Madrid \cite{isic2017second} got second place by designing a very complete automatic diagnosis system where a dermoscopic image goes through:
 
-Third place was an effort by Afonso Menegola et al\cite{isic2017second} from RECOD Lab. who collected several datasets which they cleaned and filtered, resulting in two sets of 9640 and 7544 images with differing performances on the two different binary classification tasks that they decided to keep in consideration throughout their experiments. They adopted a transfer learning approach and decided to focus on ResNet-101 and Inception-V4 models trained on ImageNet on top of which they experimented many things:
+\begin{enumerate}
+    \item A segmentation network based on \ac{FCN} \cite{fcn} to generate a binary mask outlining the area actually occupied by the lesion
+    \item A data augmentation module to generate random label-invariant views of the original dermoscopic image through rotations and crops.
+    \item A structure segmentation network that produces binary masks for 8 heuristically designed structures (dots, reticular patterns and pigmented networks, homogeneous areas, regression areas, blue-white veil, streaks, vascular structures, and other unspecific patterns) that expert dermatologists find important for a diagnosis
+    \item A classification network based on transfer learning from ResNet-50 \cite{resnet} that takes into consideration the structures identified by the structure segmentation network as well as the original dermoscopic image.
+\end{enumerate}
+
+This effort resulted in AUC score of 0.910 on the test set, thus earning second place.
+
+% third place
+Third place was an effort by Afonso Menegola et al \cite{isic2017third} from RECOD Lab. who collected several datasets which they cleaned and filtered, resulting in two sets of 9640 and 7544 images with differing performances on the two different binary classification tasks that they decided to keep in consideration throughout their experiments. They adopted a transfer learning approach and decided to focus on ResNet-101 and Inception-V4 models trained on ImageNet on top of which they experimented with:
 
 \begin{itemize}
     \item Curriculum learning scheme in which they schedule the samples during training such that easier samples are batched first and harder samples are batched later. However in practice this was worse than a traditional learning scheme.
+    \item Training data and testing data augmentation by applying label-invariant random transformations such as crops, flips, etc. that ended up significantly improving performance (which the authors already knew from experience).
+    \item Meta-learning scheme to take into consideration the decision of multiple models (even by simply averaging the output probabilities) gave the best results on the official validation AUC, even when compared to the single best model.
+    \item Normalizing the inputs to Inception networks by subtracting the average pixel value significantly improved performance, but further dividing by the standard deviation gave worse results than baseline.
+\end{itemize}
+
+Their final submission was a meta model that combined seven models based on Inception and ResNet networks trained on distinct datasets which were then stacked in a meta-learning layer based on SVM. In the end they placed third by getting an AUC score of 0.908 on the test set.
+
+% others
+Also worth noting is
+
+\begin{itemize}
+    \item \citeauthor{isic2017li} \cite{isic2017li} who present novel multi-scale fully convolutional residual networks (based on FCRN-88 \cite{fcrn}) trained on datasets augmented differently (which empirically proved to offer better performance) whose outputs are interpolated to the original scale and summed up to yield what the authors call possibility maps which are further refined by taking into a consideration a distance map representing the importance of each pixel. For comparison they also ran experiments with AlexNet, VGG16, ResNet-50, ResNet-101, Inception-v3, but their custom network outperformed them all with an AUC score of 0.912 as evaluated on the ISIC 2017 dataset.
+    \item \citeauthor{yang2017} \cite{yang2017} whose work propose a multi-task learning scheme where lesion segmentation and classification are solved simultaneously by constructing a model that builds feature maps using \ac{CNN} which then branches out into 3 parallel paths whose outputs individually do segmentation, melanoma binary classification, and seborrheic keratosis binary classification, but training is performed as if it was a single network optimizing parameters as usual. They achieve an AUC score of 0.926.
 \end{itemize}
 
 \section{ISIC 2018 Part 3: Lesion Classification}
 
-First place.
+In part 3 of the ISIC 2018 challenge participants were asked to develop a classifier to distinguish between:
 
-Second place.
+\begin{itemize}
+    \item Melanoma
+    \item Melanocytic nevus
+    \item Basal cell carcinoma
+    \item Actinic keratosis
+    \item Benign keratosis
+    \item Dermatofibroma
+    \item Vascular lesion
+\end{itemize}
 
-Third place.
+The provided training data comes from the HAM10000 Dataset \cite{ham10000}, which was acquired with many different dermatoscopes, from most anatomic sites, from a historical sample of patients presented for skin cancer screening, from many different institutions, with the proper approval. Diagnosis ground truth labels were established by:
+
+\begin{itemize}
+    \item Histopathology
+    \item Reflectance confocal microscopy
+    \item Lesion did not change during digital dermatoscopic follow up over two years with at least three images
+    \item Consensus of at least three expert dermatologists from a single image
+    \item Histopathology confirmation in cases of malignancy
+\end{itemize}
+
+Just like in the 2017 edition, participants could, of course, complement the training data by gathering their own, but this time they were ranked based on normalized multi-class accuracy metric.
+
+In the 2018 edition \citeauthor{isic2018first} \cite{isic2018first} won first, second, and third place, attaining, respectively, a balanced multiclass accuracy of 0.885, 0.882, and 0.871 (which still beat fourth place by a margin of 2\%). In their work they combined data from the competition's HAM10000 dataset, the ISIC Archive, and other proprietary data, which were preprocessed using the Shades of Gray method to normalize images from different sources and contexts. Further in their data pipeline they augment training data by performing random horizontal flips, random rotations of ${0, 90, 180, 270}$ degrees, change brightness, saturation, and contrast by a random factor in the range $[0.9, 1.1]$. Their models were based on transfer learning from models trained on ImageNet like InceptionV3, ResNet-50, Squeezenet, Densenet, and others, of which they picked the best-performing and ensembled them in a stacking scheme.
+
+The authors note that a large ensemble of models like theirs is not practical in production because of the high computational cost associated with infering the prediction of a given input for all models in the ensemble. For this reason, they suggest that constraints on memory usage or \ac{FLOPS} be considered in future challenges.
+
+Noteworthy are also the submissions by
+
+\begin{itemize}
+    \item \citeauthor{isic2018milton} \cite{isic2018milton} who also followed an approach based on transfer learning from models of PNASNet-5-Large, InceptionResNetV2, SENet154, InceptionV4 trained on ImageNet, who interestingly noted that in the first few epochs the gradient is very erratic and thus refrained from fine-tuning weights during the first 2 epochs to avoid updating weights towards the wrong direction, in the end achieving a score of 0.76 on the validation set;
+    \item \citeauthor{isic2018bissoto} \cite{isic2018bissoto} (who won 3rd place in the 2017 edition) which transfered knowledge from models of InceptionV4, ResNet-152, and DenseNet-161 trained on ImageNet, by training with online data augmentation (e.g. random crops, flips, rotations, shears, color transformations), \ac{SGD} with the learning rate being decreased by a factor of 10 whenever validation loss didn't improve for 10 epochs, eventually building an average of 15 models trained only with the challenge data that attained a score of 0.803.
+\end{itemize}
