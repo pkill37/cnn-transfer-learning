@@ -166,6 +166,8 @@ Modern initialization techniques are heuristic based and designed around the act
     \item for ReLU activation functions, He et al.\cite{heinit} suggests drawing from $\mathcal{N}(0, \frac{2}{n_{in}})$.
 \end{itemize}
 
+More recently, initializing a network with parameters transferred from other networks (typically trained on natural image datasets whose lower-layers' features generalise well to other tasks) has emerged as a very useful and pragmatic initialization strategy which in practice works very well for most tasks \cite{howtransferable}, giving birth to what is now known as transfer learning.
+
 \section{Feature Scaling}
 
 Some machine learning algorithms rely on the distance between the features in a feature vector $x$ and assume the values are on the same scale. Min-max normalization rescales $x$ to $x'$ to be on the interval $[0, 1]$, i.e.
@@ -295,14 +297,34 @@ More recently, Dropout\cite{dropout} is another regularization technique designe
 
 Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to our data and are composed of several neurons.
 
-\section{Neuron}
+\subsection{Neuron}
 
-% TODO: switchup notation order to effectively introduce W,b notation here, problem solved
-A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$ which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = f(\sum^{i=1}_{n} W_{i}x_{i} + b) = f(W^Tx + b)$. Or, if we use homogeneous coordinates, it can be said to be parametrized by a single matrix $\theta$ and outputs $h_{\theta} = f(\theta x)$.
+% TODO: neuron illustration
+A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$, which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = g(\sum^{i=1}_{n} W_{i}x_{i} + b) = g(W^Tx + b)$ that is activated by some (usually non-linear) function $g \colon \mathbb{R} \to \mathbb{R}$ called the activation function (which must be differentiable for backpropagation to work).
 
-% TODO: table of common activation functions
-An activation function $f \colon \mathbb{R} \to \mathbb{R}$ must be differentiable for backpropagation \ref{subsection:backwardpass} to work. Sigmoid function is any bounded, differentiable, real function (e.g. logistic, tanh).
-The activation function $f$ is what characterizes the neuron. If the activation function $f$ is the step function, the neuron is reduced to the perceptron presented in 1950-1960 by Rosenblatt\cite{perceptron}.
+The activation function $g$ is what characterizes the neuron. If the activation function is the step function
+
+$$
+g(x) =
+\begin{dcases}
+    1,& \text{if } z \geq \theta\\
+    0,& \text{if } z < \theta
+\end{dcases}
+$$
+
+the neuron is reduced to the perceptron presented in 1950-1960 by \citeauthor{perceptron} \cite{perceptron}.
+
+A sigmoid function is any bounded, differentiable, real function (e.g. logistic, tanh).
+
+$$
+g(x) = \frac{1}{1 + e^{-x}}
+$$
+
+The rectifier
+
+$$
+g(x) = \max(0, x)
+$$
 
 \subsection{Forward Pass}
 \label{subsection:forwardpass}
@@ -421,22 +443,22 @@ To summarize, a convolutional layer:
     \item In the output volume, the $d$-th depth slice (of size $W_2 \times H_2$) is the result of performing a valid convolution of the $d$-th filter over the input volume with a stride of $S$, and then offset by $d$-th bias.
 \end{enumerate}
 
-AlexNet\cite{alexnet} won the \ac{ILSVRC} \cite{imagenet} in 2012 by a very large margin, introducing a breakthrough in computer vision which proved that learned features could be better than hand-designed features chosen heuristically. The network employed an 8-layer \ac{CNN} that stacked many convolutional layers producing progressively smaller convolutional windows, followed by two fully-connected layers with 4096 outputs and finally a softmax layer for classification in ImageNet. In its design they also used Dropout regularization and the ReLU activation function, which today are very popular and essential tools in deep learning.
+AlexNet \cite{alexnet} won the \ac{ILSVRC} \cite{imagenet} in 2012 by a very large margin, introducing a breakthrough in computer vision which proved that learned features could be better than hand-designed features chosen heuristically. The network employed an 8-layer \ac{CNN} that stacked many convolutional layers producing progressively smaller convolutional windows, followed by two fully-connected layers with 4096 outputs and finally a softmax layer for classification in ImageNet. In its design they also used Dropout regularization and the ReLU activation function, which today are very popular and essential tools in deep learning.
 
 Later the \ac{VGG} designed an architecture that used repeated blocks of layers to build progressively more abstract features, shifting thinking in terms of layers to blocks. This basic building block consists of a convolutional layer with padding to maintain resolution, a nonlinearity (i.e. ReLU), pooling for downsampling the features. In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convolutions and $2 \times 2$ max pooling with stride $S = 2$, essentially halving the resolution after each one of these blocks.
 
-GoogLeNet\cite{inceptionv1} (also known as Inception V1) won the \ac{ILSVRC} \cite{imagenet} in 2014 which introduced the Inception block that establishes four parallel paths that use convolutional layers of different windows and max pooling layers. Furthermore it exhibited lower computational complexity when compared to other models with similar generalization performance. This influenced many later versions of Inception \cite{inceptionv2_3}\cite{inceptionv4}.
+GoogLeNet \cite{inceptionv1} (also known as Inception V1) won the \ac{ILSVRC} \cite{imagenet} in 2014 which introduced the Inception block that establishes four parallel paths that use convolutional layers of different windows and max pooling layers. Furthermore it exhibited lower computational complexity when compared to other models with similar generalization performance. This influenced many later versions of Inception \cite{inceptionv2_3}\cite{inceptionv4}.
 
-More recently \citeauthor{resnet} have pushed the state-of-the-art by introducing residual neural networks\cite{resnet}. Motivated by avoiding the problem of vanishing gradients, residual networks allow the use of skip connections (or short cuts) to arbitrarily jump over layers (effectively reusing activations from previous layers in its forward pass) which significantly speeds up learning by reducing the impact of vanishing gradients since there are less layers to backpropagate through. An ensemble of these networks achieved 3.57\% error on ImageNet, a result which won 1st place on \ac{ILSVRC} 2015.
+More recently \citeauthor{resnet} have pushed the state-of-the-art by introducing residual neural networks \cite{resnet}. Motivated by avoiding the problem of vanishing gradients, residual networks allow the use of skip connections (or short cuts) to arbitrarily jump over layers (effectively reusing activations from previous layers in its forward pass) which significantly speeds up learning by reducing the impact of vanishing gradients since there are less layers to backpropagate through. An ensemble of these networks achieved 3.57\% error on ImageNet, a result which won 1st place on \ac{ILSVRC} 2015.
 
 \section{Transfer Learning}
 \label{section:transferlearning}
 
 Supervised training of deep neural networks requires vast amounts of labeled data, which is very expensive and time consuming in itself, as well as immense computational and time resources which is often equally or more expensive. In practice, transfer learning emerges as a technique that can be used to reduce the costs or time constraints of training these deep neural networks.
 
-Transfer learning is a machine learning technique that seeks to leverage (or transfer) the knowledge gained from solving one problem to another (ideally related) problem. In the context of deep neural networks it means to transfer the weights of a model trained on a very large dataset (e.g. ImageNet\cite{imagenet}) and re-purpose them for another model.
+Transfer learning is a machine learning technique that seeks to leverage (or transfer) the knowledge gained from solving one problem to another (ideally related) problem \cite{deeptransferlearning}. In the context of deep neural networks it means to transfer the weights of a model trained on a very large dataset (e.g. ImageNet \cite{imagenet}) and re-purpose them for another model.
 
-In image classification problems \ac{CNN} models are used to build progressively more specific feature maps in layers, where lower layers represent abstract, problem independent features (e.g. squares, circles) and higher layers represent specific, problem dependent features (e.g. car, dog). With that in mind, transfer learning for current state-of-the-art image classification techniques boils down to:
+In image classification problems \ac{CNN} models are used to build progressively more specific feature maps in layers, where lower layers represent abstract, problem independent features (e.g. squares, circles) and higher layers represent specific, problem dependent features (e.g. car, dog). Transfer learning seeks to exploit and take advantage of this construct. In practice, transfer learning for current state-of-the-art image classification techniques boils down to:
 
 \begin{enumerate}
     \item choosing up to which layers should features be extracted
@@ -447,9 +469,9 @@ In image classification problems \ac{CNN} models are used to build progressively
 The classifier is commonly based on:
 
 \begin{itemize}
-    \item Fully connected layers
-    \item Global average pooling
-    \item SVM
+    \item Fully connected layers;
+    \item Global average pooling;
+    \item SVM.
 \end{itemize}
 
 \subsection{Transfer Learning by Total Feature Extraction}
@@ -474,7 +496,7 @@ Like the previous strategy, the classifier is built on top of the extracted feat
 
 The weights of the extracted layers (regardless if they were all extracted or only partially) do not all need to remain frozen. Given sufficient computational and time resources, further training the weights of the extracted layers can yield even higher generalization performance because we are, in some sense, fine-tuning the weights of the extracted features to better fit the target dataset.
 
-For this fine-tuning one should be very careful and make sure to use a very slow (i.e. low) learning rate so as to not suddenly disrupt the learned features, because we are actually updating weights transfered from another model.
+For this fine-tuning one should be very careful and make sure to use a very slow (i.e. low) learning rate so as to not suddenly disrupt the learned features, because we are actually updating weights transferred from another model.
 
 \section{Deep Learning Hardware}
 
