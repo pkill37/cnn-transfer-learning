@@ -29,7 +29,7 @@ def test(model, test):
     np.savez_compressed(os.path.join(os.path.dirname(model), 'predictions'), y_true=y_test, y_pred=y_pred)
 
 
-def reduce(experiment):
+def reduce_experiment(experiment):
     def read_csv(train_csv):
         csv_stats = {
             'acc': [],
@@ -65,7 +65,7 @@ def reduce(experiment):
     csv_stats = read_csv(os.path.join(experiment, 'train.csv'))
 
     return {
-        'id': experiment,
+        'id': os.path.basename(experiment),
         'hyperparameters': hyperparameters_from_dirname(os.path.basename(experiment)),
         'train_loss': csv_stats['loss'],
         'val_loss': csv_stats['val_loss'],
@@ -82,13 +82,10 @@ def main(experiments, test_set):
 
     for subdir in subdirs:
         test(os.path.join(experiments, subdir, 'model.h5'), test_set)
-        stats.append(reduce(os.path.join(experiments, subdir)))
+        stats.append(reduce_experiment(os.path.join(experiments, subdir)))
 
         with open(os.path.join(experiments, 'stats.json'), 'w') as f:
             json.dump(stats, f)
-
-    # Plot different views
-    pass
 
 
 if __name__ == '__main__':

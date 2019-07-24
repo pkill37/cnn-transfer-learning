@@ -31,18 +31,24 @@ Download the official ISIC2018 train set, preprocess it, and split it into our o
 
 ## Train
 
-Given a script `./src/foo.py` that trains a model, you can run it and store results in `./foo` using
+Given a script `./src/5_resnet.py` that trains a model, you can run it and save the model in `./experiments_5_resnet` using
 
 ```
-./train.sh ./src/foo.py
+python ./src/5_resnet.py --experiments ./experiments_5_resnet --train-set ./data/isic2018/224/train/train.npz --epochs 1000 --batch-size 32
 ```
 
 ## Test
 
-Given a directory of results `./foo` you can test the model against the test set using
+Given a model residing in directory `./experiments_5_resnet` you can test the model against a test set and store results in `./experiments_5_resnet` using
 
 ```
-./test.sh ./foo
+python ./src/test.py --experiments ./experiments_5_resnet --test-set ./data/isic2018/224/test/test.npz
+```
+
+And then plot results using
+
+```
+python ./src/plot.py --experiments ./experiments_5_resnet --plots ./plots_5_resnet
 ```
 
 ## Dissertation

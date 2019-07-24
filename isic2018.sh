@@ -9,7 +9,7 @@ unzip ./data/isic2018/ISIC2018_Task3_Training_Input.zip -d ./data/isic2018
 unzip ./data/isic2018/ISIC2018_Task3_Training_GroundTruth.zip -d ./data/isic2018
 
 # Process and compress
-for target_size in 224; do
+for target_size in 224 299; do
     echo "Processing data for target size "$target_size"x"$target_size"..."
     rm -rf ./data/isic2018/"$target_size"
     mkdir -p ./data/isic2018/"$target_size"/{train,test}
