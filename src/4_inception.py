@@ -11,8 +11,8 @@ import helpers
 
 
 EPSILON = 10e-3
-IMG_WIDTH = 224
-IMG_HEIGHT = 224
+IMG_WIDTH = 299
+IMG_HEIGHT = 299
 IMG_CHANNELS = 3
 
 LOSS = 'binary_crossentropy'
@@ -46,7 +46,7 @@ def train_inceptionv3(experiments, x, y, epochs, batch_size):
     del y
 
     # Build hyperparameters search grid
-    params = dict(l2=np.logspace(-50, -10, 60))
+    params = dict(l2=np.logspace(-50, 10, 60))
     params = itertools.product(*params.values())
 
     # Train a model for each hyperparameters setting
