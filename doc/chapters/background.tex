@@ -60,7 +60,7 @@ Essentially, binary classification requires a cost function that penalizes very 
     \item if the prediction is $h_{\theta}(x) = 1$ and the ground-truth label is $y = 1$, $J(\theta)$ is low.
 \end{itemize}
 
-Whereas in linear regression the hypothesis is of the form $h_{\theta} = \theta^Tx$, in binary classification (or logistic regression) the hypothesis is of the form $h_{\theta}(x) = \sigma(\theta^Tx)$ to squash predictions to the interval $[0, 1]$, hence the name logistic regression, because it uses the sigmoid-shaped logistic function $\sigma(z) = \frac{1}{1 + e^{-z}}$.
+Whereas in linear regression the hypothesis is of the form $h_{\theta}(x) = \theta^Tx$, in binary classification (or logistic regression) the hypothesis is of the form $h_{\theta}(x) = \sigma(\theta^Tx)$ to squash predictions to the interval $[0, 1]$, hence the name logistic regression, because it uses the sigmoid-shaped logistic function $\sigma(z) = \frac{1}{1 + e^{-z}}$.
 
 A useful loss function (sometimes called binary cross-entropy in some literature) for logistic regression that takes these requirements into consideration is
 
@@ -78,31 +78,45 @@ $$
 J(\theta) = -\frac{1}{m} \sum_{i=0}^{m} ( y^{(i)}\log(h_{\theta}(x^{(i)})) + (1 - y^{(i)})\log(1 - h_{\theta}(x^{(i)})) )
 $$
 
-\section{Evaluation}
+\section{Binary Classifier Evaluation}
 
-Recall is the number of items correctly identified as positive out of total true positives
+To evaluate a binary classifier means to compare the model's predicted conditions against the true conditions, where one must consider:
+
+\begin{itemize}
+    \item \ac{TP}, cases correctly classified as positive, i.e. $h(x^{(i)}) = 1$ matches $y^{(i)} = 1$;
+    \item \ac{TN}, cases correctly classified as negative, i.e. $h(x^{(i)}) = 0$ matches $y^{(i)} = 0$;
+    \item \ac{FP}, cases incorrectly classified as positive, i.e. $h(x^{(i)}) = 1$ but $y^{(i)} = 0$;
+    \item \ac{FN}, cases incorrectly classified as negative, i.e. $h(x^{(i)}) = 0$ but $y^{(i)} = 1$.
+\end{itemize}
+
+From these basic one can derive useful metrics:
+
+\begin{itemize}
+    \item \ac{TPR}, also known as sensitivity or recall, is basically the percentage of actual positives that are correctly identified as positive;
+        $$TPR = \frac{TP}{TP + FN}$$
+    \item \ac{TNR}, also known as specificity, is the percentage of actual negatives that are correctly identified as negative;
+        $$TNR = \frac{TN}{FP + TN}$$
+    \item \ac{PPV}, also known as precision,
+        $$PPV = \frac{TP}{TP + FP}$$
+    \item \ac{NPV}
+        $$NPV = \frac{TN}{TN + FN}$$
+    \item \ac{FPR} is the percentage of actual positives that are incorrectly identified as negative;
+        $$FPR = 1 - TNR$$
+\end{itemize}
+
+As a summary statistic one can derive the accuracy $A$ as the percentage of total items classified correctly
 
 $$
-Recall = \frac{TP}{TP+FN}
+A = \frac{TP + TN}{TP + FP + TN + FN}
 $$
 
-Precision is the number of items correctly identified as positive out of total items identified as positive
+However accuracy is misleading in cases where there is a class imbalance because a model can always predict the value of the majority class and still report a high accuracy value despite missing all predictions in the minority class. Instead F1 score should be preferred. F1 score is the harmonic mean of precision and recall given by
 
 $$
-Precision = \frac{TP}{TP+FP}
+F_1 = 2 \times \frac{PPV \times TPR}{PPV + TPR}
 $$
 
-Accuracy is the percentage of total items classified correctly given by
-
-$$
-Accuracy = \frac{TP+TN}{TP+FP+TN+FN}
-$$
-
-Accuracy should be avoided in cases where there is a class imbalance in the dataset. Instead F1 Score should be preferred. F1 score is the harmonic mean of precision and recall given by
-
-$$
-F_1 = 2 \times \frac{Precision \times Recall}{Precision + Recall}
-$$
+Lastly, \ac{AUC} is known as the area under the \ac{ROC} curve, i.e. the area under the plot of \ac{FPR} versus \ac{TPR} at different points in the interval $[0, 1]$.
 
 \section{Optimization}
 
