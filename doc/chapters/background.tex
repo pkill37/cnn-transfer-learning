@@ -1,7 +1,7 @@
 \chapter{Background}
 \label{chapter:background}
 
-In this section we briefly introduce relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as the state-of-the-art work that we will review in chapter \ref{chapter:sota}.
+In this section we briefly introduce relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as contextualize the state-of-the-art work that we will review in chapter \ref{chapter:sota}.
 
 \section{Supervised Learning}
 
@@ -9,7 +9,7 @@ In a supervised learning problem the data has the correct expected output for ev
 
 More formally, it is a problem in which there are $m$ labeled pairs $(x^{(i)}, y^{(i)})$, also denoted as samples, where $x^{(i)} \in \mathbb{R}^n$ (i.e. the input vectors, commonly referred to as features) and $y^{(i)} \in \mathbb{R}^n$ (i.e. the corresponding output vector, usually called the target or label) which have some relationship expressed by some function.
 
-The goal of supervised learning is to find a function $h_{\theta}(x)$ (sometimes called the hypothesis) that usefully approximates the true function in the underlying relationship between the input $x$ and associated output $y$.
+The goal of supervised learning is to find a function $h_{\theta}(x)$ (sometimes called the hypothesis) that usefully approximates the true function in the underlying relationship between the input $x$ and associated output $y$, parameterized by $\theta$.
 
 \section{Training, Validation, and Test}
 
@@ -21,7 +21,7 @@ In machine learning, the data samples are commonly split into three separate set
     \item Test Set: samples used to assess the final performance of the final model.
 \end{itemize}
 
-It is important to follow this hierarchy carefully and not use the different sets for the different tasks interchangeably. As \citeauthor{crossvalidationbias} point out in their \citeyear{crossvalidationbias} paper, if, for example, we use the test set to simultaneously tune hyperparameters and assess its generalization performance we risk optimistically biasing the model. As such, if we use any one set to tune hyperparameters, we must use a different set for evaluation to get an unbiased assessment of the model's generalization performance.
+It is important to follow this taxonomy carefully and not use the different sets for the different tasks interchangeably. As \citeauthor{crossvalidationbias} point out in their \citeyear{crossvalidationbias} paper, if, for example, we use the test set to simultaneously tune hyperparameters and assess its generalization performance we risk optimistically biasing the model. As such, if we use any one set to tune hyperparameters, we must use a different set for evaluation to get an unbiased assessment of the model's generalization performance.
 
 However, this technique (typically referred to as the holdout method) has its downsides:
 
@@ -32,7 +32,7 @@ However, this technique (typically referred to as the holdout method) has its do
 
 $K$-fold cross-validation is a common cross-validation technique that randomly partitions the data into $K$ equally sized subsamples, of which a single subsample is used for testing and the remaining $K-1$ subsamples for fitting the model, a process which is repeated $K$ times to yield $K$ performance estimations that can be averaged over to produce one estimation that can be referred to. In this way all samples are used for training and testing, which is an advantage over repeated random sub-sampling which does not systematically use all samples for training and testing.
 
-Nested cross-validation techniques are required when, in addition to estimating a model's generalization performance (i.e. performance on the test set), it is also necessary to select the best model among many (e.g. with different hyperparameters)\cite{crossvalidationbias}. A truly nested variant will use an inner loop of $L$ folds to tune the hyperparameters and select the best model, and an outer loop of $K$ folds to evaluate the models selected by the inner loop. A simpler (albeit not really nested) will follow a scheme similar to the $K$-fold cross-validation we described above, except that, of the $K$ equally sized subsamples, we take 1 subsample for validation, another 1 subsample for testing, and the remaining $K-2$ subsamples are used for training. However, in practice, nested cross-validation when selecting classifiers is overzealous and too expensive for most applications\cite{nestedcvoverzealous}.
+Nested cross-validation techniques are required when, in addition to estimating a model's generalization performance (i.e. performance on the test set), it is also necessary to select the best model among many (e.g. with different hyperparameters) \cite{crossvalidationbias}. A truly nested variant will use an inner loop of $L$ folds to tune the hyperparameters and select the best model, and an outer loop of $K$ folds to evaluate the models selected by the inner loop. A simpler (albeit not really nested) scheme is one that is similar to the $K$-fold cross-validation we described above, except that, of the $K$ equally sized subsamples, we take 1 subsample for validation, another 1 subsample for testing, and the remaining $K-2$ subsamples are used for training. However, in practice, nested cross-validation when selecting classifiers is overzealous and too expensive for most applications \cite{nestedcvoverzealous}.
 
 \section{Binary Classification}
 
@@ -89,7 +89,7 @@ To evaluate a binary classifier means to compare the model's predicted condition
     \item \ac{FN}, cases incorrectly classified as negative, i.e. $h(x^{(i)}) = 0$ but $y^{(i)} = 1$.
 \end{itemize}
 
-From these basic one can derive useful metrics:
+From these basic measurements one can derive useful metrics:
 
 \begin{itemize}
     \item \ac{TPR}, also known as sensitivity or recall, is basically the percentage of actual positives that are correctly identified as positive;
@@ -148,8 +148,7 @@ $$
 \nabla_{\theta} J(\theta) = \frac{1}{m} \sum_{i=1}^{m} \nabla_{\theta} L(h_{\theta}(x^{(i)}), y^{(i)})
 $$
 
-A parameter $\eta \in \mathbb{{R}^{+}}$, called the learning rate, controls the size of the step to take in the direction of the gradient.
-The learning rate $\eta$ must be set carefully to ensure that the cost function converges. A small enough value will ensure convergence, but requires a larger number of updates to get there, whereas bigger values will likely result in divergence.
+A parameter $\eta \in \mathbb{{R}^{+}}$, called the learning rate, controls the size of the step to take in the direction of the gradient. The learning rate $\eta$ must be set carefully to ensure that the cost function converges. A small enough value will ensure convergence, but requires a larger number of updates to get there, whereas bigger values will likely result in divergence.
 
 Thus emerges a very simple and natural update rule (called batch gradient descent) for our parameters:
 
@@ -511,6 +510,47 @@ Like the previous strategy, the classifier is built on top of the extracted feat
 The weights of the extracted layers (regardless if they were all extracted or only partially) do not all need to remain frozen. Given sufficient computational and time resources, further training the weights of the extracted layers can yield even higher generalization performance because we are, in some sense, fine-tuning the weights of the extracted features to better fit the target dataset.
 
 For this fine-tuning one should be very careful and make sure to use a very slow (i.e. low) learning rate so as to not suddenly disrupt the learned features, because we are actually updating weights transferred from another model.
+
+\section{Ensemble Learning}
+
+Ensemble learning is a machine learning paradigm that designs models by combining other models into a single more complex and presumably more accurate model. In ensemble learning theory we refer to these building block models as weak learners because they usually suffer from high bias or high variance, which are combined in such a way to reduce the bias and variance into a final ensemble model called a strong learner.
+
+There are three major ensemble learning methods: bagging, boosting, and stacking.
+
+\subsection{Bagging}
+
+Bagging, short for bootstrap aggregation, focuses on reducing variance and relies on $L$ approximately i.i.d. subsamples of the data (called bootstrap samples) to fit $L$ weak learners $h_1(x), h_2(x), \ldots, h_L(x)$ and aggregate or average them through some function $H(x)$ which e.g.
+
+\begin{enumerate}
+    \item in a regression problem can literally be the average of the predictions of the weak learners, sometimes referred to as soft voting, i.e. $H(x) = \frac{1}{L} \sum_{i=1}^{L} h_i(x)$
+    \item in a classification problem can be to just take the mode of the predictions of the weak learners, often called hard voting, i.e. $H(x) = \mode{(h_1(x), h_2(x), \ldots, h_L(x))}$
+\end{enumerate}
+
+Perhaps the biggest advantage of bagging is that the the $L$ weak learners can be fit independently and in parallel, considerably speeding up research iterations.
+
+\subsection{Boosting}
+
+Boosting fits multiple models sequentially such that the model being fit at a given iteration gives more importance to samples that were previously predicted with high error, thus resulting in a strong learner with lower bias than its weak learners.
+
+Adaptive boosting (also known as AdaBoost) \cite{adaboost} combines the output of its $T$ weak learners into a weighted sum that represents the final output and is of the form
+
+$$
+H_T(x) = \sum_{t=1}^{T} \alpha_t h_t
+$$
+
+Rather than optimizing for the optimal set of weights $\alpha_t$ and weak learners $h_t$, AdaBoost takes an iterative approach. Essentially, at each iteration $t$, a weak learner $h_t$ is chosen and weighted $\alpha_t$ to minimize the training error $E_t$ of the $t$-th boosting classifier
+
+$$
+E_t = \sum_{t=1}^{T} E[H_{t-1}(x_t) + \alpha_t h_t(x_i)]
+$$
+
+\subsection{Stacking}
+
+Rather than combining the weak learners using some arbitrary pre-determined scheme, stacking learns this combination by training a meta-model based on the weak learners' predictions, which can even be done in multiple layers.
+
+Stacking often works well with heterogeneous weak learners, i.e. different algorithms. For example, our weak learners could consist of \ac{KNN}, \ac{SVM}, and decision tree models. Then, the outputs of the weak learners could be taken as inputs for an \ac{ANN} to learn the meta-model based on their predictions.
+
+The data that is used to train the weak learners is not relevant for training the meta-model. Thus we need to split the data in two folds: one for training the weak learners and another for training the meta-model. An obvious immediate drawback is that we only have a fraction of the data available for training the meta-model and vice versa.
 
 \section{Deep Learning Hardware}
 
