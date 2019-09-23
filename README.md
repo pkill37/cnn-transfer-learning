@@ -31,7 +31,7 @@ Download the official ISIC2018 train set, preprocess it, and split it into our o
 
 ## Train
 
-Given a script `./src/5_resnet.py` that trains a model, you can run it and save the model in `./experiments_5_resnet` using
+Given a script `./src/5_resnet.py` that trains a model, you can run it and store the model in `./experiments_5_resnet/model.h5` using
 
 ```
 python ./src/5_resnet.py --experiments ./experiments_5_resnet --train-set ./data/isic2018/224/train/train.npz --epochs 1000 --batch-size 32
