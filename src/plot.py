@@ -21,7 +21,7 @@ def plot_train_loss(stat, target_file):
     plt.plot(epochs, train_loss, 'b', label='Train cost')
     plt.ylabel('Cost')
     plt.xlabel('Epoch')
-    plt.ylim(0, 1)
+    #plt.ylim(0, 1)
     plt.title(f'Train cost')
     plt.legend()
 

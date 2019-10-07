@@ -76,22 +76,18 @@ def reduce_experiment(experiment):
     }
 
 
-def main(experiments, test_set):
-    stats = []
-    subdirs = next(os.walk(experiments))[1]
+def main(experiment, test_set):
+    test(os.path.join(experiment, 'model.h5'), test_set)
+    stats = reduce_experiment(experiment)
 
-    for subdir in subdirs:
-        test(os.path.join(experiments, subdir, 'model.h5'), test_set)
-        stats.append(reduce_experiment(os.path.join(experiments, subdir)))
-
-        with open(os.path.join(experiments, 'stats.json'), 'w') as f:
-            json.dump(stats, f)
+    with open(os.path.join(experiment, 'stats.json'), 'w') as f:
+        json.dump(stats, f)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiments', type=helpers.is_dir, required=True)
+    parser.add_argument('--experiment', type=helpers.is_dir, required=True)
     parser.add_argument('--test-set', type=helpers.is_file, required=True)
     args = parser.parse_args()
 
-    main(args.experiments, args.test_set)
+    main(args.experiment, args.test_set)
