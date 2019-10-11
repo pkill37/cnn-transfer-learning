@@ -1,5 +1,5 @@
 #! /bin/bash
-set -euxo pipefail
+set -x
 
 experiments=$(echo "$1")
 test_set=$(echo "$2")

@@ -8,4 +8,4 @@ tarball=$(echo "$(basename $directory).tar.gz")
 tar -czvf "$tarball" "$directory"
 
 # Print command to transfer tarball from local machine
-echo "scp deeplar:$(readlink -f $tarball) ."
+echo "scp deeplar.ml:$(readlink -f $tarball) ."
