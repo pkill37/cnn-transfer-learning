@@ -51,7 +51,7 @@ $$
 
 In a binary classification problem specifically we have that $y^{(i)} \in \{0, 1\}$. Unfortunately, as it turns out, the linear regression cost function is unsuitable for binary classification because it would be a non-convex function with many local minima, which in turn would make optimization very difficult.
 
-Essentially, binary classification requires a cost function that penalizes very confident wrong predictions and rewards confident and right predictions, i.e.,
+Essentially, binary classification requires a cost function that penalizes very confident wrong predictions while also rewarding confident right predictions, i.e.,
 
 \begin{itemize}
     \item if the prediction is $h_{\theta}(x) = 0$ and the ground-truth label is $y = 0$, $J(\theta)$ is low;
@@ -77,8 +77,6 @@ or, cleverly arranging things algebraically,
 $$
 J(\theta) = -\frac{1}{m} \sum_{i=0}^{m} ( y^{(i)}\log(h_{\theta}(x^{(i)})) + (1 - y^{(i)})\log(1 - h_{\theta}(x^{(i)})) )
 $$
-
-\section{Binary Classifier Evaluation}
 
 To evaluate a binary classifier means to compare the model's predicted conditions against the true conditions, where one must consider:
 
@@ -156,10 +154,10 @@ $$
 \theta^{t+1} = \theta^t - \eta \nabla_{\theta} J(\theta)
 $$
 
-Computing the gradient $\nabla J$ with respect to the original $m$ training samples is computationally and memory intensive for very big $m$. But it turns out we can get a good estimate of the true gradient $\nabla J$ by randomly choosing a smaller number $m'$ of samples, i.e.,
+Computing the gradient $\nabla J$ with respect to the original $m$ training samples is computationally and memory intensive for very big $m$. But it turns out we can get a good estimate of the true gradient $\nabla J$ by averaging over a smaller random number of samples $m'$, i.e.,
 
 $$
-\frac{\sum_{i=1}^{m'} \nabla J_i}{m'} \approx \frac{\sum_{i=1}^m \nabla J_{i}}{m} = \nabla J
+\frac{\sum_{i=1}^{m'} \nabla J_i}{m'} \approx \frac{\sum_{i=1}^m \nabla J_{i}}{m} \approx \nabla J
 $$
 
 This idea is interchangeably referred to as mini-batch gradient descent or \ac{SGD} (in some literature only when $m' = 1$).
@@ -168,15 +166,21 @@ More recently, gradient descent methods have been further developed to find indi
 
 \section{Initialization}
 
-Optimization algorithms for deep learning are usually iterative, hence the matrix $\theta$ needs to be initialized. This initialization determines how quickly optimization converges or whether it converges at all, which is why it is so important.
+An optimization algorithm like gradient descent is inherently iterative in its update rule (for iterations $t > 0$)
 
-A reasonable first approach would be to initialize all values of the matrix $\theta$ to zero. However, e.g. in a neural network this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation (assuming all neurons use the same activation function), thus the gradients computed by backpropagation will also be the same and result in the exact same updates during gradient descent. Therefore parameters must be chosen in such a way that they break this symmetry, which is what motivates the use of random initialization. However simply drawing random parameters (e.g. from a Gaussian distribution with 0 mean and 1 standard deviation) might result in too small or too big parameter values and very wide in range which originate a vanishing or exploding gradient problem where different layers effectively learn at different speeds.
+$$
+\theta^{t+1} = \theta^t - \eta \nabla_{\theta} J(\theta)
+$$
 
-Modern initialization techniques are heuristic based and designed around the activation functions themselves to counter these problems by, essentially, guaranteeing the activations mean to be $0$ and the activations variance to be the same across different layers. Under these conditions the backpropagated gradient will not be multiplied by very small or very big values (which would lead to vanishing or exploding problems, respectively). Specifically,
+for which we need to initialize the matrix $\theta^0$ such that the first update works. This initialization determines how quickly optimization converges or whether it converges at all, which is why it is so important.
+
+A reasonable first approach would be to initialize all values of the matrix $\theta$ to zero. However, e.g. in a neural network this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation (assuming all neurons use the same activation function), thus the gradients computed by backpropagation will also be the same and result in the exact same updates during gradient descent. Therefore parameters must be chosen in such a way that they break this symmetry, which is what motivates the use of random initialization. However simply drawing random parameters (e.g. from a Gaussian distribution with mean 0 and standard deviation 1) might result in too small or too big parameter values and very wide in range which originate a vanishing or exploding gradient problem where different layers effectively learn at different speeds.
+
+Modern initialization techniques are heuristic based and designed around the activation functions themselves to counter these problems by, essentially, guaranteeing the activations' mean to be $0$ and the variance to be the same across different layers. Under these conditions the backpropagated gradient will not be multiplied by very small or very big values (which would lead to vanishing or exploding gradient problems, respectively). Specifically,
 
 \begin{itemize}
-    \item for tanh activation functions, Xavier et al.\cite{xavierinit} recommends drawing parameters from either $\mathcal{N}(0, \frac{1}{n_{in}})$ or $\mathcal{N}(0, \frac{2}{n_{in}+n_{out}})$ where $n_{in}$ is the number of input neurons and $n_{out}$ the number of output neurons in that layer;
-    \item for ReLU activation functions, He et al.\cite{heinit} suggests drawing from $\mathcal{N}(0, \frac{2}{n_{in}})$.
+    \item for tanh activation functions, Xavier et al. \cite{xavierinit} recommend drawing parameters from either $\mathcal{N}(0, \frac{1}{n_{in}})$ or $\mathcal{N}(0, \frac{2}{n_{in}+n_{out}})$ where $n_{in}$ is the number of input neurons and $n_{out}$ the number of output neurons in that layer;
+    \item for ReLU activation functions, He et al. \cite{heinit} suggest drawing from $\mathcal{N}(0, \frac{2}{n_{in}})$.
 \end{itemize}
 
 More recently, initializing a network with parameters transferred from other networks (typically trained on natural image datasets whose lower-layers' features generalise well to other tasks) has emerged as a very useful and pragmatic initialization strategy which in practice works very well for most tasks \cite{howtransferable}, giving birth to what is now known as transfer learning.
@@ -202,9 +206,11 @@ In practice, gradient descent converges much faster with features that follow a 
 
 In binary classification problems, it is said that a dataset of $m$ samples has class imbalance when there is a majority class with $|S_{maj}|$ samples and a minority class with $|S_{min}|$ samples where $|S_{maj}| > |S_{min}|$, in other words when there is a significant difference between the number of samples of one class compared to the other. It is very common to see datasets in which classes are highly imbalanced, simply because it reflects the real world distribution (e.g. there are more benign moles than actual melanoma cases).
 
-A lot of machine learning algorithms do not perform well under this imbalance. When a dataset is imbalanced, machine learning algorithms will typically over-classify the majority group due to its increased prior probability. Thus, the samples in the minority group are misclassifed more often than the majority group \cite{Johnson2019}.
+A lot of machine learning algorithms do not perform well under this imbalance. When a dataset is imbalanced, machine learning algorithms will typically over-classify the majority group due to its increased prior probability. Thus, the samples in the minority group are misclassified more often than the majority group \cite{Johnson2019}.
 
-\citeauthor{haibo2009} provide a comprehensive survey of class balancing algorithms \cite{haibo2009}, of which oversampling of the minority class is the simplest and most natural. In practice the minority class must be oversampled by a factor (i.e. number of transformations applied to each original sample) of $\frac{|S_{maj}|}{|S_{min}|}$. Sometimes, in addition to balancing the dataset, it is also necessary to augment the total number of samples $m$ (perhaps because of an overfitting problem) to a new total number of samples $m'$, in which case
+\citeauthor{haibo2009} provide a comprehensive survey of class balancing algorithms \cite{haibo2009}, of which oversampling of the minority class is the simplest and most natural. In practice the minority class must be oversampled by a factor (i.e. number of transformations applied to each original sample) of $\frac{|S_{maj}|}{|S_{min}|}$.
+
+Sometimes, perhaps because of an overfitting problem, it is also necessary to augment the total number of samples $m$ to a new total number of samples $m'$, in which case
 
 \begin{itemize}
     \item the minority class must be oversampled by augmenting its samples  by a factor of $\frac{\frac{m'}{2}}{|S_{min}|}$
@@ -300,15 +306,15 @@ which basically
     \item generally produces more complex models.
 \end{itemize}
 
-In practice, we control the regularization strength via the $\lambda$ parameter. Put simply, in a high variance (overfitting) scenario we should increase $\lambda$ and in a high bias (underfitting) situation we should decrease $\lambda$.
+In practice, we control the regularization strength via the $\lambda$ parameter. Put simply, in a high variance scenario (overfitting) we should increase $\lambda$ and in a high bias situation (underfitting) we should decrease $\lambda$.
 
-More recently, Dropout\cite{dropout} is another regularization technique designed specifically to prevent neural networks from overfitting by randomly dropping neuron (and their connections) from the network during training which prevents complex co-adaptations on training data.
+More recently, Dropout \cite{dropout} is another regularization technique designed specifically to prevent neural networks from overfitting by randomly dropping neuron (and their connections) from the network during training which prevents complex co-adaptations on training data.
 
-\citeauthor{regularizationsurvey} present a much broader and more modern view of regularization in machine learning in their \citeyear{regularizationsurvey} paper\cite{regularizationsurvey}, where they define regularization more abstractly as any technique that allows the model to generalize better (i.e. perform better on the test set). They go over implicit regularization via data augmentation, network architecture, and the optimization algorithm itself as well as various explicit regularization techniques that penalize large weights (e.g. L1 and L2 regularization).
+\citeauthor{regularizationsurvey} present a much broader and more modern view of regularization in machine learning in their \citeyear{regularizationsurvey} paper \cite{regularizationsurvey}, where they define regularization more abstractly as any technique that allows the model to generalize better (i.e. perform better on the test set). They go over implicit regularization via data augmentation, network architecture, and the optimization algorithm itself as well as various explicit regularization techniques that penalize large weights (e.g. L1 and L2 regularization).
 
 \section{Neural Network}
 
-Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to our data and are composed of several neurons.
+Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to data and are composed of several neurons.
 
 \subsection{Neuron}
 
@@ -333,11 +339,9 @@ $$
 g(x) = \frac{1}{1 + e^{-x}}
 $$
 
-The rectifier
+ReLU is the abbreviation of rectified linear unit, which applies the non-saturating activation function $g(x)=\max(0,x)$. It effectively removes negative values from an activation map by setting them to zero. It increases the nonlinear properties of the decision function and of the overall network without affecting the receptive fields of the convolution layer.
 
-$$
-g(x) = \max(0, x)
-$$
+Other functions are also used to increase nonlinearity, for example the saturating hyperbolic tangent $g(x)=\tanh(x)$, $g(x)=|\tanh(x)|$, and the sigmoid function $\sigma (x)=(1+e^{-x})^{-1}$. ReLU is often preferred to other functions because it trains the neural network several times faster without a significant penalty to generalization accuracy.[62]
 
 \subsection{Forward Pass}
 \label{subsection:forwardpass}
@@ -425,7 +429,7 @@ A \ac{CNN} is a class of deep, feed-forward artificial neural network, originall
     \item Classifier composed by fully connected layers. The main goal of the classifier is to classify the image based on the detected features. A fully connected layer is a layer whose neurons have full connections to all activation in the previous layer.
 \end{itemize}
 
-For a particular feature map (the output received on convolving the image with a particular filter is called a feature map), each neuron is connected only to a small chunk of the input image and all the neurons have the same connection weights
+For a particular feature map (the output received on convolving the image with a particular filter is called a feature map), each neuron is connected only to a small chunk of the input image and all the neurons have the same connection weights.
 
 Two key ideas in convolutional neural networks:
 
@@ -456,7 +460,9 @@ To summarize, a convolutional layer:
     \item In the output volume, the $d$-th depth slice (of size $W_2 \times H_2$) is the result of performing a valid convolution of the $d$-th filter over the input volume with a stride of $S$, and then offset by $d$-th bias.
 \end{enumerate}
 
-AlexNet \cite{alexnet} won the \ac{ILSVRC} \cite{imagenet} in 2012 by a very large margin, introducing a breakthrough in computer vision which proved that learned features could be better than hand-designed features chosen heuristically. The network employed an 8-layer \ac{CNN} that stacked many convolutional layers producing progressively smaller convolutional windows, followed by two fully-connected layers with 4096 outputs and finally a softmax layer for classification in ImageNet. In its design they also used Dropout regularization and the ReLU activation function, which today are very popular and essential tools in deep learning.
+LeNet \cite{lenet} is widely considered to be the first successful application of \ac{CNN}, when \citeauthor{lenet} used backpropagation to automatically learn the kernels of convolutions rather than the laborous hand-designed systems that came before it.
+
+AlexNet \cite{alexnet} won the \ac{ILSVRC} \cite{imagenet} in 2012 by a very large margin, introducing a breakthrough in computer vision which further proved that learned features could be better than hand-designed features chosen heuristically. The network employed an 8-layer \ac{CNN} that stacked many convolutional layers (immediatelly followed by pooling layers) producing progressively smaller convolutional windows, topped off by two fully-connected layers with 4096 outputs and finally a softmax layer for classification in ImageNet. In its design they also used Dropout regularization and the ReLU activation function, which today are very popular and essential tools in deep learning.
 
 Later the \ac{VGG} designed an architecture that used repeated blocks of layers to build progressively more abstract features, shifting thinking in terms of layers to blocks. This basic building block consists of a convolutional layer with padding to maintain resolution, a nonlinearity (i.e. ReLU), pooling for downsampling the features. In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convolutions and $2 \times 2$ max pooling with stride $S = 2$, essentially halving the resolution after each one of these blocks.
 

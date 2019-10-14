@@ -1,10 +1,38 @@
 \chapter{Introduction}
 \label{chapter:introduction}
 
-% motivation
-Melanoma is a dangerous type of skin cancer which in 2012 occurred in 232000 people, and in 2015 there were 3.1 million people with the disease that resulted in over 59000 deaths. According to the Centers for Disease Control and Prevention, the rates of new melanomas have doubled over the last three decades and will continue to double.
+This introductory chapter introduces this dissertation's motivation, objectives, and high-level outline.
 
-% definition
-Melanoma is a cancer that is developed from melanocytes (i.e. cells that produce the melanin skin pigment). This abnormal growth of tissue generally occurs in skin, but can also manifest itself in the mouth, intestines or eyes. The most common cause of melanoma is the exposure to ultraviolet light (e.g. sunlight, tanning devices), thus it can be prevented by frequent use of sunscreen and avoiding long exposure to the sun. The clinical diagnosis is confirmed with a skin biopsy and, if it hasn't spread, treatment is usually surgical excision.
+\section{Motivation}
 
-Since the skin lesions occur on the surface of the skin, melanoma can easily be detected early through visual inspection by a physician with the use of dermoscopy techniques that allow a better look at the pigmented lesions. Dermoscopy is an imaging technique that works by removing the surface reflection of the skin which enables the visualization of enhanced levels of skin. More recently, computerized digital dermoscopy has made it relatively trivial to get high resolution imaging that can be used to get second opinions remotely or even a computer-assisted diagnosis\cite{dermoscopy}. Specifically, advances in deep learning algorithms and computer hardware has made classification by a machine learning algorithm a viable and reliable technique for a diagnosis.
+Melanoma is a cancer that is developed from melanocytes, i.e. cells that produce the melanin skin pigment. This abnormal growth of tissue generally occurs in skin, but can also manifest itself in the mouth, intestines or eyes. The most common cause of melanoma is the exposure to ultraviolet light (e.g. sunlight, tanning devices), thus it can be prevented by frequent use of sunscreen and avoiding long exposure to the sun. The clinical diagnosis is confirmed with a skin biopsy and, if it hasn't spread, treatment is usually surgical excision.
+
+Melanoma is a dangerous type of skin cancer which, in 2012, occurred in 232000 people, and in 2015 there were 3.1 million people with the disease that resulted in over 59000 deaths worldwide. According to the \ac{CDC} , the rates of new melanomas have doubled over the last three decades and will continue to double.
+
+Since the skin lesions occur on the surface of the skin, melanoma can easily be detected early through visual inspection by a physician with the use of dermoscopy techniques that allow a better look at the pigmented lesions. Dermoscopy is an imaging technique that works by removing the surface reflection of the skin which enables the visualization of enhanced levels of skin. More recently, computerized digital dermoscopy has made it relatively trivial to get high resolution imaging that can be used to get second opinions remotely or even a computer-assisted diagnosis\cite{dermoscopy}. More specifically, advances in deep learning algorithms and computer hardware has made classification by a machine learning algorithm a viable and reliable technique for a diagnosis.
+
+Deep learning architectures are an improvement of \ac{ANN} characterized by the large number of hidden processing layers capable of learning hierarchical feature representations. One major advantage of deep learning is that it reduces the need of feature engineering, which is one of the most complicated and time consuming parts in machine learning practice. The successes of deep learning architectures are now well reported in computer vision. The latest developments have been boosted by the use of \ac{GPU} to speedup computations and the development of high-level modules to build neural networks such as Theano, Caffe and TensorFlow.
+
+The surveys by Greenspan, Ginneken and Summers \cite{intro1}, Hu et al. \cite{intro2} and Litjens et al. \cite{intro3} contribute to a clear understanding of the principles and methods of neural networks and deep learning applied to medical image analysis. They provide insight into how the algorithms based on deep models, namely \ac{CNN}, are being applied in different contexts, such as organ segmentation, lesion detection or tumor classification. A particular area where deep learning is rapidly improving the state-of-the art is in dermatology care \cite{nature2017}\cite{intro5}\cite{intro6}. The results achieved are impressive despite the many challenges for training deep models with many layers composed by adaptive parameters encompass.
+
+The first challenge is that deep learning models often require a large amount of training data to achieve superior performance than other methods (shallow competitors). Second, the objective function is often a highly non-convex function of the parameters with the potential for local minima. Third, we still lack the right methodology to fully comprehend the deep structure of a trained model that works, to a large extent, like a black box. Consequently, training deep models from scratch requires large amounts of annotated data and massive computational resources. Transfer learning has emerged as a promising solution to the data challenge by using, as baseline, the knowledge from a deep model previously trained on a large labelled dataset \cite{intro7}\cite{howtransferable}\cite{intro9}.
+
+\section{Objectives}
+
+The objective is to assess and compare the effectiveness of transfer learning in the specific domain of skin lesion classification by running experiments that will train and evaluate models using various different techniques.
+
+The first set of experiments focuses on transfer learning. In general, we start from models previously trained on ImageNet (of a variety of architectures) and repurpose them for the task of skin lesion classification by extracting weights from arbitrary layers and continuing training on our dataset. Namely in our study we consider as a variable the layer where this extraction of weights occurs and study its effect.
+
+The second set of experiments focuses on a simpler custom \ac{CNN} architecture designed around first-principle heuristics and trained end-to-end, rather than the transfer learning approach of initializing the weights to those of the pre-trained model, thus presenting a model obtained by following more traditional techniques for comparison.
+
+\section{Outline}
+
+At a high level, this dissertation is organized into 5 other chapters:
+
+\begin{itemize}
+    \item Chapter \ref{chapter:background} introduces the reader to deep learning concepts and state-of-the-art techniques relevant to this dissertation;
+    \item Chapter \ref{chapter:sota} reviews the state-of-the-art results of deep learning applied to dermoscopy;
+    \item Chapter \ref{chapter:environment} introduces the hardware and software used for this work;
+    \item Chapter \ref{chapter:experiments} goes over this work's methodology and presents and discusses the experimental results;
+    \item Chapter \ref{chapter:conclusion} offers final remarks, key takeaways, and points in the direction of future work.
+\end{itemize}
