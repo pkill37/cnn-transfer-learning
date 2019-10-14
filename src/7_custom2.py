@@ -21,7 +21,7 @@ OPTIMIZER = tf.keras.optimizers.SGD(lr=10e-4, momentum=0.9, decay=0.0, nesterov=
 LR_DECAY = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_acc', factor=0.1, patience=10, verbose=1, mode='max', min_delta=EPSILON, cooldown=0, min_lr=0)
 
 
-def custom(l2):
+def custom2(l2, units):
     model = tf.keras.models.Sequential([
         tf.keras.layers.Conv2D(input_shape=(IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), filters=32, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)),
         tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
@@ -30,14 +30,14 @@ def custom(l2):
         tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
 
         tf.keras.layers.GlobalAveragePooling2D(),
-        tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)),
+        tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)),
         tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(l2)),
     ])
     model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS)
     return model
 
 
-def train_custom(experiments, x, y, epochs, batch_size):
+def train_custom2(experiments, x, y, epochs, batch_size):
     # Standardize and split data
     x = data.standardize(x, np.mean(x, axis=(0,1,2)), np.std(x, axis=(0,1,2)))
     x_train, x_validation, y_train, y_validation = sklearn.model_selection.train_test_split(x, y, test_size=0.2, shuffle=True, stratify=y)
@@ -45,15 +45,15 @@ def train_custom(experiments, x, y, epochs, batch_size):
     del y
 
     # Build hyperparameters search grid
-    params = dict(l2=np.logspace(-50, -10, 60))
+    params = dict(l2=np.logspace(-50, 10, 30), units=[64,128,256,512,1024,2048])
     params = itertools.product(*params.values())
 
     # Train a model for each hyperparameters setting
     for param in params:
-        l2, = param
-        model = custom(l2)
+        l2, units = param
+        model = custom2(l2, units)
 
-        run = os.path.join(experiments, f'lambda{l2}')
+        run = os.path.join(experiments, f'units{units}_lambda{l2}')
         helpers.create_or_recreate_dir(run)
         print(run)
         model_filename = os.path.join(run, 'model.h5')
@@ -62,7 +62,7 @@ def train_custom(experiments, x, y, epochs, batch_size):
         callbacks = [
             LR_DECAY,
             helpers.TrainingTimeLogger(),
-            tf.keras.callbacks.EarlyStopping(monitor='loss', min_delta=EPSILON, patience=30, verbose=1, mode='min', baseline=None),
+            tf.keras.callbacks.EarlyStopping(monitor='loss', min_delta=EPSILON, patience=50, verbose=1, mode='min', baseline=None),
             tf.keras.callbacks.ModelCheckpoint(filepath=model_filename, monitor='loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
             tf.keras.callbacks.CSVLogger(filename=csv_filename, separator=',', append=False),
         ]
@@ -77,7 +77,7 @@ def main(experiments, train_set, epochs, batch_size):
 
     # Train
     x, y = data.load(train_set)
-    train_custom(experiments, x, y, epochs, batch_size)
+    train_custom2(experiments, x, y, epochs, batch_size)
 
 
 if __name__ == '__main__':
