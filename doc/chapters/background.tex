@@ -314,7 +314,7 @@ More recently, Dropout \cite{dropout} is another regularization technique design
 
 \section{Neural Network}
 
-Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to data and are composed of several neurons.
+Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to data and are traditionally composed of several neurons.
 
 \subsection{Neuron}
 
@@ -339,11 +339,9 @@ $$
 g(x) = \frac{1}{1 + e^{-x}}
 $$
 
-ReLU is the abbreviation of rectified linear unit, which applies the non-saturating activation function $g(x)=\max(0,x)$. It effectively removes negative values from an activation map by setting them to zero. It increases the nonlinear properties of the decision function and of the overall network without affecting the receptive fields of the convolution layer.
+ReLU is the abbreviation of rectified linear unit, which applies the non-saturating activation function $g(x)=\max(0,x)$. It effectively removes negative values from an activation map by setting them to zero. It increases the nonlinear properties of the decision function and of the overall network without affecting the receptive fields of the convolution layer. ReLU is preferred because it trains the neural network faster without a significant penalty to generalization accuracy.[62]
 
-Other functions are also used to increase nonlinearity, for example the saturating hyperbolic tangent $g(x)=\tanh(x)$, $g(x)=|\tanh(x)|$, and the sigmoid function $\sigma (x)=(1+e^{-x})^{-1}$. ReLU is often preferred to other functions because it trains the neural network several times faster without a significant penalty to generalization accuracy.[62]
-
-\subsection{Forward Pass}
+Other functions are also used to increase nonlinearity, for example the saturating hyperbolic tangent $g(x)=\tanh(x)$, $g(x)=|\tanh(x)|$, and the sigmoid function $\sigma (x)=(1+e^{-x})^{-1}$. \subsection{Forward Pass}
 \label{subsection:forwardpass}
 
 An $L$-layer neural network's activations can be recursively defined
@@ -460,15 +458,50 @@ To summarize, a convolutional layer:
     \item In the output volume, the $d$-th depth slice (of size $W_2 \times H_2$) is the result of performing a valid convolution of the $d$-th filter over the input volume with a stride of $S$, and then offset by $d$-th bias.
 \end{enumerate}
 
-LeNet \cite{lenet} is widely considered to be the first successful application of \ac{CNN}, when \citeauthor{lenet} used backpropagation to automatically learn the kernels of convolutions rather than the laborous hand-designed systems that came before it.
+LeNet \cite{lenet}, in figure \ref{fig:lenet}, is widely considered to be the first successful application of \ac{CNN}, when \citeauthor{lenet} used backpropagation to automatically learn the kernels of convolutions rather than the laborous hand-designed systems that came before it.
 
-AlexNet \cite{alexnet} won the \ac{ILSVRC} \cite{imagenet} in 2012 by a very large margin, introducing a breakthrough in computer vision which further proved that learned features could be better than hand-designed features chosen heuristically. The network employed an 8-layer \ac{CNN} that stacked many convolutional layers (immediatelly followed by pooling layers) producing progressively smaller convolutional windows, topped off by two fully-connected layers with 4096 outputs and finally a softmax layer for classification in ImageNet. In its design they also used Dropout regularization and the ReLU activation function, which today are very popular and essential tools in deep learning.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figs/lenet.png}
+    \caption{LeNet}
+    \label{fig:lenet}
+\end{figure}
 
-Later the \ac{VGG} designed an architecture that used repeated blocks of layers to build progressively more abstract features, shifting thinking in terms of layers to blocks. This basic building block consists of a convolutional layer with padding to maintain resolution, a nonlinearity (i.e. ReLU), pooling for downsampling the features. In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convolutions and $2 \times 2$ max pooling with stride $S = 2$, essentially halving the resolution after each one of these blocks.
+AlexNet \cite{alexnet} won the \ac{ILSVRC} \cite{imagenet} in 2012 by a very large margin, introducing a breakthrough in computer vision which further proved that learned features could be better than hand-designed features chosen heuristically. The network, pictured in figure \ref{fig:alexnet}, employed an 8-layer \ac{CNN} that stacked many convolutional layers (immediatelly followed by pooling layers) producing progressively smaller convolutional windows, topped off by two fully-connected layers with 4096 outputs and finally a softmax layer for classification in ImageNet. In its design they also used Dropout regularization and the ReLU activation function, which today are very popular and essential tools in deep learning.
 
-GoogLeNet \cite{inceptionv1} (also known as Inception V1) won the \ac{ILSVRC} \cite{imagenet} in 2014 which introduced the Inception block that establishes four parallel paths that use convolutional layers of different windows and max pooling layers. Furthermore it exhibited lower computational complexity when compared to other models with similar generalization performance. This influenced many later versions of Inception \cite{inceptionv2_3}\cite{inceptionv4}.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figs/alexnet.png}
+    \caption{AlexNet}
+    \label{fig:alexnet}
+\end{figure}
 
-More recently \citeauthor{resnet} have pushed the state-of-the-art by introducing residual neural networks \cite{resnet}. Motivated by avoiding the problem of vanishing gradients, residual networks allow the use of skip connections (or short cuts) to arbitrarily jump over layers (effectively reusing activations from previous layers in its forward pass) which significantly speeds up learning by reducing the impact of vanishing gradients since there are less layers to backpropagate through. An ensemble of these networks achieved 3.57\% error on ImageNet, a result which won 1st place on \ac{ILSVRC} 2015.
+Later the \ac{VGG} designed an architecture (illustrated in figure \ref{fig:vgg16}) that used repeated blocks of layers to build progressively more abstract features, shifting thinking in terms of layers to blocks. This basic building block consists of a convolutional layer with padding to maintain resolution, a nonlinearity (i.e. ReLU), pooling for downsampling the features. In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convolutions and $2 \times 2$ max pooling with stride $S = 2$, essentially halving the resolution after each one of these blocks.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figs/vgg16.jpg}
+    \caption{VGG16}
+    \label{fig:vgg16}
+\end{figure}
+
+GoogLeNet \cite{inceptionv1} (also known as Inception V1) won the \ac{ILSVRC} \cite{imagenet} in 2014 which introduced the Inception block that establishes four parallel paths that use convolutional layers of different windows and max pooling layers. Furthermore it exhibited lower computational complexity when compared to other models with similar generalization performance. This influenced many later versions of Inception \cite{inceptionv2_3}\cite{inceptionv4}, namely Inception V3 as illustrated in figure \ref{fig:inceptionv3}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figs/inceptionv3.png}
+    \caption{Inception V3}
+    \label{fig:inceptionv3}
+\end{figure}
+
+More recently \citeauthor{resnet} have pushed the state-of-the-art by introducing residual neural networks \cite{resnet}. Motivated by avoiding the problem of vanishing gradients, residual networks allow the use of skip connections (or short cuts, as pictured in figure \ref{fig:resnet50}) to arbitrarily jump over layers (effectively reusing activations from previous layers in its forward pass) which significantly speeds up learning by reducing the impact of vanishing gradients since there are less layers to backpropagate through. An ensemble of these networks achieved 3.57\% error on ImageNet, a result which won 1st place on \ac{ILSVRC} 2015.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figs/resnet50.png}
+    \caption{Comparison between ResNet-50 and more traditional architectures, illustrating how residual networks avoid the vanishing gradient problem.}
+    \label{fig:resnet50}
+\end{figure}
 
 \section{Transfer Learning}
 \label{section:transferlearning}

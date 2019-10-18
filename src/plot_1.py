@@ -13,24 +13,9 @@ import helpers
 import data
 
 
-def plot_train_loss(stat, target_file):
-    train_loss = stat['train_loss']
-    epochs = range(len(train_loss))
-
-    plt.figure()
-    plt.plot(epochs, train_loss, 'b', label='Train cost')
-    plt.ylabel('Cost')
-    plt.xlabel('Epoch')
-    #plt.ylim(0, 1)
-    plt.title(f'Train cost')
-    plt.legend()
-
-    plt.savefig(target_file)
-
-
 def truncate_floats(stats):
     def truncate(f):
-        return float("{:.4f}".format(f))
+        return float("{:.2e}".format(f))
 
     for stat in stats:
         for h in stat['hyperparameters']:
@@ -89,26 +74,56 @@ def tabulate(stats, target_file):
         f.write(latex)
 
 
+def plot_lambda(stats, plots):
+    extract = [18, 14, 10, 6, 3]
+    freeze = [18, 14, 10, 6, 3, 0]
+    cases = []
+    for e in extract:
+        case = []
+        for f in freeze:
+            if f <= e:
+                case.append((e, f))
+        cases.append(case)
+
+    for case in cases:
+        fig, axs = plt.subplots(1, len(case), constrained_layout=True, figsize=(3*len(case), 3))
+        for i in range(len(case)):
+            extract, freeze = case[i]
+            stats_filtered = list(filter(lambda s: s['hyperparameters']['extract'] == extract and s['hyperparameters']['freeze'] == freeze, stats))
+            x = np.array(sorted([stat['hyperparameters']['lambda'] for stat in stats_filtered]))
+            y1 = np.array(sorted([stat['train_acc'][-1] for stat in stats_filtered]))
+            y2 = np.array(sorted([stat['val_acc'][-1] for stat in stats_filtered]))
+            y3 = np.array(sorted([stat['test_acc'] for stat in stats_filtered]))
+
+            axs[i].set_title(f'Extract {extract} and freeze {freeze} layers')
+            axs[i].plot(x, y1, '.b-', label="$A_{train}$")
+            axs[i].plot(x, y2, '.r-', label="$A_{val}$")
+            axs[i].plot(x, y3, '.g-', label="$A_{test}$")
+            axs[i].legend()
+            axs[i].grid(True)
+
+            axs[i].set_xscale("log")
+            axs[i].set_yscale("linear")
+
+            axs[i].set_xlabel("L2-regularization Strength")
+            axs[i].set_ylabel("Accuracy")
+
+        plt.savefig(os.path.join(plots, f'{extract}.png'))
+        plt.close()
+
+
 def main(experiments, plots):
     stats = os.path.join(experiments, 'stats.json')
     with open(stats) as f:
         stats = json.loads(f.read())
 
-    # Sort by F1
-    stats = sorted(stats, key=lambda x: x['classification_report']['weighted avg']['f1-score'], reverse=True)
+    # Tabulate top-20 results sorted by performance
+    stats = sorted(stats, key=lambda x: x['test_acc'], reverse=True)
     stats = stats[:20]
+    tabulate(stats, os.path.join(plots, 'top20.tex'))
 
-    # Tabulate results
-    tabulate(stats, os.path.join(plots, 'table.tex'))
-
-    # Plot graphs
-    """
-    for i, stat in enumerate(stats):
-        target_path = os.path.join(plots, stat['id'])
-        helpers.create_or_recreate_dir(target_path)
-        target_file = os.path.join(target_path, f'{i}_cost.png')
-        plot_train_loss(stat, target_file)
-    """
+    # Plot accuracy vs lambda
+    plot_graphs(stats, plots)
 
 
 if __name__ == '__main__':
