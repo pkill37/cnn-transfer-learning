@@ -4,13 +4,11 @@ import argparse
 import csv
 import json
 
-import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-import sklearn.metrics
+from mpl_toolkits.mplot3d import Axes3D
 
 import helpers
-import data
 
 
 def truncate_floats(stats):
@@ -43,22 +41,22 @@ def tabulate(stats, target_file):
     """
 
     # Truncate floats to 2 decimal places for presentation purposes
-    stats = truncate_floats(stats)
+    stats_truncated = truncate_floats(stats)
 
     # Build header
     latex = '\\begin{table}[ht]\n'
     latex += '\\centering\n'
     latex += '\\begin{tabular}{ '
-    latex += '|c'*(len(stats[0]['hyperparameters']) + 3) + '|'
+    latex += '|c'*(len(stats_truncated[0]['hyperparameters']) + 3) + '|'
     latex += ' }\n'
     latex += '\\hline\n'
-    for h in stats[0]['hyperparameters']:
+    for h in stats_truncated[0]['hyperparameters']:
         latex += f"{h} & "
     latex += "train acc & val acc & test acc \\\\\n"
     latex += '\\hline\n'
 
     # Build body
-    for stat in stats:
+    for stat in stats_truncated:
         for h in stat['hyperparameters']:
             latex += f"{stat['hyperparameters'][h]} & "
         latex += f"{stat['train_acc'][-1]} & {stat['val_acc'][-1]} & {stat['test_acc']} \\\\\n"
@@ -74,7 +72,7 @@ def tabulate(stats, target_file):
         f.write(latex)
 
 
-def plot_lambda(stats, plots):
+def plot_accuracy_vs_lambda(stats, plots):
     extract = [18, 14, 10, 6, 3]
     freeze = [18, 14, 10, 6, 3, 0]
     cases = []
@@ -85,17 +83,24 @@ def plot_lambda(stats, plots):
                 case.append((e, f))
         cases.append(case)
 
+    target_dir = os.path.join(plots, 'lambda_study')
+    helpers.create_or_recreate_dir(target_dir)
     for case in cases:
         fig, axs = plt.subplots(1, len(case), constrained_layout=True, figsize=(3*len(case), 3))
         for i in range(len(case)):
             extract, freeze = case[i]
             stats_filtered = list(filter(lambda s: s['hyperparameters']['extract'] == extract and s['hyperparameters']['freeze'] == freeze, stats))
-            x = np.array(sorted([stat['hyperparameters']['lambda'] for stat in stats_filtered]))
-            y1 = np.array(sorted([stat['train_acc'][-1] for stat in stats_filtered]))
-            y2 = np.array(sorted([stat['val_acc'][-1] for stat in stats_filtered]))
-            y3 = np.array(sorted([stat['test_acc'] for stat in stats_filtered]))
+            x = np.array([stat['hyperparameters']['lambda'] for stat in stats_filtered])
+            y1 = np.array([stat['train_acc'][-1] for stat in stats_filtered])
+            y2 = np.array([stat['val_acc'][-1] for stat in stats_filtered])
+            y3 = np.array([stat['test_acc'] for stat in stats_filtered])
+            x, y1, y2, y3 = zip(*sorted(zip(x, y1, y2, y3)))
+            x = np.array(x)
+            y1 = np.array(y1)
+            y2 = np.array(y2)
+            y3 = np.array(y3)
 
-            axs[i].set_title(f'Extract {extract} and freeze {freeze} layers')
+            axs[i].set_title(f'Accuracy when $e = {extract}$ and $f = {freeze}$')
             axs[i].plot(x, y1, '.b-', label="$A_{train}$")
             axs[i].plot(x, y2, '.r-', label="$A_{val}$")
             axs[i].plot(x, y3, '.g-', label="$A_{test}$")
@@ -108,22 +113,92 @@ def plot_lambda(stats, plots):
             axs[i].set_xlabel("L2-regularization Strength")
             axs[i].set_ylabel("Accuracy")
 
-        plt.savefig(os.path.join(plots, f'{extract}.png'))
+        plt.savefig(os.path.join(target_dir, f'{extract}.png'))
         plt.close()
 
 
+def plot_accuracy_vs_extract_freeze(stats, plots):
+    target_dir = os.path.join(plots, 'extract_freeze_study')
+    helpers.create_or_recreate_dir(target_dir)
+    lambdas = list(set([stat['hyperparameters']['lambda'] for stat in stats]))
+    print(lambdas)
+    for i, l2 in enumerate(lambdas):
+        stats_filtered = list(filter(lambda s: s['hyperparameters']['lambda'] == l2, stats))
+        print('len', len(stats_filtered))
+
+        x = np.array([stat['hyperparameters']['extract'] for stat in stats_filtered])
+        y = np.array([stat['hyperparameters']['freeze'] for stat in stats_filtered])
+        z = np.array([stat['test_acc'] for stat in stats_filtered])
+        x, y, z = zip(*sorted(zip(x, y, z)))
+        x = np.array(x)
+        y = np.array(y)
+        z = np.array(z)
+
+        X, Y = np.meshgrid(x, y)
+        Z = np.outer(z.T, z)
+
+        fig, ax = plt.subplots(1, 1)
+        ax.set_title(f'Accuracy versus \nnumber of extracted and frozen layers when $\lambda = {l2}$')
+        ax.set_xscale("linear")
+        ax.set_yscale("linear")
+        ax.set_xlabel('Layer up to which weights were extracted from')
+        ax.set_ylabel('Layer up to which weights were frozen')
+
+        surf = ax.contourf(X, Y, Z, levels=50)
+        fig.colorbar(surf)
+
+        plt.savefig(os.path.join(target_dir, f'{l2}.png'))
+        plt.close()
+
+
+def plot_accuracy_vs_freeze(stats, plots):
+    target_dir = os.path.join(plots, 'freeze_study')
+    helpers.create_or_recreate_dir(target_dir)
+    lambdas = list(set([stat['hyperparameters']['lambda'] for stat in stats]))
+    extracts = list(set([stat['hyperparameters']['extract'] for stat in stats]))
+    for i, l2 in enumerate(lambdas):
+        for j, extract in enumerate(extracts):
+            stats_filtered = list(filter(lambda s: s['hyperparameters']['lambda'] == l2 and s['hyperparameters']['extract'] == extract, stats))
+
+            x = np.array([stat['hyperparameters']['freeze'] for stat in stats_filtered])
+            y = np.array([stat['test_acc'] for stat in stats_filtered])
+            x, y = zip(*sorted(zip(x, y)))
+            x = np.array(x)
+            y = np.array(y)
+
+            fig, ax = plt.subplots(1, 1)
+            ax.set_title(f'Accuracy versus frozen layers when $e = {extract}$ and $\lambda = {l2}$')
+            ax.plot(x, y)
+
+            ax.set_xscale("linear")
+            ax.set_yscale("linear")
+            ax.set_xlabel('Layer up to which weights were frozen')
+            ax.set_ylabel('Accuracy on the test set')
+
+            plt.savefig(os.path.join(target_dir, f'extract{extract}_lambda{l2}.png'))
+            plt.close()
+
+
 def main(experiments, plots):
+    helpers.create_or_recreate_dir(plots)
+
     stats = os.path.join(experiments, 'stats.json')
     with open(stats) as f:
         stats = json.loads(f.read())
+    stats = truncate_floats(stats)
 
     # Tabulate top-20 results sorted by performance
     stats = sorted(stats, key=lambda x: x['test_acc'], reverse=True)
-    stats = stats[:20]
-    tabulate(stats, os.path.join(plots, 'top20.tex'))
+    tabulate(stats[:20], os.path.join(plots, 'top20.tex'))
 
-    # Plot accuracy vs lambda
-    plot_graphs(stats, plots)
+    # Study effect of lambda
+    plot_accuracy_vs_lambda(stats, plots)
+
+    # Study effect of extract and freeze
+    plot_accuracy_vs_extract_freeze(stats, plots)
+
+    # Study effect of freeze
+    plot_accuracy_vs_freeze(stats, plots)
 
 
 if __name__ == '__main__':

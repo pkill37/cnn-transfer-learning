@@ -1,19 +1,17 @@
 \chapter{Background}
 \label{chapter:background}
 
-In this section we briefly introduce relevant concepts of machine learning and deep learning to better familiarize the reader with our methodology and techniques as well as contextualize the state-of-the-art work that we will review in chapter \ref{chapter:sota}.
+This section briefly introduces relevant concepts of machine learning and deep learning to better familiarize the reader with the methodology and techniques as well as contextualize the state-of-the-art work that will be reviewed later in chapter \ref{chapter:sota}.
 
 \section{Supervised Learning}
 
-In a supervised learning problem the data has the correct expected output for every input.
+A supervised learning problem is a machine learning problem in which the data has the correct expected output for every input.
 
 More formally, it is a problem in which there are $m$ labeled pairs $(x^{(i)}, y^{(i)})$, also denoted as samples, where $x^{(i)} \in \mathbb{R}^n$ (i.e. the input vectors, commonly referred to as features) and $y^{(i)} \in \mathbb{R}^n$ (i.e. the corresponding output vector, usually called the target or label) which have some relationship expressed by some function.
 
 The goal of supervised learning is to find a function $h_{\theta}(x)$ (sometimes called the hypothesis) that usefully approximates the true function in the underlying relationship between the input $x$ and associated output $y$, parameterized by $\theta$.
 
-\section{Training, Validation, and Test}
-
-In machine learning, the data samples are commonly split into three separate sets with different intents and used exclusively for that purpose:
+In supervised learning, the data samples are commonly split into three separate sets with different intents and used exclusively for that purpose:
 
 \begin{itemize}
     \item Training Set: samples used for actually fitting the model's parameters (e.g. weights and biases of a neural network);
@@ -33,6 +31,7 @@ However, this technique (typically referred to as the holdout method) has its do
 $K$-fold cross-validation is a common cross-validation technique that randomly partitions the data into $K$ equally sized subsamples, of which a single subsample is used for testing and the remaining $K-1$ subsamples for fitting the model, a process which is repeated $K$ times to yield $K$ performance estimations that can be averaged over to produce one estimation that can be referred to. In this way all samples are used for training and testing, which is an advantage over repeated random sub-sampling which does not systematically use all samples for training and testing.
 
 Nested cross-validation techniques are required when, in addition to estimating a model's generalization performance (i.e. performance on the test set), it is also necessary to select the best model among many (e.g. with different hyperparameters) \cite{crossvalidationbias}. A truly nested variant will use an inner loop of $L$ folds to tune the hyperparameters and select the best model, and an outer loop of $K$ folds to evaluate the models selected by the inner loop. A simpler (albeit not really nested) scheme is one that is similar to the $K$-fold cross-validation we described above, except that, of the $K$ equally sized subsamples, we take 1 subsample for validation, another 1 subsample for testing, and the remaining $K-2$ subsamples are used for training. However, in practice, nested cross-validation when selecting classifiers is overzealous and too expensive for most applications \cite{nestedcvoverzealous}.
+
 
 \section{Binary Classification}
 
@@ -78,6 +77,8 @@ $$
 J(\theta) = -\frac{1}{m} \sum_{i=0}^{m} ( y^{(i)}\log(h_{\theta}(x^{(i)})) + (1 - y^{(i)})\log(1 - h_{\theta}(x^{(i)})) )
 $$
 
+\subsection{Evaluation}
+
 To evaluate a binary classifier means to compare the model's predicted conditions against the true conditions, where one must consider:
 
 \begin{itemize}
@@ -115,6 +116,17 @@ F_1 = 2 \times \frac{PPV \times TPR}{PPV + TPR}
 $$
 
 Lastly, \ac{AUC} is known as the area under the \ac{ROC} curve, i.e. the area under the plot of \ac{FPR} versus \ac{TPR} at different points in the interval $[0, 1]$.
+
+\subsection{Class Imbalance}
+
+In binary classification problems, it is said that a dataset of $m$ samples has class imbalance when there is a majority class with $|S_{maj}|$ samples and a minority class with $|S_{min}|$ samples where $|S_{maj}| > |S_{min}|$, in other words when there is a significant difference between the number of samples of one class compared to the other. It is very common to see datasets in which classes are highly imbalanced, simply because it reflects the real world distribution (e.g. there are more benign moles than actual melanoma cases). A lot of machine learning algorithms do not perform well under this imbalance. When a dataset is imbalanced, machine learning algorithms will typically over-classify the majority group due to its increased prior probability. Thus, the samples in the minority group are misclassified more often than the majority group \cite{Johnson2019}.
+
+\citeauthor{haibo2009} provide a comprehensive survey of class balancing algorithms \cite{haibo2009}, of which oversampling of the minority class is the simplest and most natural. In practice the minority class must be oversampled by a factor (i.e. number of transformations applied to each original sample) of $\frac{|S_{maj}|}{|S_{min}|}$. Sometimes, perhaps because of an overfitting problem, it is also necessary to augment the total number of samples $m$ to a new total number of samples $m'$, in which case
+
+\begin{itemize}
+    \item the minority class must be oversampled by augmenting its samples  by a factor of $\frac{\frac{m'}{2}}{|S_{min}|}$
+    \item and the majority class must also be augmented by a factor of $\frac{\frac{m'}{2}}{|S_{maj}|}$
+\end{itemize}
 
 \section{Optimization}
 
@@ -201,21 +213,6 @@ $$
 
 In practice, gradient descent converges much faster with features that follow a normal distribution \cite{batchnormalization}.
 
-\section{Class Imbalance}
-\label{subsection:classimbalance}
-
-In binary classification problems, it is said that a dataset of $m$ samples has class imbalance when there is a majority class with $|S_{maj}|$ samples and a minority class with $|S_{min}|$ samples where $|S_{maj}| > |S_{min}|$, in other words when there is a significant difference between the number of samples of one class compared to the other. It is very common to see datasets in which classes are highly imbalanced, simply because it reflects the real world distribution (e.g. there are more benign moles than actual melanoma cases).
-
-A lot of machine learning algorithms do not perform well under this imbalance. When a dataset is imbalanced, machine learning algorithms will typically over-classify the majority group due to its increased prior probability. Thus, the samples in the minority group are misclassified more often than the majority group \cite{Johnson2019}.
-
-\citeauthor{haibo2009} provide a comprehensive survey of class balancing algorithms \cite{haibo2009}, of which oversampling of the minority class is the simplest and most natural. In practice the minority class must be oversampled by a factor (i.e. number of transformations applied to each original sample) of $\frac{|S_{maj}|}{|S_{min}|}$.
-
-Sometimes, perhaps because of an overfitting problem, it is also necessary to augment the total number of samples $m$ to a new total number of samples $m'$, in which case
-
-\begin{itemize}
-    \item the minority class must be oversampled by augmenting its samples  by a factor of $\frac{\frac{m'}{2}}{|S_{min}|}$
-    \item and the majority class must also be augmented by a factor of $\frac{\frac{m'}{2}}{|S_{maj}|}$
-\end{itemize}
 
 \section{Bias-Variance Tradeoff}
 
@@ -273,7 +270,7 @@ $$
 This regularization penalty can be seen as a form of Occam's razor that prefers simpler functions. In a sense, this redefines the optimization goal to simultaneously
 
 \begin{itemize}
-    \item fit the training data well (i.e. the $J(\theta$ term) and
+    \item fit the training data well (i.e. the $J(\theta)$ term) and
     \item keep the parameters small (i.e. the $R(\theta)$ term).
 \end{itemize}
 
@@ -314,12 +311,18 @@ More recently, Dropout \cite{dropout} is another regularization technique design
 
 \section{Neural Network}
 
-Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to data and are traditionally composed of several neurons.
+Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to data and are traditionally composed of several neurons (as illustrated in figure \ref{fig:neuralnetwork}).
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figs/neuralnetwork.jpeg}
+    \caption{Overly simplified view of a neural network composed of multiple neurons, in this case organized in an input layer, four fully-connected hidden layers, and an output layer. Source: datanami.com.}
+    \label{fig:neuralnetwork}
+\end{figure}
 
 \subsection{Neuron}
 
-% TODO: neuron illustration
-A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$, which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = g(\sum^{i=1}_{n} W_{i}x_{i} + b) = g(W^Tx + b)$ that is activated by some (usually non-linear) function $g \colon \mathbb{R} \to \mathbb{R}$ called the activation function (which must be differentiable for backpropagation to work).
+A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$, which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = g(\sum^{i=1}_{n} W_{i}x_{i} + b) = g(W^Tx + b)$ that is activated by some (usually non-linear) function $g \colon \mathbb{R} \to \mathbb{R}$ called the activation function.
 
 The activation function $g$ is what characterizes the neuron. If the activation function is the step function
 

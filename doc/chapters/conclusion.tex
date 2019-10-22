@@ -3,4 +3,13 @@
 
 In this section we present conclusions, final remarks, and point to directions for future work.
 
-Ironically, when compared to end-to-end learning, most transfer learning experiments actually take longer because of the large number of parameters that you end up training anyway
+\section{Discussion}
+
+Overall comparison and brief discussion after presenting results.
+
+\begin{itemize}
+    \item Ironically, when compared to end-to-end learning, most transfer learning experiments actually take longer because of the larger number of parameters that you end up training anyway.
+    \item Transfer learning is not such a simple off-the-shelf technique. The network needs to be carefully explored, as was shown by the subpar results of the Inception V3 models.
+    \item Extracting all features is the best idea. Optimization does not work in layers but as a whole, so breaking them apart is not a great idea because neurons develop co-dependencies between them.
+    \item Performance is too dependent on regularization. Nothing can be concluded from surface.
+\end{itemize}

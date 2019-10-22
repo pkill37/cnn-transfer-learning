@@ -199,7 +199,7 @@ if __name__ == '__main__':
     ############################
     # fully connected layers
     size_list = [(fc_unit_size, fc_unit_size)] * 2
-    num_list = [256, 1]
+    num_list = [64, 1]
     num_show_list = list(map(min, num_list, [NumFcMax] * len(num_list)))
     x_diff_list = [sum(x_diff_list) + layer_width, layer_width, layer_width]
     top_left_list = np.c_[np.cumsum(x_diff_list), np.zeros(len(x_diff_list))]

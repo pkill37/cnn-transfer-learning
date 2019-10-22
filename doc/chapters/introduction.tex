@@ -21,18 +21,18 @@ The first challenge is that deep learning models often require a large amount of
 
 The objective is to assess and compare the effectiveness of transfer learning in the specific domain of skin lesion classification by running experiments that will train and evaluate models using various different techniques.
 
-The first set of experiments focuses on transfer learning. In general, we start from models previously trained on ImageNet (of a variety of architectures) and repurpose them for the task of skin lesion classification by extracting weights from arbitrary layers and continuing training on our dataset. Namely in our study we consider as a variable the layer where this extraction of weights occurs and study its effect.
-
-The second set of experiments focuses on a simpler custom \ac{CNN} architecture designed around first-principle heuristics and trained end-to-end, rather than the transfer learning approach of initializing the weights to those of the pre-trained model, thus presenting a model obtained by following more traditional techniques for comparison.
+\begin{itemize}
+    \item The first set of experiments follow a transfer learning approach. In general, models previously trained on ImageNet (of a variety of architectures) are repurposed for the task of skin lesion classification by extracting and freezing weights from arbitrary layers and continuing training on the target dataset. In particular, the layers where this extraction and freezing of weights occur can be thought of as variables and have their effect studied, which will be explored for the VGG16 architecture since it is computationally feasible given its relatively small number of layers. Other architectures have hundreds of layers, so this level of detail in the study is not possible.
+    \item The second set of experiments focus on simpler custom \ac{CNN} architectures designed around first-principle heuristics and trained end-to-end, rather than the contrasting transfer learning approach of initializing weights to those of the pre-trained model, which trains models using more traditional or conventional techniques for comparison with the transfer learning approaches.
+\end{itemize}
 
 \section{Outline}
 
-At a high level, this dissertation is organized into 5 other chapters:
+At a high level, this dissertation is organized into four other chapters:
 
 \begin{itemize}
-    \item Chapter \ref{chapter:background} introduces the reader to deep learning concepts and state-of-the-art techniques relevant to this dissertation;
+    \item Chapter \ref{chapter:background} introduces the reader to deep learning concepts and techniques relevant to the current state-of-the-art and this dissertation;
     \item Chapter \ref{chapter:sota} reviews the state-of-the-art results of deep learning applied to dermoscopy;
-    \item Chapter \ref{chapter:environment} introduces the hardware and software used for this work;
-    \item Chapter \ref{chapter:experiments} goes over this work's methodology and presents and discusses the experimental results;
-    \item Chapter \ref{chapter:conclusion} offers final remarks, key takeaways, and points in the direction of future work.
+    \item Chapter \ref{chapter:experiments} introduces the hardware, software, and dataset used for this work according to a methodology that is thoroughly described and presents experimental results;
+    \item Chapter \ref{chapter:conclusion} offers final remarks, key takeaways, directions for future work.
 \end{itemize}
