@@ -14,11 +14,11 @@ Ultimately the experiments aim to study transfer learning in the specific domain
 
 \section{Data}
 
-The ISIC 2017: Skin Lesion Analysis Towards Melanoma Detection grand challenge datasets \cite{isic2017} provides a training set with 2000 samples (divided into three classes: 374 melanoma, 254 seborrheic keratosis, and 1372 nevus), a validation set with 150 samples, and a test set with 600 samples. However training deep neural networks for skin lesion classification requires vast amounts of high quality, reliably labeled and verified data - a set of requirements which this dataset did not meet with confidence.
+The \ac{ISIC} 2017: Skin Lesion Analysis Towards Melanoma Detection grand challenge datasets \cite{isic2017} provides a training set with 2000 samples (divided into three classes: 374 melanoma, 254 seborrheic keratosis, and 1372 nevus), a validation set with 150 samples, and a test set with 600 samples. However training deep neural networks for skin lesion classification requires vast amounts of high quality, reliably labeled and verified data - a set of requirements which this dataset did not meet with confidence.
 
-The HAM10000 \cite{ham10000} dataset is an effort to boost research on automated diagnosis of dermatoscopic images that focuses on the quality and reliability of the large volume of data that is so important for successful deep learning. The extracted images (where the lesion is centered if necessary) go through an extensive semi-automatic process that filters out non-dermoscopic imaging and unreliable diagnoses, after which they are submitted to a manual review to further confirm its quality.
+The \ac{HAM10000} \cite{ham10000} dataset is an effort to boost research on automated diagnosis of dermatoscopic images that focuses on the quality and reliability of the large volume of data that is so important for successful deep learning. The extracted images (where the lesion is centered if necessary) go through an extensive semi-automatic process that filters out non-dermoscopic imaging and unreliable diagnoses, after which they are submitted to a manual review to further confirm its quality.
 
-The datasets from the ISIC 2018 grand challenge \cite{isic2018} were largely based on HAM10000 that was already very high quality, which meant the data preprocessing needs would be much lower compared to the previous years' editions where all these quality guarantees had to be independently ensured by the competitors. The ISIC 2018 datasets are therefore adequate for running these experiments.
+The datasets from the \ac{ISIC} 2018 grand challenge \cite{isic2018} were largely based on \ac{HAM10000} that was already very high quality, which meant the data preprocessing needs would be much lower compared to the previous years' editions where all these quality guarantees had to be independently ensured by the competitors. The \ac{ISIC} 2018 datasets are therefore adequate for running these experiments.
 
 \subsection{Preprocessing}
 \label{subsection:preprocessing}
@@ -80,7 +80,7 @@ def seed():
 \label{code:seed}
 \end{listing}
 
-The original training set from ISIC 2018 is available for direct download, but the validation and test sets are kept private by the organization and are only used internally for reporting performance without actually releasing the data itself. As such, we will split the samples from the training set (which is available for download) into our own training, validation and test sets.
+The original training set from \ac{ISIC} 2018 is available for direct download, but the validation and test sets are kept private by the organization and are only used internally for reporting performance without actually releasing the data itself. As such, we will split the samples from the training set (which is available for download) into our own training, validation and test sets.
 
 Augmentation, as described previously, results in 17810 samples which are split 85\%-15\% in a stratified fashion to maintain class balance within the splits into:
 
@@ -128,7 +128,7 @@ To verify this, experiments based on this transfer learning approach will adhere
             \item Stack fully-connected layers of ReLU-activated neurons;
             \item Add fully-connected layer with a single sigmoid-activated neuron for binary classification.
         \end{enumerate}
-    \item Mini-batch \ac{SGD} optimization:
+    \item Mini-batch \ac{SGD} with momentum $\gamma = 0.9$:
         \begin{itemize}
             \item Binary cross entropy cost function and explicit L2 regularization;
             \item 32 samples batches;
@@ -597,7 +597,7 @@ These custom architectures are based around reasonable heuristics\footnote{\url{
 The experiments models of such architectures were trained from scratch as follows:
 
 \begin{enumerate}
-    \item Standardize training and validation samples relative to ISIC 2018;
+    \item Standardize training and validation samples relative to \ac{ISIC} 2018;
     \item Parameters are all initialized according to Xavier initialization;
     \item Define network architecture:
         \begin{enumerate}
@@ -606,7 +606,7 @@ The experiments models of such architectures were trained from scratch as follow
             \item Stack fully-connected layers of ReLU-activated neurons;
             \item Add fully-connected layer with a single sigmoid-activated neuron for binary classification.
         \end{enumerate}
-    \item Mini-batch \ac{SGD} optimization:
+    \item Mini-batch \ac{SGD} with momentum $\gamma = 0.9$:
         \begin{itemize}
             \item Binary cross entropy cost function and explicit L2 regularization;
             \item 32 samples batches;
