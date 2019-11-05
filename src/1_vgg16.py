@@ -35,7 +35,8 @@ def vgg16(extract_until, freeze_until, l2):
 
     # Classifier
     model.add(tf.keras.layers.GlobalAveragePooling2D())
-    model.add(tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)))
+    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)))
+    model.add(tf.keras.layers.Dropout(rate=0.5))
     model.add(tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(l2)))
     model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS)
     return model
@@ -51,14 +52,14 @@ def train_one(experiments, x_train, y_train, x_validation, y_validation, epochs,
     callbacks = [
         LR_DECAY,
         helpers.TrainingTimeLogger(),
-        tf.keras.callbacks.EarlyStopping(monitor='loss', min_delta=EPSILON, patience=20, verbose=1, mode='min', baseline=None),
-        tf.keras.callbacks.ModelCheckpoint(filepath=model_filename, monitor='loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
+        tf.keras.callbacks.EarlyStopping(monitor='val_acc', min_delta=EPSILON, patience=20, verbose=1, mode='max', baseline=None),
         tf.keras.callbacks.CSVLogger(filename=csv_filename, separator=',', append=False),
     ]
 
     # Train
     model = vgg16(extract_until, freeze_until, l2)
     model.fit(x=x_train, y=y_train, validation_data=(x_validation, y_validation), batch_size=batch_size, epochs=epochs, verbose=1, callbacks=callbacks, shuffle=True)
+    model.save(model_filename)
 
     # Cleanup
     del model

@@ -62,12 +62,12 @@ def train_custom2(experiments, x, y, epochs, batch_size):
         callbacks = [
             LR_DECAY,
             helpers.TrainingTimeLogger(),
-            tf.keras.callbacks.EarlyStopping(monitor='loss', min_delta=EPSILON, patience=50, verbose=1, mode='min', baseline=None),
-            tf.keras.callbacks.ModelCheckpoint(filepath=model_filename, monitor='loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
+            tf.keras.callbacks.EarlyStopping(monitor='val_acc', min_delta=EPSILON, patience=50, verbose=1, mode='max', baseline=None),
             tf.keras.callbacks.CSVLogger(filename=csv_filename, separator=',', append=False),
         ]
 
         model.fit(x=x_train, y=y_train, validation_data=(x_validation, y_validation), batch_size=batch_size, epochs=epochs, verbose=1, callbacks=callbacks, shuffle=True)
+        model.save(model_filename)
         del model
 
 
