@@ -76,16 +76,13 @@ def plot_accuracy_vs_units_lambda(stats, plots):
     y = np.array(y)
     z = np.array(z)
 
-    X, Y = np.meshgrid(x, y)
-    Z = np.outer(z.T, z)
-
     fig, ax = plt.subplots(1, 1, constrained_layout=True)
     ax.set_xscale("log")
     ax.set_yscale("linear")
     ax.set_xlabel("L2-regularization strength")
     ax.set_ylabel("Number of neurons")
 
-    surf = ax.contourf(X, Y, Z, levels=50)
+    surf = ax.tricontourf(x, y, z, levels=50)
     fig.colorbar(surf)
 
     target_dir = os.path.join(plots, 'lambda_units_study')

@@ -86,14 +86,14 @@
 
 %%% Edit thesis title in Portuguese
 %% Thesis Mandatory Title in Portuguese
-\Title{\selectlanguage{portuguese}Deep Learning para Imagem Médica}
+\Title{\selectlanguage{portuguese}Um Estudo de Transfer Learning para Classificação de Lesões na Pele}
 
 %%% OPTIONAL: you can write your thesis title in
 %%%  other languages. You can repeat the following
 %%%  line as many times as you want, or remove it
 %%%  if you only want the portuguese title.
 %% Optional Titles in additional languages.
-\Title{\selectlanguage{english}Deep Learning for Medical Imaging}
+\Title{\selectlanguage{english}A Study of Transfer Learning for Skin Lesion Classification}
 
 %%% OPTIONAL: add a quotation if you like.
 %% Optional Quotation
@@ -132,7 +132,7 @@
 %%% school    : University/Scholl name; Choose the
 %%%             preposition accordingly.
 %% Optional SecondSuperviser information
-\SecondSupervisor{Pétia Georgieva}{auxiliar convidado}{do Departamento de Eletrónica, Telecomunicações e Informática}{da Universidade de Aveiro}
+\SecondSupervisor{Pétia Georgieva}{auxiliar}{do Departamento de Eletrónica, Telecomunicações e Informática}{da Universidade de Aveiro}
 
 %%% Edit your degree information.
 %%%
@@ -163,8 +163,8 @@
 %%%  declaration.
 %%% Don't remove the \selectlanguage statement or you will end with incorrect hyphenation
 %% Mandatory Keywords and Abstract in Portuguese
-\Abstract{Palavras Chave}{texto livro, arquitetura, história, construção, materiais de construção, saber tradicional.}
-         {Resumo}{\selectlanguage{portuguese}\blindtext[3]}
+\Abstract{Palavras Chave}{imagem médica, deep learning, rede neuronal convolucional, transfer learning, diagnósticos de lesões na pele, classificação binária.}
+         {Resumo}{\selectlanguage{portuguese}O transfer learning é uma solução popular para o problema comum no deep learning que é a falta de dados ou de recursos computacionais para treinar grandes modelos a partir do zero, para a qual a classificação de lesões na pele é uma candidata pois os dados de imagens médicas de alta qualidade neste domínio são escassos. Esta dissertação estuda o transfer learning no domínio da classificação de lesões na pele, explorando modelos pré-treinados de arquiteturas como VGG16 e InceptionV3 (originalmente treinados no ImageNet) e adaptando-os novamente para a classificação de lesões na pele no conjunto de dados ISIC 2018. Especificamente, os modelos de VGG16 são testados exaustivamente variando as camadas nas quais os pesos são extraídos e até os quais são congelados de treino adicional, resultando na conclusão que extrair todas as camadas do modelo e ajustá-las ao ISIC 2018 é a solução que oferece mais desempenho. Para comparação, duas arquiteturas originais de CNN são exploradas e treinadas do zero num esquema típico de aprendizagem, que resulta em desempenhos semelhantes aos modelos de transfer learning e a partir dos quais podem ser observadas lições clássicas de deep learning.}
 
 %%% OPTIONAL: you can write the keywords and
 %%%  abstract in other languages. You can repeat
@@ -173,8 +173,8 @@
 %%% Don't remove the \selectlanguage statement or you will end with incorrect hyphenation.
 %%% You can modify the language to any other supported by Latex
 %% Optional Keywords and Abstract in additional languages.
-\Abstract{Keywords}{medical imaging, melanoma, binary classification, deep learning, convolutional neural network, ISIC, transfer learning, ImageNet.}
-         {Abstract}{\selectlanguage{english}Lorem}
+\Abstract{Keywords}{medical imaging, deep learning, convolutional neural network, transfer learning, skin lesion diagnosis, binary classification.}
+         {Abstract}{\selectlanguage{english}Transfer learning is a popular solution to the common problem in deep learning that is the lack of data or the computational resources to train large models from scratch, which skin lesion classification is a prime candidate for because high quality medical imaging data in this domain is scarce. This dissertation studies transfer learning in the domain of skin lesion classification by exploring pre-trained models of architectures like VGG16 and InceptionV3 (originally trained on ImageNet) and repurposing them for skin lesion classification on the ISIC 2018 dataset. Specifically, models of VGG16 are tested by exhaustively testing the layers at which weights are extracted from and up to which they are frozen from further training, resulting in that extracting all layers from VGG16 and fine-tuning them to the ISIC 2018 dataset is the most performant. For comparison, two custom CNN architectures are explored and trained from scratch in a typical end-to-end learning scheme, which result in similar performances to the transfer learning models and from which classic lessons in deep learning can be observed.}
 
 %%% Edit the Jury President information.
 %% First Member will be the President of the Jury
