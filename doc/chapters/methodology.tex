@@ -27,8 +27,72 @@ The images in the dataset undergo a number of preprocessing steps:
 
 \begin{enumerate}
     \item Most readily available pretrained models are of network architectures whose input tensor is of square dimensions (e.g. $224 \times 224 \times 3$). Since our dataset's images are of distinct non-square dimensions, it is necessary to resize them to a square. However, resizing them all naively to the network's input tensor dimensions without regards to the image's aspect ratio means that the input fed to the network is of varying distinct aspect ratios which does not constitute a good start. Therefore, the first step is to crop an arbitrarily-sized square of the center of the image which will likely (and, in fact, does) capture the skin lesion.
-    \item Resize the images to the target networks' input dimensions $224 \times 224 \times 3$ and $299 \times 299 \times 3$. We resize them as soon as possible in the data pipeline in order to reduce the computational costs of any subsequent operations on the images.
+
+    \begin{listing}[ht]
+    \begin{minted}{python}
+    def _crop(img):
+        width, height = img.size
+        if width == height:
+            return img
+
+        length = min(width, height)
+
+        left = (width - length) // 2
+        upper = (height - length) // 2
+        right = left + length
+        lower = upper + length
+
+        box = (left, upper, right, lower)
+        return img.crop(box)
+    \end{minted}
+    \caption{Function that crops a given image to a square crop of the center of the original image.}
+    \label{code:crop}
+    \end{listing}
+
+\item Resize the images to the target networks' input dimensions $224 \times 224 \times 3$ and $299 \times 299 \times 3$. We resize them as soon as possible in the data pipeline in order to reduce the computational costs of any subsequent operations on the images.
+
+    \begin{listing}[ht]
+    \begin{minted}{python}
+    def _resize(img, target_size):
+        return img.resize(target_size, PIL.Image.NEAREST)
+    \end{minted}
+    \caption{Function that resizes a given image to the target dimensions.}
+    \label{code:resize}
+    \end{listing}
+
     \item Normalize the luminance and apply a 99\% contrast stretch to reduce the negative effect of changes in illumination and acquisition devices that alter the color of images \cite{colorconstancy}.
+
+    \begin{listing}[ht]
+    \begin{minted}{python}
+    def _correct(img):
+        """
+        Normalize PIL image
+
+        Normalizes luminance to (mean,std)=(0,1), and applies a [1%, 99%] contrast stretch
+        """
+        img_y, img_b, img_r = img.convert('YCbCr').split()
+
+        img_y_np = np.asarray(img_y).astype(float)
+
+        img_y_np /= 255
+        img_y_np -= img_y_np.mean()
+        img_y_np /= img_y_np.std()
+        scale = np.max([np.abs(np.percentile(img_y_np, 1.0)),
+                        np.abs(np.percentile(img_y_np, 99.0))])
+        img_y_np = img_y_np / scale
+        img_y_np = np.clip(img_y_np, -1.0, 1.0)
+        img_y_np = (img_y_np + 1.0) / 2.0
+
+        img_y_np = (img_y_np * 255 + 0.5).astype(np.uint8)
+
+        img_y = PIL.Image.fromarray(img_y_np)
+
+        img_ybr = PIL.Image.merge('YCbCr', (img_y, img_b, img_r))
+        return img_ybr.convert('RGB')
+    \end{minted}
+    \caption{Function that normalizes the luminance of an image and applies a 99\% contrast stretch.}
+    \label{code:correct}
+    \end{listing}
 \end{enumerate}
 
 \subsection{Augmentation}
@@ -56,6 +120,16 @@ We correct this imbalance by oversampling the minority class, while also augment
     \item 90º rotation
     \item 180º rotation
     \item 270º rotation
+\end{itemize}
+
+implemented by \verb|PIL.Image.transpose|\footnote{\url{https://pillow.readthedocs.io/en/stable/reference/Image.html\#PIL.Image.Image.transpose}} with the respective method:
+
+\begin{itemize}
+    \item \verb|PIL.Image.FLIP_LEFT_RIGHT|;
+    \item \verb|PIL.Image.FLIP_TOP_BOTTOM|;
+    \item \verb|PIL.Image.ROTATE_90|;
+    \item \verb|PIL.Image.ROTATE_180|;
+    \item \verb|PIL.Image.ROTATE_270|.
 \end{itemize}
 
 On principle, we did not consider transformations that change the color (e.g. contrast change, channel shift) or size (e.g. zoom) of features because it would unjustifiably allow the network to learn from these potentially misrepresenting features which even an expert human diagnosis would have trouble with.
@@ -107,7 +181,7 @@ Since validation is intrinsically part of the training process itself, the valid
 
 \section{Transfer Learning Experiments}
 
-Based on the transfer learning techniques introduced in chapter \ref{chapter:background}, models of VGG16, Inception V3, and ResNet-50 architectures pre-trained on ImageNet will be explored in order to repurpose the weights to a new model for skin lesion classification and draw conclusions about its efficacy.
+Based on the transfer learning techniques introduced in chapter \ref{chapter:background}, models of the VGG16 architecture pre-trained on ImageNet will be explored in order to repurpose the weights to a new model for skin lesion classification and draw conclusions about its efficacy.
 
 It is hypothesized that
 
@@ -488,95 +562,6 @@ Figures \ref{fig:results_1_18}, \ref{fig:results_1_14}, \ref{fig:results_1_10}, 
     \label{fig:results_1_3}
 \end{figure}
 
-
-\subsection{InceptionV3}
-
-As the VGG16 experiments have shown, extracting all features yields better performance because weights are optimized globally, not on a per-layer basis. As such, our experiments with the InceptionV3 architecture (which has hundreds more layers) will focus on these higher layers rather than exhaustively try all combinations of extracting and freezing layers.
-
-% experiment 4
-The first experiment with the InceptionV3 architecture aims to extract and freeze all layers and train a classifier on top of that.
-
-\begin{enumerate}
-    \item Extract and freeze the weights of all the convolutional layers.
-    \item Connect the last layer to a global average pooling layer in order to reduce parameters before the fully-connected classifier.
-    \item Connect the last layer to a fully-connected layer of 1024 ReLU-activated neurons;
-    \item Connect the last layer to a fully-connected sigmoid-activated neuron for binary classification.
-\end{enumerate}
-
-Additionally, for each of these settings, we grid-search the best $\lambda$ for L2-regularization from $\lambda \in \{10^{-10}, ..., 10^{2}\}$ (spaced evenly on a log scale). This yields a total of $60$ models, of which the top 10 are summarized in table \ref{table:inceptionv3_1}.
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{ |c|c|c|c| }
-\hline
-$\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ \\
-\hline
-1.54e-39 & 0.504 & 0.497 & 0.56 \\
-1.26e-44 & 0.494 & 0.55 & 0.537 \\
-1.17e-46 & 0.457 & 0.434 & 0.524 \\
-0.000602 & 0.52 & 0.532 & 0.513 \\
-1.22e-45 & 0.49 & 0.486 & 0.511 \\
-2.18e-30 & 0.486 & 0.461 & 0.504 \\
-2.45e-27 & 0.501 & 0.516 & 0.504 \\
-5.36e-07 & 0.513 & 0.504 & 0.503 \\
-1.37e-42 & 0.484 & 0.507 & 0.501 \\
-4.24e-13 & 0.469 & 0.528 & 0.501 \\
-\hline
-\end{tabular}
-\caption{Foobar}
-\caption{Top 10 models based on transfer learning off of features from InceptionV3 models, sorted by $A_{test}$ in descending order.}
-\label{table:inceptionv3_1}
-\end{table}
-
-% experiment 7
-Then we tried fine-tuning the top 2 inception blocks in addition to training the classifier on top of the extracted features. Like before, we grid-search the best $\lambda$ for L2-regularization from $\lambda \in \{10^{-10}, ..., 10^{2}\}$ (spaced evenly on a log scale). This yields a total of $60$ models, of which the top 10 are summarized in table \ref{table:inceptionv3_2}.
-
-\begin{table}[ht]
-\centering
-\begin{tabular}{ |c|c|c|c| }
-\hline
-$\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ \\
-\hline
-1.48e-40 & 0.998 & 0.542 & 0.504 \\
-1e-50 & 0.997 & 0.547 & 0.501 \\
-4.58e-11 & 0.997 & 0.548 & 0.501 \\
-0.677 & 0.5 & 0.5 & 0.5 \\
-1.54e-39 & 0.997 & 0.55 & 0.5 \\
-1.6e-38 & 0.997 & 0.556 & 0.5 \\
-1.94e-33 & 0.997 & 0.555 & 0.5 \\
-2.45e-27 & 0.998 & 0.562 & 0.5 \\
-3.22e-20 & 0.998 & 0.554 & 0.5 \\
-3.63e-17 & 0.997 & 0.553 & 0.5 \\
-\hline
-\end{tabular}
-\caption{Top 10 models based on transfer learning off of fine-tuned features from InceptionV3 models, sorted by $A_{test}$ in descending order.}
-\label{table:inceptionv3_2}
-\end{table}
-
-%\subsection{ResNet-50}
-%Lorem ipsum
-
-%\begin{table}[ht]
-%\centering
-%\begin{tabular}{ |c|c|c|c| }
-%\hline
-%$\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ \\
-%\hline
-%1e-50 & 0.991 & 0.72 & 0.666 \\
-%0.0651 & 0.447 & 0.568 & 0.585 \\
-%962000000.0 & 0.56 & 0.582 & 0.582 \\
-%3.63e-17 & 0.484 & 0.587 & 0.581 \\
-%855000.0 & 0.525 & 0.616 & 0.575 \\
-%5.15e-08 & 0.497 & 0.458 & 0.572 \\
-%0.677 & 0.499 & 0.477 & 0.559 \\
-%1.87e-34 & 0.5 & 0.502 & 0.556 \\
-%2.65e-25 & 0.542 & 0.575 & 0.553 \\
-%82300.0 & 0.514 & 0.528 & 0.532 \\
-%\hline
-%\end{tabular}
-%\caption{Top 10 models based on transfer learning off of ResNet-50 models, sorted by $A_{test}$ in descending order.}
-%\label{table:foobar}
-%\end{table}
 
 \section{End-to-End Learning Experiments}
 
