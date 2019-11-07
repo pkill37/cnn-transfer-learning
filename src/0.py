@@ -21,7 +21,7 @@ OPTIMIZER = tf.keras.optimizers.SGD(lr=10e-4, momentum=0.9, decay=0.0, nesterov=
 LR_DECAY = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_acc', factor=0.1, patience=10, verbose=1, mode='max', min_delta=EPSILON, cooldown=0, min_lr=0)
 
 
-def vgg16(extract_until, freeze_until, l2):
+def vgg16(extract_until, freeze_until, units, l2, dropout):
     assert extract_until >= freeze_until
 
     # Extract and freeze pre-trained model layers
@@ -35,17 +35,16 @@ def vgg16(extract_until, freeze_until, l2):
 
     # Classifier
     model.add(tf.keras.layers.GlobalAveragePooling2D())
-    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)))
-    model.add(tf.keras.layers.Dropout(rate=0.5))
+    model.add(tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)))
+    model.add(tf.keras.layers.Dropout(rate=dropout))
     model.add(tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(l2)))
     model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS)
     return model
 
 
-def train_one(experiments, x_train, y_train, x_validation, y_validation, epochs, batch_size, extract_until, freeze_until, l2):
-    run = os.path.join(experiments, f'extract{extract_until:03}_freeze{freeze_until:03}_lambda{l2}')
+def train(experiments, x_train, y_train, x_validation, y_validation, epochs, batch_size, extract_until, freeze_until, units, l2, dropout):
+    run = os.path.join(experiments, f'extract{extract_until:03}_freeze{freeze_until:03}_units{units}_lambda{l2}_dropout{dropout}')
     helpers.create_or_recreate_dir(run)
-    print(run)
     model_filename = os.path.join(run, 'model.h5')
     csv_filename = os.path.join(run, 'train.csv')
 
@@ -57,7 +56,7 @@ def train_one(experiments, x_train, y_train, x_validation, y_validation, epochs,
     ]
 
     # Train
-    model = vgg16(extract_until, freeze_until, l2)
+    model = vgg16(extract_until, freeze_until, units, l2, dropout)
     model.fit(x=x_train, y=y_train, validation_data=(x_validation, y_validation), batch_size=batch_size, epochs=epochs, verbose=1, callbacks=callbacks, shuffle=True)
     model.save(model_filename)
 
@@ -66,7 +65,7 @@ def train_one(experiments, x_train, y_train, x_validation, y_validation, epochs,
     helpers.fix_layer0(model_filename, (None, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), 'float32')
 
 
-def main(experiments, train_set, epochs, batch_size, extract_until, freeze_until, l2):
+def main(experiments, train_set, epochs, batch_size, extract_until, freeze_until, units, l2, dropout):
     # Set PRNG seeds so that all runs have the same initial conditions
     helpers.seed()
 
@@ -78,7 +77,7 @@ def main(experiments, train_set, epochs, batch_size, extract_until, freeze_until
     del y
 
     # Train
-    train_one(experiments, x_train, y_train, x_validation, y_validation, epochs, batch_size, extract_until, freeze_until, l2)
+    train(experiments, x_train, y_train, x_validation, y_validation, epochs, batch_size, extract_until, freeze_until, units, l2, dropout)
 
 
 if __name__ == '__main__':
@@ -89,7 +88,9 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, required=True)
     parser.add_argument('--extract-until', type=int, required=True)
     parser.add_argument('--freeze-until', type=int, required=True)
+    parser.add_argument('--units', type=int, required=True)
     parser.add_argument('--l2', type=float, required=True)
+    parser.add_argument('--dropout', type=float, required=True)
     args = parser.parse_args()
 
-    main(args.experiments, args.train_set, args.epochs, args.batch_size, args.extract_until, args.freeze_until, args.l2)
+    main(args.experiments, args.train_set, args.epochs, args.batch_size, args.extract_until, args.freeze_until, args.units, args.l2, args.dropout)
