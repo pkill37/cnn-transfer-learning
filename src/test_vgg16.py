@@ -82,6 +82,7 @@ def reduce_experiment(experiment):
         'test_acc': sklearn.metrics.accuracy_score(y_true, y_pred),
         'auc': sklearn.metrics.roc_auc_score(y_true, y_scores),
         'classification_report': sklearn.metrics.classification_report(y_true, y_pred, target_names=['0', '1'], output_dict=True),
+        'confusion_matrix': sklearn.metrics.confusion_matrix(y_true, y_pred).tolist(),
     }
 
 
