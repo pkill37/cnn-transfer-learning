@@ -5,4 +5,5 @@ curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh > min
 bash miniconda.sh
 rm miniconda.sh
 
-$(which conda) env create -f src/environment.yml
+exec $SHELL
+conda env create -f src/environment.yml

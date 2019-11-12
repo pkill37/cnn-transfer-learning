@@ -8,10 +8,22 @@ import helpers
 import data
 
 
-def plot(x, y, target_file):
-    fig = plt.figure(figsize=(15, 20))
-    rows = 4
+def plot_data(x, y, target):
+    fig = plt.figure()
+    rows = 3
     columns = 6
+    for cell in range(1, columns*rows+1):
+        i = np.random.randint(0, x.shape[0])
+        plt.subplot(rows, columns, cell)
+        plt.title('Melanoma' if y[i] == 1 else 'Non melanoma', fontsize=6)
+        plt.imshow(x[i]/255)
+        plt.axis('off')
+
+    plt.savefig(target)
+    plt.close()
+
+def plot_barplot(x, y, target_file):
+    fig = plt.figure()
     for cell in range(1, columns*rows+1):
         i = np.random.randint(0, x.shape[0])
         plt.subplot(rows, columns, cell)
@@ -23,13 +35,14 @@ def plot(x, y, target_file):
     plt.close()
 
 
-def main(train, test, target_dir):
+def main(train, test, target):
     x_train, y_train = data.load(train)
     x_test, y_test = data.load(test)
 
-    helpers.create_or_recreate_dir(target_dir)
-    plot(x_train, y_train, os.path.join(target_dir, 'train.png'))
-    plot(x_test, y_test, os.path.join(target_dir, 'test.png'))
+    helpers.create_or_recreate_dir(target)
+    plot(x_train, y_train, os.path.join(target, 'train.png'))
+    plot(x_test, y_test, os.path.join(target, 'test.png'))
+    plot_barplot(x_train + x_test, y_train + y_test, os.path.join(target_dir, 'barplot.png'))
 
 
 if __name__ == '__main__':

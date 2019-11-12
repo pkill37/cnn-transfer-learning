@@ -15,6 +15,8 @@ import data
 def test(model, test):
     m = tf.keras.models.load_model(model)
     x_test, y_test = data.load(test)
+    x_test = tf.keras.applications.vgg16.preprocess_input(x_test)
+    #x_test = data.standardize(x_test, np.mean(x_test, axis=(0,1,2)), np.std(x_test, axis=(0,1,2)))
 
     y_pred = m.predict(
         x=x_test,
@@ -22,11 +24,16 @@ def test(model, test):
         verbose=1,
     )
 
+    # Keep raw probability scores
     y_pred.reshape(-1)
-    y_pred[y_pred <= 0.5] = 0.
-    y_pred[y_pred > 0.5] = 1.
+    y_scores = y_pred
 
-    np.savez_compressed(os.path.join(os.path.dirname(model), 'predictions'), y_true=y_test, y_pred=y_pred)
+    # Threshold default predictions at 0.5
+    threshold = 0.5
+    y_pred[y_pred <= threshold] = 0. # not melanoma
+    y_pred[y_pred > threshold] = 1. # melanoma
+
+    np.savez_compressed(os.path.join(os.path.dirname(model), 'predictions'), y_true=y_test, y_pred=y_pred, y_scores=y_scores)
 
 
 def reduce_experiment(experiment):
@@ -54,14 +61,15 @@ def reduce_experiment(experiment):
         data = np.load(predictions)
         y_true = data['y_true']
         y_pred = data['y_pred']
-        return y_true, y_pred
+        y_scores = data['y_scores']
+        return y_true, y_pred, y_scores
 
 
     def hyperparameters_from_dirname(s):
         groups = re.findall(r'([a-zA-Z]+)([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)', s)
         return { str(group[0]): float(group[1]) for group in groups }
 
-    y_true, y_pred = read_predictions(os.path.join(experiment, 'predictions.npz'))
+    y_true, y_pred, y_scores = read_predictions(os.path.join(experiment, 'predictions.npz'))
     csv_stats = read_csv(os.path.join(experiment, 'train.csv'))
 
     return {
@@ -72,13 +80,16 @@ def reduce_experiment(experiment):
         'train_acc': csv_stats['acc'],
         'val_acc': csv_stats['val_acc'],
         'test_acc': sklearn.metrics.accuracy_score(y_true, y_pred),
+        'auc': sklearn.metrics.roc_auc_score(y_true, y_scores),
         'classification_report': sklearn.metrics.classification_report(y_true, y_pred, target_names=['0', '1'], output_dict=True),
+        'confusion_matrix': sklearn.metrics.confusion_matrix(y_true, y_pred).tolist(),
     }
 
 
 def main(experiment, test_set):
     test(os.path.join(experiment, 'model.h5'), test_set)
     stats = reduce_experiment(experiment)
+    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', stats['id'], stats['test_acc'], stats['auc'])
 
     with open(os.path.join(experiment, 'stats.json'), 'w') as f:
         json.dump(stats, f)

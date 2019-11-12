@@ -1,9 +1,7 @@
 import os
 import argparse
-import itertools
 
 import tensorflow as tf
-import numpy as np
 import sklearn
 
 import data
@@ -15,13 +13,8 @@ IMG_WIDTH = 224
 IMG_HEIGHT = 224
 IMG_CHANNELS = 3
 
-LOSS = 'binary_crossentropy'
-METRICS = ['accuracy']
-OPTIMIZER = tf.keras.optimizers.SGD(lr=10e-4, momentum=0.9, decay=0.0, nesterov=False)
-LR_DECAY = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_acc', factor=0.1, patience=10, verbose=1, mode='max', min_delta=EPSILON, cooldown=0, min_lr=0)
 
-
-def vgg16(extract_until, freeze_until, l2):
+def vgg16(extract_until, freeze_until, units, l2, dropout):
     assert extract_until >= freeze_until
 
     # Extract and freeze pre-trained model layers
@@ -35,37 +28,13 @@ def vgg16(extract_until, freeze_until, l2):
 
     # Classifier
     model.add(tf.keras.layers.GlobalAveragePooling2D())
-    model.add(tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)))
+    model.add(tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l2)))
+    model.add(tf.keras.layers.Dropout(rate=dropout))
     model.add(tf.keras.layers.Dense(units=1, activation='sigmoid', kernel_regularizer=tf.keras.regularizers.l2(l2)))
-    model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS)
     return model
 
 
-def train_one(experiments, x_train, y_train, x_validation, y_validation, epochs, batch_size, extract_until, freeze_until, l2):
-    run = os.path.join(experiments, f'extract{extract_until:03}_freeze{freeze_until:03}_lambda{l2}')
-    helpers.create_or_recreate_dir(run)
-    print(run)
-    model_filename = os.path.join(run, 'model.h5')
-    csv_filename = os.path.join(run, 'train.csv')
-
-    callbacks = [
-        LR_DECAY,
-        helpers.TrainingTimeLogger(),
-        tf.keras.callbacks.EarlyStopping(monitor='loss', min_delta=EPSILON, patience=20, verbose=1, mode='min', baseline=None),
-        tf.keras.callbacks.ModelCheckpoint(filepath=model_filename, monitor='loss', verbose=0, save_best_only=True, save_weights_only=False, mode='min', period=1),
-        tf.keras.callbacks.CSVLogger(filename=csv_filename, separator=',', append=False),
-    ]
-
-    # Train
-    model = vgg16(extract_until, freeze_until, l2)
-    model.fit(x=x_train, y=y_train, validation_data=(x_validation, y_validation), batch_size=batch_size, epochs=epochs, verbose=1, callbacks=callbacks, shuffle=True)
-
-    # Cleanup
-    del model
-    helpers.fix_layer0(model_filename, (None, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), 'float32')
-
-
-def main(experiments, train_set, epochs, batch_size, extract_until, freeze_until, l2):
+def main(experiments, train_set, epochs, batch_size, extract_until, freeze_until, units, l2, dropout, patience):
     # Set PRNG seeds so that all runs have the same initial conditions
     helpers.seed()
 
@@ -76,8 +45,28 @@ def main(experiments, train_set, epochs, batch_size, extract_until, freeze_until
     del x
     del y
 
+    # Settings
+    run = os.path.join(experiments, f'extract{extract_until:03}_freeze{freeze_until:03}_units{units}_lambda{l2}_dropout{dropout}_patience{patience}')
+    helpers.create_or_recreate_dir(run)
+    model_filename = os.path.join(run, 'model.h5')
+    csv_filename = os.path.join(run, 'train.csv')
+
+    callbacks = [
+        helpers.TrainingTimeLogger(),
+        tf.keras.callbacks.ReduceLROnPlateau(monitor='val_acc', factor=0.1, patience=10, verbose=1, mode='max', min_delta=EPSILON, cooldown=0, min_lr=0),
+        tf.keras.callbacks.EarlyStopping(monitor='val_acc', min_delta=EPSILON, patience=patience, verbose=1, mode='max', baseline=None),
+        tf.keras.callbacks.CSVLogger(filename=csv_filename, separator=',', append=False),
+    ]
+
     # Train
-    train_one(experiments, x_train, y_train, x_validation, y_validation, epochs, batch_size, extract_until, freeze_until, l2)
+    model = vgg16(extract_until, freeze_until, units, l2, dropout)
+    model.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.SGD(lr=10e-4, momentum=0.9, decay=0.0, nesterov=False), metrics=['accuracy'])
+    model.fit(x=x_train, y=y_train, validation_data=(x_validation, y_validation), batch_size=batch_size, epochs=epochs, verbose=1, callbacks=callbacks, shuffle=True)
+    model.save(model_filename)
+
+    # Cleanup
+    del model
+    helpers.fix_layer0(model_filename, (None, IMG_WIDTH, IMG_HEIGHT, IMG_CHANNELS), 'float32')
 
 
 if __name__ == '__main__':
@@ -88,7 +77,10 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, required=True)
     parser.add_argument('--extract-until', type=int, required=True)
     parser.add_argument('--freeze-until', type=int, required=True)
+    parser.add_argument('--units', type=int, required=True)
     parser.add_argument('--l2', type=float, required=True)
+    parser.add_argument('--dropout', type=float, required=True)
+    parser.add_argument('--patience', type=int, required=True)
     args = parser.parse_args()
 
-    main(args.experiments, args.train_set, args.epochs, args.batch_size, args.extract_until, args.freeze_until, args.l2)
+    main(args.experiments, args.train_set, args.epochs, args.batch_size, args.extract_until, args.freeze_until, args.units, args.l2, args.dropout, args.patience)
