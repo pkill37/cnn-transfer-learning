@@ -1,7 +1,7 @@
 \chapter{Background}
 \label{chapter:background}
 
-This section briefly introduces relevant concepts of machine learning and deep learning to better familiarize the reader with the methodology and techniques as well as contextualize the state-of-the-art work that will be reviewed later in chapter \ref{chapter:sota}.
+This chapter provides the necessary background of machine learning and deep learning to better familiarize the reader with the techniques as well as contextualize the state-of-the-art work that will be reviewed later in chapter \ref{chapter:sota}.
 
 \section{Supervised Learning}
 
@@ -31,7 +31,6 @@ However, this technique (typically referred to as the holdout method) has its do
 $K$-fold cross-validation is a common cross-validation technique that randomly partitions the data into $K$ equally sized subsamples, of which a single subsample is used for testing and the remaining $K-1$ subsamples for fitting the model, a process which is repeated $K$ times to yield $K$ performance estimations that can be averaged over to produce one estimation that can be referred to. In this way all samples are used for training and testing, which is an advantage over repeated random sub-sampling which does not systematically use all samples for training and testing.
 
 Nested cross-validation techniques are required when, in addition to estimating a model's generalization performance (i.e. performance on the test set), it is also necessary to select the best model among many (e.g. with different hyperparameters) \cite{crossvalidationbias}. A truly nested variant will use an inner loop of $L$ folds to tune the hyperparameters and select the best model, and an outer loop of $K$ folds to evaluate the models selected by the inner loop. A simpler (albeit not really nested) scheme is one that is similar to the $K$-fold cross-validation we described above, except that, of the $K$ equally sized subsamples, we take 1 subsample for validation, another 1 subsample for testing, and the remaining $K-2$ subsamples are used for training. However, in practice, nested cross-validation when selecting classifiers is overzealous and too expensive for most applications \cite{nestedcvoverzealous}.
-
 
 \section{Binary Classification}
 
@@ -158,7 +157,7 @@ $$
 \nabla_{\theta} J(\theta) = \frac{1}{m} \sum_{i=1}^{m} \nabla_{\theta} L(h_{\theta}(x^{(i)}), y^{(i)})
 $$
 
-A parameter $\eta \in \mathbb{{R}^{+}}$, called the learning rate, controls the size of the step to take in the direction of the gradient. The learning rate $\eta$ must be set carefully to ensure that the cost function converges. A small enough value will ensure convergence, but requires a larger number of updates to get there, whereas bigger values will likely result in divergence.
+A parameter $\eta \in \mathbb{{R}^{+}}$, called the learning rate, controls the size of the step to take in the direction of the gradient. The learning rate $\eta$ must be set carefully to ensure that the cost function converges. A small enough value will ensure convergence, but requires a larger number of updates to get there, whereas bigger values will likely result in divergence. The learning rate can also be set dynamically to change during training. One such heuristic is to reduce it by a factor $f$ (e.g. $f=0.1$) when the loss has not changed significantly within some threshold $\epsilon$ (e.g. $\epsilon=0.0001$) in $p$ epochs (e.g. $p=30$) during which it will be patient \cite{learningrateschedules}.
 
 Thus emerges a very simple and natural update rule (called batch gradient descent) for our parameters:
 
@@ -166,15 +165,62 @@ $$
 \theta^{t+1} = \theta^t - \eta \nabla_{\theta} J(\theta)
 $$
 
-Computing the gradient $\nabla J$ with respect to the original $m$ training samples is computationally and memory intensive for very big $m$. But it turns out we can get a good estimate of the true gradient $\nabla J$ by averaging over a smaller random number of samples $m'$, i.e.,
+Computing the gradient $\nabla J$ with respect to the original $m$ training samples is computationally and memory intensive for very big $m$. But, as it turns out, through an idea interchangeably referred to as mini-batch gradient descent or \ac{SGD}, we can get a good estimate of the true gradient $\nabla J$, by averaging over a smaller random number of samples $m'$, i.e.,
 
 $$
-\frac{\sum_{i=1}^{m'} \nabla J_i}{m'} \approx \frac{\sum_{i=1}^m \nabla J_{i}}{m} \approx \nabla J
+\nabla J \approx \frac{\sum_{i=1}^{m'} \nabla J_i}{m'} \approx \frac{\sum_{i=1}^m \nabla J_{i}}{m}
 $$
 
-This idea is interchangeably referred to as mini-batch gradient descent or \ac{SGD} (in some literature only when $m' = 1$).
+A variation of \ac{SGD} called \ac{SGD} with momentum \cite{ruder2016} keeps track of the past parameter updates in a vector $v$ (with $\dim v = \dim \theta$) which initially, at iteration $t = 0$, is the zero matrix
 
-More recently, gradient descent methods have been further developed to find individual learning rates per parameter which are adapted using estimations of the first and second moments of the gradient. \citeauthor{ruder2016} \cite{ruder2016} presents an extensive review of these adaptive variations of gradient descent. Despite the popularity of these methods, sometimes they offer marginal value versus the classic \ac{SGD}. Wilson et al. \cite{wilson2017} show that the solutions found by adaptive methods usually generalize worse when compared to \ac{SGD}, which suggests that machine learning practicioners should reconsider the use of adaptive methods and try other methods too.
+$$
+v^0 = 0
+$$
+
+and $v^{t+1}$ holds a fraction $\gamma \in [0,1]$ (usually $\gamma = 0.9$) of the updates up until iteration $t$, i.e.,
+
+$$
+v^{t+1} = -\eta \nabla_{\theta} J(\theta) + \gamma v^{t}
+$$
+
+and determines that the parameter update at (the next) iteration $t+1$ is a linear combination of the gradient and the previous parameter updates $v^{t}$:
+
+\begin{align*}
+    \theta^{t+1} &= \theta^{t} + v^{t+1} \\
+                 &= \theta^{t} - \eta \nabla_{\theta} J(\theta) + \gamma v^{t}
+\end{align*}
+
+\ac{SGD} with momentum effectively helps accelerate \ac{SGD} in the relevant direction and dampen oscillations in the parameter values \cite{ruder2016}.
+
+More recently, adaptive gradient descent methods have been further developed to find individual learning rates per parameter and use ideas similar to momentum, which \citeauthor{ruder2016} \cite{ruder2016} presents an extensive review of. Despite the popularity of these adaptive methods (e.g. Adam), sometimes they offer marginal value versus the classic \ac{SGD}. Wilson et al. \cite{wilson2017} show that the solutions found by adaptive methods usually generalize worse when compared to \ac{SGD}, which suggests that adaptive methods like Adam should not be used like a magical black box but cross-validated among other optimizers.
+
+% TODO: https://www.i2tutorials.com/technology/back-propagation-and-computational-graphs-in-neural-networks/
+% TODO: http://outlace.com/on-chain-rule-computational-graphs-and-backpropagation.html
+\section{Computational Graphs}
+
+In some sense, a neural network is just an arbitrarily composite function.
+
+$$
+f(x) = g(h( ... j(x) ... ))
+$$
+
+Such a function can be represented in a directed acyclic graph (which the machine learning literature calls a computational graph) where each node in the graph is a variable (which can be a scalar blabla) and an edge is an operation, e.g. $f(x) = x+2$ would draw two nodes ($x$ and $2$) connected by an edge (the addition operator).
+
+On a computational graph we can have essentially two types of computation:
+
+\begin{itemize}
+    \item Forward propagation (i.e. inference) runs an input $x$ through this arbitrarily composed function.
+    \item Backward propagation is all about understanding how changing one variable affects another, which computational graphs make quite easy.
+\end{itemize}
+
+Computational graphs expose a programming model where the big idea is to express a numeric computation as a graph and
+
+\begin{itemize}
+    \item graph nodes are operations which have any number of inputs and outputs;
+    \item graph edges are tensors that flow between nodes.
+\end{itemize}
+
+Computational graphs also make it easy to move computation to GPU or TPU [citation needed].
 
 \section{Initialization}
 
@@ -261,7 +307,7 @@ On the other hand, an overfitting (high variance) problem can be identified when
 
 \section{Regularization}
 
-In the optimization literature, regularization is seen as a modification $J_R(\theta)$ to the original objective function $J(\theta)$ that penalises large parameter values $\theta$ using some criteria $R(\theta)$ such that
+In the optimization literature, regularization is clasically seen as a modification $J_R(\theta)$ to the original objective function $J(\theta)$ that penalises large parameter values $\theta$ using some criteria $R(\theta)$ such that
 
 $$
 J_R(\theta) = J(\theta) + R(\theta)
@@ -303,11 +349,13 @@ which basically
     \item generally produces more complex models.
 \end{itemize}
 
-In practice, we control the regularization strength via the $\lambda$ parameter. Put simply, in a high variance scenario (overfitting) we should increase $\lambda$ and in a high bias situation (underfitting) we should decrease $\lambda$.
+In practice, the regularization strength is controlled via the $\lambda \in \mathbb{{R}^{+}}$ parameter. Put simply, in a high variance scenario (overfitting) one should increase $\lambda$ and in a high bias situation (underfitting) decrease $\lambda$.
+
+\citeauthor{regularizationsurvey} present a much broader and more modern view of regularization in machine learning in their \citeyear{regularizationsurvey} paper \cite{regularizationsurvey}, where they define regularization more abstractly as any technique that allows the model to generalize better (i.e. perform better on the test set). They go over implicit regularization via data augmentation, network architecture, and the optimization algorithm itself as well as various explicit regularization techniques that penalize large weights (e.g. L1 and L2 regularization).
 
 More recently, Dropout \cite{dropout} is another regularization technique designed specifically to prevent neural networks from overfitting by randomly dropping neuron (and their connections) from the network during training which prevents complex co-adaptations on training data.
 
-\citeauthor{regularizationsurvey} present a much broader and more modern view of regularization in machine learning in their \citeyear{regularizationsurvey} paper \cite{regularizationsurvey}, where they define regularization more abstractly as any technique that allows the model to generalize better (i.e. perform better on the test set). They go over implicit regularization via data augmentation, network architecture, and the optimization algorithm itself as well as various explicit regularization techniques that penalize large weights (e.g. L1 and L2 regularization).
+Iterative optimization algorithms like \ac{SGD} work by improving the model's fit to the training set every epoch which, up to some point, also improves its generalization performance (i.e. performance on data outside of the training set). However, past that point, continuing to improve the model's fit to the training set will negatively impact its generalization performance. Early stopping emerges as a form of regularization applicable to such optimization algorithms that stops training according to some stopping criterion \cite{earlystopping} \cite{deeplearning}. For example, most implementations\footnote{\url{https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/EarlyStopping}} stop training after $p$ patient epochs of no significant improvement within a threshold $\epsilon$ (e.g. $\epsilon = 0.0001$) of some monitored metric (e.g. error on a validation set) and in the end either uses the weights from the epoch with the best value of the monitored metric (which requires extra memory to maintain the best weights) or the weights obtained at the last epoch of training after early stopping (which is faster since it just needs to seek the weights of the current model).
 
 \section{Neural Network}
 
@@ -322,7 +370,7 @@ Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with
 
 \subsection{Neuron}
 
-A neuron is a computational unit parameterized by a weight matrix $W$ and bias vector $b$, which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = g(\sum^{i=1}_{n} W_{i}x_{i} + b) = g(W^Tx + b)$ that is activated by some (usually non-linear) function $g \colon \mathbb{R} \to \mathbb{R}$ called the activation function.
+A neuron is a computational unit parameterized by a weight vector $W$ and bias scalar $b$, which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = g(\sum^{i=1}_{n} W_{i}x_{i} + b) = g(W^Tx + b)$ that is activated by some (usually non-linear) function $g \colon \mathbb{R} \to \mathbb{R}$ called the activation function.
 
 The activation function $g$ is what characterizes the neuron. If the activation function is the step function
 
@@ -344,8 +392,7 @@ $$
 
 ReLU is the abbreviation of rectified linear unit, which applies the non-saturating activation function $g(x)=\max(0,x)$. It effectively removes negative values from an activation map by setting them to zero. It increases the nonlinear properties of the decision function and of the overall network without affecting the receptive fields of the convolution layer. ReLU is preferred because it trains the neural network faster without a significant penalty to generalization accuracy.[62]
 
-Other functions are also used to increase nonlinearity, for example the saturating hyperbolic tangent $g(x)=\tanh(x)$, $g(x)=|\tanh(x)|$, and the sigmoid function $\sigma (x)=(1+e^{-x})^{-1}$. \subsection{Forward Pass}
-\label{subsection:forwardpass}
+Other functions are also used to increase nonlinearity, for example the saturating hyperbolic tangent $g(x)=\tanh(x)$, $g(x)=|\tanh(x)|$, and the sigmoid function $\sigma (x)=(1+e^{-x})^{-1}$.
 
 An $L$-layer neural network's activations can be recursively defined
 
@@ -363,64 +410,7 @@ $$
 z^{l} = W^{l-1}a^{l-1} + b^{l-1}
 $$
 
-\subsection{Backward Pass}
-\label{subsection:backwardpass}
-
-Backpropagation is a way of computing the gradient through recursive application of the chain rule from calculus.
-
-A network should be able to infer the right outputs given the right weights and biases. To learn these correct weights and biases, the network must be able to adjust them.
-
-Small changes in weights $\Delta w_j$ and biases $\Delta b$ should only cause small changes in neuron output $\Delta a^L_i$. This is in fact the case. By the tangent line approximation
-
-$$
-\Delta a^L_i \approx \sum_j \frac{\partial a^L_i}{\partial w_j} \Delta w_j + \frac{\partial a^L_i}{\partial b} \Delta b
-$$
-
-Backpropagation is about understanding how changing the weights and biases in a network changes the cost function, which is precisely represented by $\frac{\partial C}{\partial w^l_{jk}}$ and $\frac{\partial C}{\partial b^l_j}$.
-
-But to compute those, we first introduce an intermediate quantity, $\delta^l_j$, which we call the error in the $j$th neuron in the $l$th layer. Backpropagation will give us a procedure to compute the error $\delta^l_j$, which will then relate $\delta^l_j$ to $\frac{\partial C}{\partial w^l_{jk}}$ and $\frac{\partial C}{\partial b^l_j}$.
-
-
-%% TODO: refactor, word engineering
-
-The intuition behind the backpropagation algorithm is as follows. Given a training example $(x, y)$ we will first run a forward pass to compute all the activations throughout the network, namely the output of the network $h_{W,b}(x)$. Then, for each node $i$ in layer $l$, we would like to compute the error $\delta^{l}_i$ as a measure of how much that node was responsible for the error in the output $\delta^{L}_i$. For any of the nodes at the output of the neural network, this can be directly measured as the difference between the activation of a node and the labeled value.
-The error that
-
-Backpropagation relies on two important assumptions about the cost function:
-
-\begin{itemize}
-    \item it can be written as an average of cost per individual training sample $x$, i.e. $C = \frac{1}{m} \sum_x C_x$, because backpropagation can only compute $\frac{\partial C_x}{\partial w}$  and $\frac{\partial C_x}{\partial b}$ for a single training example $x$ which can then be averaged to obtain $\frac{\partial C}{\partial w}$  and $\frac{\partial C}{\partial b}$.
-    \item it can be written as a function of the output at the neural network, i.e. $C = C(a^{L})$, which it otherwise
-\end{itemize}
-
-The error at the output layer $L$ is given by:
-
-$$
-\delta^L = \nabla_{a^L} C(a^L) \odot \sigma'(z^L)
-$$
-
-The error at an arbitrary hidden layer $l$ is given in terms of the error in layer $l+1$:
-
-$$
-\delta^l = ((w^{l+1})^T \delta^{l+1}) \odot \sigma'(z^L)
-$$
-
-Finally we can relate the error back to the gradient we wanted to compute:
-
-$$
-\frac{\partial C}{\partial b^l_j} = \delta^l_j
-$$
-
-$$
-\frac{\partial C}{\partial w^l_{jk}} = a^{l-1}_k \delta^l_j
-$$
-
-The gradient descent update rules then become:
-
-$$
-1337
-$$
-
+% TODO: https://cs231n.github.io/convolutional-networks/#conv
 \section{Convolutional Neural Network}
 
 A \ac{CNN} is a class of deep, feed-forward artificial neural network, originally designed for computer vision problems where it is most popular. A \ac{CNN} consists of an input and an output layer, as well as multiple hidden layers. The hidden layers of a \ac{CNN} are typically comprised of:
