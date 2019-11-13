@@ -89,8 +89,6 @@ def reduce_experiment(experiment):
 def main(experiment, test_set):
     test(os.path.join(experiment, 'model.h5'), test_set)
     stats = reduce_experiment(experiment)
-    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', stats['id'], stats['test_acc'], stats['auc'])
-
     with open(os.path.join(experiment, 'stats.json'), 'w') as f:
         json.dump(stats, f)
 
