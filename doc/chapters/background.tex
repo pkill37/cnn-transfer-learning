@@ -243,7 +243,7 @@ Modern initialization techniques are heuristic based and designed around the act
 
 More recently, initializing a network with parameters transferred from other networks (typically trained on natural image datasets whose lower-layers' features generalise well to other tasks) has emerged as a very useful and pragmatic initialization strategy which in practice works very well for most tasks \cite{howtransferable}, giving birth to what is now known as transfer learning.
 
-\section{Feature Scaling}
+\section{Feature Normalization}
 
 Some machine learning algorithms rely on the distance between the features in a feature vector $x$ and assume the values are on the same scale. Min-max normalization rescales $x$ to $x'$ to be on the interval $[0, 1]$, i.e.
 
@@ -251,14 +251,22 @@ $$
 x' = \frac{x - \min{(x)}}{\max{(x)} - \min{(x)}}
 $$
 
-Other machine learning algorithms assume that the feature vector $x$ follows a Gaussian distribution (i.e. zero mean and unit-variance). Standardization (sometimes more intuitively called normalization) is the process of rescaling $x$ (where $\mu_x$ is the mean of each feature vector $x$ and $\sigma_x$ its standard deviation) to $x'$ to follow a Gaussian distribution, i.e.
+Other machine learning algorithms assume that the feature vector $x$ follows a Gaussian distribution (i.e. zero mean and unit-variance). Gaussian normalization is the process of rescaling $x$ (where $\mu_x$ is the mean of each feature vector $x$ and $\sigma_x$ its standard deviation) to $x'$ to follow a Gaussian distribution, i.e.
 
 $$
 x' = \frac{x - \mu_x}{\sigma_x}
 $$
 
-In practice, gradient descent converges much faster with features that follow a normal distribution \cite{batchnormalization}.
+In practice, gradient descent converges much faster with features that follow a normal distribution as was seen by the work of \citeauthor{batchnormalization} on batch normalization \cite{batchnormalization}.
 
+Performing feature normalization on the entire dataset and only afterwards split it (into train, validation, and test sets) will leak information (i.e. the mean and variance) about the validation and test sets into the train set itself which will bias performance metrics on the validation and test sets. Therefore, it is crucial to
+
+\begin{enumerate}
+    \item Split the dataset;
+    \item Perform feature normalization on the train set and save the mean $\mu_{train}$ and variance $\sigma_{train}$;
+    \item Perform feature normalization on the validation set using the mean $\mu_{train}$ and variance $\sigma_{train}$;
+    \item Perform feature normalization on the test set using the mean $\mu_{train}$ and variance $\sigma_{train}$.
+\end{enumerate}
 
 \section{Bias-Variance Tradeoff}
 
