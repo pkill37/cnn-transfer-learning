@@ -127,6 +127,31 @@ In binary classification problems, it is said that a dataset of $m$ samples has 
     \item and the majority class must also be augmented by a factor of $\frac{\frac{m'}{2}}{|S_{maj}|}$
 \end{itemize}
 
+\section{Feature Normalization}
+
+Some machine learning algorithms rely on the distance between the features in a feature vector $x$ and assume the values are on the same scale. Min-max normalization rescales $x$ to $x'$ to be on the interval $[0, 1]$, i.e.
+
+$$
+x' = \frac{x - \min{(x)}}{\max{(x)} - \min{(x)}}
+$$
+
+Other machine learning algorithms assume that the feature vector $x$ follows a Gaussian distribution (i.e. zero mean and unit-variance). Gaussian normalization is the process of rescaling $x$ (where $\mu_x$ is the mean of each feature vector $x$ and $\sigma_x$ its standard deviation) to $x'$ to follow a Gaussian distribution, i.e.
+
+$$
+x' = \frac{x - \mu_x}{\sigma_x}
+$$
+
+In practice, gradient descent converges much faster with features that follow a normal distribution as was seen by the work of \citeauthor{batchnormalization} on batch normalization \cite{batchnormalization}.
+
+Performing feature normalization on the entire dataset and only afterwards split it (into train, validation, and test sets) will leak information (i.e. the mean and variance) about the validation and test sets into the train set itself which will bias performance metrics on the validation and test sets. Therefore, it is crucial to
+
+\begin{enumerate}
+    \item Split the dataset;
+    \item Perform feature normalization on the train set and save the mean $\mu_{train}$ and variance $\sigma_{train}$;
+    \item Perform feature normalization on the validation set using the mean $\mu_{train}$ and variance $\sigma_{train}$;
+    \item Perform feature normalization on the test set using the mean $\mu_{train}$ and variance $\sigma_{train}$.
+\end{enumerate}
+
 \section{Optimization}
 
 Given a cost function $J$ and initial parameters $\theta$, the goal is to find the optimal $\theta^*$ that minimizes the cost function, i.e. the optimization objective is
@@ -137,19 +162,9 @@ $$
 
 In the deep learning high-dimensional optimization landscape, the objective function is highly non-convex w.r.t. the parameters, so one can't use any of the tools from the convex optimization literature. Using calculus to find the minimum analytically is only feasible for trivial, low-dimensional, convex functions.
 
-\subsection{Brute-force Search}
+A naive first approach is to systematically and exhaustively enumerate and evaluate many candidate solutions while keeping track of the best one. This simple brute-force search solution, arguably the simplest metaheuristic, is infeasible in the context of deep neural networks due to the curse of dimensionality.
 
-A naive first approach is to systematically and exhaustively enumerate and evaluate many candidate solutions while keeping track of the best one. This simple solution, arguably the simplest metaheuristic, is infeasible in the context of deep neural networks due to the curse of dimensionality.
-
-\subsection{Random Optimization}
-
-Rather than try all solutions exhaustively, another approach is to try random values of $\theta$ in a loop and record the running best until some stopping criteria.
-
-\subsection{Random Local Search}
-
-A slightly better strategy is to start with random $\theta$ and iteratively refine the best-found solution (hence the local in local search) until some stopping criteria.
-
-\subsection{Gradient Descent}
+Rather than try all solutions exhaustively, another approach is to try random values of $\theta$ in a loop and record the running best until some stopping criteria. Random local search is a slightly better strategy that starts with random $\theta$ and iteratively refine the best-found solution (hence the local in local search) until some stopping criteria.
 
 Random local search forms a good basis for optimization, but there is no need to move randomly in search-space. The negative of the gradient of the cost function w.r.t. the parameters $\theta$ over all $m$ training samples gives the direction of steepest descent (i.e. the direction in which the cost function decreases):
 
@@ -194,43 +209,9 @@ and determines that the parameter update at (the next) iteration $t+1$ is a line
 
 More recently, adaptive gradient descent methods have been further developed to find individual learning rates per parameter and use ideas similar to momentum, which \citeauthor{ruder2016} \cite{ruder2016} presents an extensive review of. Despite the popularity of these adaptive methods (e.g. Adam), sometimes they offer marginal value versus the classic \ac{SGD}. Wilson et al. \cite{wilson2017} show that the solutions found by adaptive methods usually generalize worse when compared to \ac{SGD}, which suggests that adaptive methods like Adam should not be used like a magical black box but cross-validated among other optimizers.
 
-% TODO: https://www.i2tutorials.com/technology/back-propagation-and-computational-graphs-in-neural-networks/
-% TODO: http://outlace.com/on-chain-rule-computational-graphs-and-backpropagation.html
-\section{Computational Graphs}
-
-In some sense, a neural network is just an arbitrarily composite function.
-
-$$
-f(x) = g(h( ... j(x) ... ))
-$$
-
-Such a function can be represented in a directed acyclic graph (which the machine learning literature calls a computational graph) where each node in the graph is a variable (which can be a scalar blabla) and an edge is an operation, e.g. $f(x) = x+2$ would draw two nodes ($x$ and $2$) connected by an edge (the addition operator).
-
-On a computational graph we can have essentially two types of computation:
-
-\begin{itemize}
-    \item Forward propagation (i.e. inference) runs an input $x$ through this arbitrarily composed function.
-    \item Backward propagation is all about understanding how changing one variable affects another, which computational graphs make quite easy.
-\end{itemize}
-
-Computational graphs expose a programming model where the big idea is to express a numeric computation as a graph and
-
-\begin{itemize}
-    \item graph nodes are operations which have any number of inputs and outputs;
-    \item graph edges are tensors that flow between nodes.
-\end{itemize}
-
-Computational graphs also make it easy to move computation to GPU or TPU [citation needed].
-
 \section{Initialization}
 
-An optimization algorithm like gradient descent is inherently iterative in its update rule (for iterations $t > 0$)
-
-$$
-\theta^{t+1} = \theta^t - \eta \nabla_{\theta} J(\theta)
-$$
-
-for which we need to initialize the matrix $\theta^0$ such that the first update works. This initialization determines how quickly optimization converges or whether it converges at all, which is why it is so important.
+An optimization algorithm like gradient descent is inherently iterative in its update rule for which we need to initialize the matrix $\theta$ such that the first update works. This initialization determines how quickly optimization converges or whether it converges at all, which is why it is so important.
 
 A reasonable first approach would be to initialize all values of the matrix $\theta$ to zero. However, e.g. in a neural network this does not have any symmetry breaking properties because if every weight is initialized to zero then every neuron will compute the same activation (assuming all neurons use the same activation function), thus the gradients computed by backpropagation will also be the same and result in the exact same updates during gradient descent. Therefore parameters must be chosen in such a way that they break this symmetry, which is what motivates the use of random initialization. However simply drawing random parameters (e.g. from a Gaussian distribution with mean 0 and standard deviation 1) might result in too small or too big parameter values and very wide in range which originate a vanishing or exploding gradient problem where different layers effectively learn at different speeds.
 
@@ -242,31 +223,6 @@ Modern initialization techniques are heuristic based and designed around the act
 \end{itemize}
 
 More recently, initializing a network with parameters transferred from other networks (typically trained on natural image datasets whose lower-layers' features generalise well to other tasks) has emerged as a very useful and pragmatic initialization strategy which in practice works very well for most tasks \cite{howtransferable}, giving birth to what is now known as transfer learning.
-
-\section{Feature Normalization}
-
-Some machine learning algorithms rely on the distance between the features in a feature vector $x$ and assume the values are on the same scale. Min-max normalization rescales $x$ to $x'$ to be on the interval $[0, 1]$, i.e.
-
-$$
-x' = \frac{x - \min{(x)}}{\max{(x)} - \min{(x)}}
-$$
-
-Other machine learning algorithms assume that the feature vector $x$ follows a Gaussian distribution (i.e. zero mean and unit-variance). Gaussian normalization is the process of rescaling $x$ (where $\mu_x$ is the mean of each feature vector $x$ and $\sigma_x$ its standard deviation) to $x'$ to follow a Gaussian distribution, i.e.
-
-$$
-x' = \frac{x - \mu_x}{\sigma_x}
-$$
-
-In practice, gradient descent converges much faster with features that follow a normal distribution as was seen by the work of \citeauthor{batchnormalization} on batch normalization \cite{batchnormalization}.
-
-Performing feature normalization on the entire dataset and only afterwards split it (into train, validation, and test sets) will leak information (i.e. the mean and variance) about the validation and test sets into the train set itself which will bias performance metrics on the validation and test sets. Therefore, it is crucial to
-
-\begin{enumerate}
-    \item Split the dataset;
-    \item Perform feature normalization on the train set and save the mean $\mu_{train}$ and variance $\sigma_{train}$;
-    \item Perform feature normalization on the validation set using the mean $\mu_{train}$ and variance $\sigma_{train}$;
-    \item Perform feature normalization on the test set using the mean $\mu_{train}$ and variance $\sigma_{train}$.
-\end{enumerate}
 
 \section{Bias-Variance Tradeoff}
 
@@ -365,99 +321,87 @@ More recently, Dropout \cite{dropout} is another regularization technique design
 
 Iterative optimization algorithms like \ac{SGD} work by improving the model's fit to the training set every epoch which, up to some point, also improves its generalization performance (i.e. performance on data outside of the training set). However, past that point, continuing to improve the model's fit to the training set will negatively impact its generalization performance. Early stopping emerges as a form of regularization applicable to such optimization algorithms that stops training according to some stopping criterion \cite{earlystopping} \cite{deeplearning}. For example, most implementations\footnote{\url{https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/EarlyStopping}} stop training after $p$ patient epochs of no significant improvement within a threshold $\epsilon$ (e.g. $\epsilon = 0.0001$) of some monitored metric (e.g. error on a validation set) and in the end either uses the weights from the epoch with the best value of the monitored metric (which requires extra memory to maintain the best weights) or the weights obtained at the last epoch of training after early stopping (which is faster since it just needs to seek the weights of the current model).
 
-\section{Neural Network}
+\section{Feedforward Neural Networks}
 
-Neural networks allow defining complex, non-linear hypotheses $h_\theta(x)$ with parameters $\theta$ that we can fit to data and are traditionally composed of several neurons (as illustrated in figure \ref{fig:neuralnetwork}).
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.6\textwidth]{figs/neuralnetwork.jpeg}
-    \caption{Overly simplified view of a neural network composed of multiple neurons, in this case organized in an input layer, four fully-connected hidden layers, and an output layer. Source: datanami.com.}
-    \label{fig:neuralnetwork}
-\end{figure}
+Feedforward \ac{ANN} define a family of parameterized non-linear functions which, according to the universal approximation theorem, can approximate any continuous function. A feedforward \ac{ANN} with a single hidden layer of finite width is such a universal approximator, but requires an exponentially large number of neurons in the hidden layer (its width) \cite{uat}. This has since motivated the construction of width-bounded deeper networks, sparking what is now known as deep learning.
 
 \subsection{Neuron}
 
-A neuron is a computational unit parameterized by a weight vector $W$ and bias scalar $b$, which takes as input $x \in \mathbb{R}^{n}$ and outputs a hypothesis $h_{W,b}(x) = g(\sum^{i=1}_{n} W_{i}x_{i} + b) = g(W^Tx + b)$ that is activated by some (usually non-linear) function $g \colon \mathbb{R} \to \mathbb{R}$ called the activation function.
-
-The activation function $g$ is what characterizes the neuron. If the activation function is the step function
-
-$$
-g(x) =
-\begin{dcases}
-    1,& \text{if } z \geq \theta\\
-    0,& \text{if } z < \theta
-\end{dcases}
-$$
-
-the neuron is reduced to the perceptron presented in 1950-1960 by \citeauthor{perceptron} \cite{perceptron}.
-
-A sigmoid function is any bounded, differentiable, real function (e.g. logistic, tanh).
-
-$$
-g(x) = \frac{1}{1 + e^{-x}}
-$$
-
-ReLU is the abbreviation of rectified linear unit, which applies the non-saturating activation function $g(x)=\max(0,x)$. It effectively removes negative values from an activation map by setting them to zero. It increases the nonlinear properties of the decision function and of the overall network without affecting the receptive fields of the convolution layer. ReLU is preferred because it trains the neural network faster without a significant penalty to generalization accuracy.[62]
-
-Other functions are also used to increase nonlinearity, for example the saturating hyperbolic tangent $g(x)=\tanh(x)$, $g(x)=|\tanh(x)|$, and the sigmoid function $\sigma (x)=(1+e^{-x})^{-1}$.
-
-An $L$-layer neural network's activations can be recursively defined
-
-$$
-a^{l} =
-\begin{dcases}
-    f(W^{l-1}a^{l-1} + b^{l-1}),& \text{if } 1 < l \leq L\\
-    x,              & \text{if } l = 1
-\end{dcases}
-$$
-
-Let us also define the weighted inputs to the activation function, which is of importance when deriving the backpropagation equations.
-
-$$
-z^{l} = W^{l-1}a^{l-1} + b^{l-1}
-$$
-
-% TODO: https://cs231n.github.io/convolutional-networks/#conv
-\section{Convolutional Neural Network}
-
-A \ac{CNN} is a class of deep, feed-forward artificial neural network, originally designed for computer vision problems where it is most popular. A \ac{CNN} consists of an input and an output layer, as well as multiple hidden layers. The hidden layers of a \ac{CNN} are typically comprised of:
+In general, a neuron is a function $\hat{f} \colon \mathbb{R}^n \to \mathbb{R}$
 
 \begin{itemize}
-    \item Convolutional base composed by a stack of convolutional and pooling layers. Convolutional layers comprise a set of n independent filters which are independently convolved with the input volume to obtain an output volume of n feature maps. Pooling layers progressively reduce the spatial size of an input volume to reduce the amount of parameters and computation in the network. Pooling layers operate on each feature map independently. The main goal of the convolutional base is to generate features from the image.
-    \item Classifier composed by fully connected layers. The main goal of the classifier is to classify the image based on the detected features. A fully connected layer is a layer whose neurons have full connections to all activation in the previous layer.
+    \item accepting an input $x \in \mathbb{R}^{n}$ where $x_0 = 1$ by convention, enabling fast matrix-multiplication implementations
+    \item parameterized by $\theta \in \mathbb{R}^{n}$
+    \item characterized by a (usually non-linear) activation function $g \colon \mathbb{R} \to \mathbb{R}$
 \end{itemize}
 
-For a particular feature map (the output received on convolving the image with a particular filter is called a feature map), each neuron is connected only to a small chunk of the input image and all the neurons have the same connection weights.
+$$
+\hat{f}(x) = g(\theta_0 x_0 + \sum_{i=1}^{n}{\theta_i x_i}) = g(\theta^T x)
+$$
 
-Two key ideas in convolutional neural networks:
+When the activation function is
 
 \begin{itemize}
-    \item Parameter sharing is sharing of weights by all neurons in a particular feature map.
-    \item Local connectivity is the concept of each neural connected only to a subset of the input image (unlike a neural network where all the neurons are fully connected)
+    \item the Heaviside step function the neuron is reduced to the Rosenblatt perceptron which does not output a continuous value nor does it distinguish data that is not linearly separable.
+    \item any linear function (e.g. $g(x) = x$) the network is reduced to a linear regression model.
+    \item the logistic function $g(x) = \frac{1}{1 + e^{-x}}$ the single-layer network is reduced to a logistic regression model.
+    \item the ReLU activation function $g(x) = \max(0, x)$ is the de facto default recommendation for neural networks as it is able to overcome numerical computation issues (exploding or vanishing gradients) associated with activation functions like the logistic function. In practice, ReLU networks converge faster \cite{alexnet}.
 \end{itemize}
 
-This helps to reduce the number of parameters in the network and makes the computation more efficient.
+\subsection{Fully-Connected Neural Networks}
 
-To summarize, a convolutional layer:
+Neurons can be arbitrarily composed (as in function composition) in so called hidden layers to form a neural network. For example a neural network with 3 hidden layers (each with only one neuron) and an output layer of 1 neuron is parameterized by $\theta_1$ in the first hidden layer (the first function composition), $\theta_2$ in the second hidden layer (the second function composition), $\theta_3$ in the third hidden layer (the third function composition), i.e. the neural network computes
 
-\begin{enumerate}
-    \item Accepts a volume of size $W_1 \times H_1 \times D_1$
-    \item Requires four hyperparameters:
-    \begin{enumerate}
-        \item Number of filters $K$,
-        \item their spatial extent $F$,
-        \item the stride $S$,
-        \item the amount of zero padding $P$.
-    \end{enumerate}
-    \item Produces a volume of size $W_2 \times H_2 \times D_2$ where:
-    \begin{enumerate}
-        \item $W_2 = H_2 = \frac{W_1 - F + 2P}{S} + 1$
-        \item $D_2 = K$
-    \end{enumerate}
-    \item With parameter sharing, it introduces $F F D_1$ weights per filter, for a total of $(F F D_1) K$ weights and $K$ biases.
-    \item In the output volume, the $d$-th depth slice (of size $W_2 \times H_2$) is the result of performing a valid convolution of the $d$-th filter over the input volume with a stride of $S$, and then offset by $d$-th bias.
-\end{enumerate}
+$$
+\hat{f_1}(x) = g(\theta_3^T g(\theta_2^T g(\theta_1^T x)))
+$$
+
+As another example, a neural network with 1 hidden layer of 4 neurons and an output layer of 1 neuron computes
+
+$$
+\hat{f_2}(x) = g(\theta_1^1 T (g(\theta^T x) + g(\theta^T x) + g(\theta^T x) + g(\theta^T x)))
+$$
+
+In a way, these neural networks can be seen as just one big function composition of linear functions activated by some non-linear function. However networks more complex than the trivial $\hat{f_1}$ and $\hat{f_2}$ are cumbersome to express mathematically, so it is more convenient to discuss them in terms of layers of weights which hides away the complexity of highly composite functions.
+
+Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but strictly speaking an \ac{MLP} (as the name suggests) is composed of perceptrons which modern neural networks certainly don't use. Hereinafter these networks will be referred to as \ac{FCNN}. An \ac{FCNN} composes neurons in one-dimensional layers (known as fully-connected layers) where each neuron is fully-connected to every other neuron in the previous layer, i.e. the output of every neuron in a given layer is an input to every neuron in the next layer and vice versa.
+
+\ac{FCNN} are relatively simple (when compared to other architectures that require setting lots of hyperparameters) and adequate for a variety of problems in various domains but, in computer vision problems where the input images are big, these networks quickly amount to a rather large number of parameters (which makes them particularly hard to train since this is a situation that is easily prone to overfitting). For example, images on the CIFAR-10 \cite{cifar10} dataset are $32 \times 32 \times 3$ (i.e. $n = 32 \times 32 \times 3 = 3072$ features) for which a vector of parameters $\theta \in \mathbb{R}^{3072}$ (i.e. 3072 weights) is needed to parameterize a single neuron fully-connected to the input. It is easy to see that this is unsustainable when
+
+\begin{itemize}
+    \item the input dimensions are more typically on the order of $224 \times 224 \times 3$, i.e. $n = 224 \times 224 \times 3 = 150528$ features which would require 150528 weights for a single neuron;
+    \item fully-connected layers are often composed of hundreds or thousands of neurons, which would require anywhere between $10^7$ and $10^8$ (or more) weights for a single fully-connected layer of neurons;
+    \item \ac{FCNN} can be arbitrarily deep in the number of layers.
+\end{itemize}
+
+\subsection{Convolutional Neural Networks}
+
+\ac{CNN} are another class of feedforward \ac{ANN} (originally designed for computer vision problems) whose architecture takes advantage of the assumption that the input is an image. Unlike \ac{FCNN} which compose neurons in one-dimensional layers, \ac{CNN} compose neurons in three-dimensional layers (or volumes), namely convolutional layers and pooling layers. Nonetheless most \ac{CNN} architectures still use fully-connected layers (typically in the rightmost layers).
+
+In particular, the convolutional layer\footnote{\url{https://cs231n.github.io/convolutional-networks/}} is the building block of \ac{CNN}. Essentially a convolutional layer accepts an input volume of size $W_1 \times H_1 \times D_1$ (which may eventually be zero-padded around the edges in a $P$-pixels wide border) and is parameterized by a set of $K$ learnable filters of size $F \times F \times D_1$ which in the forward pass slide (with some stride $S$) over the input volume (locally in the width and height, but fully in depth of the input volume) to compute dot products between the filter and the selected part of the input (just like a regular neuron), producing $K$ two-dimensional activation maps (one for each of the $K$ filters) stacked in depth to form the output volume.
+
+With the assumption that the input to a \ac{CNN} is a two-dimensional image with three color channels, it stands to reason that many of the features found in one channel will also be found in other channels because most features are spatial (e.g. edges, lines, shapes). As such if some local feature (local in width and height) is activating meaningfully at depth $d_1$ of a convolutional layer, it will also usefully activate the same concept at a different depth $d_2$. It turns out this can be taken advantage of by further relaxing the architecture and introducing parameter sharing thus allowing neurons at the same depth slice of a convolutional layer to share the same weights and biases, which
+
+\begin{itemize}
+    \item significantly reduces the number of free parameters to only $F F D_1$ weights and $1$ bias per filter, or a total of $(F F D_1 + 1) K$ parameters;
+    \item reduces the memory footprint of keeping said parameters;
+    \item contributes to the translation equivariance of the \ac{CNN} architecture.
+\end{itemize}
+
+In a \ac{FCNN} all neurons are fully-connected to all the neurons in the previous layer which creates a highly complex model capable of modeling very complex relationships in the input features. However, for spatial data like images, this complexity is pointless since most features are localized anyway, i.e. the face of a person is likely completely unrelated to the dog in the background of the photo. Instead, convolutional layers exploit the spatial locality of images by connecting neurons only to local regions of the input volume which, intuitively, ensures that the learnt filters activate strongly only in the presence of a spatially local input pattern. By stacking many such layers the network first creates representations of small regions of the input and progressively assembles representations of larger regions of the input (as if the filters were bigger or global rather than local).
+
+On the other hand, the exact location of these features is not so important when compared to its location relative to other features. The pooling layer is an approach to providing translation invariance by reducing the spatial size (or down-sampling) of every depth slice of an input volume, most commonly by sliding a filter of size $2 \times 2$ with a stride $S = 2$ and computing the maximum (i.e. max pooling) of the selected part of the input. Effectively this progressively reduces the number of free parameters (while introducing no new parameters since max pooling is a fixed function of the input) and the memory footprint and computation in the network.
+
+In summary \ac{CNN} are a great architecture for computer vision due to:
+
+\begin{itemize}
+    \item Composition of neurons in 3D volumes;
+    \item Parameter sharing reducing the number of parameters;
+    \item Local connectivity exploiting spatial locality of images;
+    \item Translation and rotation invariance contributing to generalization of features.
+\end{itemize}
+
+% TODO: move this to SOTA
 
 LeNet \cite{lenet}, in figure \ref{fig:lenet}, is widely considered to be the first successful application of \ac{CNN}, when \citeauthor{lenet} used backpropagation to automatically learn the kernels of convolutions rather than the laborous hand-designed systems that came before it.
 
@@ -503,6 +447,30 @@ More recently \citeauthor{resnet} have pushed the state-of-the-art by introducin
     \caption{Comparison between ResNet-50 and more traditional architectures, illustrating how residual networks avoid the vanishing gradient problem.}
     \label{fig:resnet50}
 \end{figure}
+
+\subsection{Computational Graphs}
+
+In some sense, a neural network is just an arbitrarily composite function
+
+$$
+\hat{f}(x) = g(h( ... j(x) ... ))
+$$
+
+Such a function can easily be represented in a directed acyclic graph which the machine learning literature calls a computational graph. Computational graphs expose a programming model where the big idea is to express a numeric computation as a graph such that
+
+\begin{itemize}
+    \item graph nodes represent operations (which have any number of inputs and outputs);
+    \item graph edges represent the flow (input and output) of data (most generically tensors, hence TensorFlow \cite{tensorflow}) between nodes.
+\end{itemize}
+
+On a computational graph we have essentially two modes of computation \cite{deeplearning}:
+
+\begin{itemize}
+    \item Forward propagation (or inference) refers to the calculation (and storage for the later backpropagation) of all operations (including the final output) in the graph in the order of the innermost operation to the outermost operation.
+    \item Backward propagation (or backpropagation) refers to the calculation of the gradient of an objective function (the cost function $J$) w.r.t. every parameter $\theta_{ij}$ by traversing the graph in reverse order relative to the forward pass (which in turn might require computing intermediate gradients according to the chain rule of calculus) giving $\frac{\partial J}{\partial \theta_{ij}}$ that can be used to finally run gradient descent to optimize parameters \cite{deeplearning}.
+\end{itemize}
+
+Forward and backward propagation are highly interdependent. Forward propagation sequentially computes and stores all intermediate operations within the computational graph that is traversed from input to output. In turn backpropagation sequentially (but in reverse order) computes and stores the gradients of intermediate operations as needed according to the chain rule. Moreover, in order to invoke the chain rule, these intermediate values need to be retained until backpropagation terminates which is why it is so memory intensive \cite{deeplearning}.
 
 \section{Transfer Learning}
 \label{section:transferlearning}
@@ -594,18 +562,14 @@ The data that is used to train the weak learners is not relevant for training th
 
 \section{Deep Learning Hardware}
 
-Deep learning is very computationally intensive in itself and even more so when we want to run multiple experiments with hyperparameters or even completely different architectures.
+Deep learning is very computationally intensive in itself and even more so when we want to run multiple experiments with cross-validated hyperparameters or completely different architectures.
 
 \ac{CNN}, the core of most state-of-the-art deep learning applied to computer vision, are computationally complex and embarassingly parallel \cite{chang2017} which the architecture of general purpose \ac{GPU} are appropriate for \cite{gpu} and for which libraries like cuDNN \cite{cudnn} were developed to further leverage the characteristics of \ac{GPU} into even bigger performance improvements.
 
 There is a growing demand for domain-specific hardware designed specifically for the computations necessary in neural network training and inference, like Google's TPU custom ASIC \cite{tpu}, which naturally can achieve major improvements in cost-energy-performance when compared to general purpose hardware like \ac{GPU} that were originally designed for the demands of computer graphics which coincidentally also serve deep learning reasonably well. Nonetheless, \ac{GPU} remain the best cost-effective commodity hardware for this type of computation, especially when not working at the scale of companies like Google and Facebook. In a typical scenario, the CPU does little useful computation in a deep learning application where most of the computation is delegated to the GPU.
 
-% TODO: write more
-
 \section{Deep Learning Software Frameworks}
 
-TensorFlow is an open source software library for numerical computation using data flow graphs. The graph nodes represent mathematical operations, while the graph edges represent the tensors that flow between them. This flexible architecture enables you to deploy computation to one or more CPU or GPU in a desktop, server, or mobile device without rewriting code \cite{tensorflow}.
+TensorFlow\footnote{\url{https://www.tensorflow.org/}} is an open source software library for numerical computation using data flow graphs (or computational graphs). The graph nodes represent mathematical operations, while the graph edges represent the tensors that flow between them. This flexible architecture enables you to deploy computation to one or more CPU or GPU in a desktop, server, or mobile device without rewriting code \cite{tensorflow}.
 
-Keras is a high-level neural networks API, written in Python and capable of running on top of TensorFlow, CNTK or Theano. It was developed with a focus on fast experimentation which enables easy and fast prototyping through user friendliness, modularity, and extensibility. This API was more recently adopted by TensorFlow itself in the tf.keras namespace which is given a lot more attention in TensorFlow 2.0 (following the criticism of TensorFlow's convoluted API).
-
-% TODO: write more
+Keras\footnote{\url{https://keras.io/}} is a high-level neural networks API, written in Python and capable of running on top of TensorFlow, CNTK or Theano. It was developed with a focus on fast experimentation which enables easy and fast prototyping through user friendliness, modularity, and extensibility. This API was more recently adopted by TensorFlow itself in the \verb|tf.keras| namespace which is a central part of TensorFlow 2.0, following the criticism of TensorFlow's convoluted API, and the original Keras project is likely to be dissolved eventually.
