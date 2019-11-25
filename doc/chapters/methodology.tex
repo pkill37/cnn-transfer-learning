@@ -174,16 +174,58 @@ Augmentation, as described previously, results in 17810 samples which are split 
 
 Since validation is intrinsically part of the training process itself, the validation set is a 15\% split from the training set obtained independently at the start of each training routine (also in a stratified fashion).
 
-\section{Transfer Learning Experiments}
+\section{Hardware}
 
-Based on the transfer learning techniques introduced in chapter \ref{chapter:background}, models of the VGG16 architecture pre-trained on ImageNet will be explored in order to repurpose the weights to a new model for skin lesion classification and draw conclusions about its efficacy.
-
-It is hypothesized that
+Initially, computational resources from \ac{IEETA} were used in very early exploratory research:
 
 \begin{itemize}
-    \item extracting features from lower layers of models trained for ImageNet classification can sometimes be better than higher layers, because the former presumably provide low-level features (e.g. shapesor lines) that are useful for skin lesion classification whereas the latter provide very high-level concepts (e.g. dogs, cats) that are relevant for classification in the ImageNet domain.
-    \item extracting features from the last layer can sometimes be the most performant because optimization algorithms work globally on weights (which develop complex co-adaptations with other weights deep in the network), not on a per-layer basis, so it makes sense to extract all weights and fine-tune them to the target dataset.
+    \item Intel® Xeon® Processor E5-2640;
+    \item NVIDIA Tesla K40c;
+    \item NVIDIA Quadro K4000;
+    \item 32GB DDR4 RAM.
 \end{itemize}
+
+However, given that it was shared between dozens of other researchers it was deemed not enough for a comfortable and flexible workflow because:
+
+\begin{itemize}
+    \item the little amount of memory almost wasn't enough to load the dataset into memory, especially during critically busy times;
+    \item the NVIDIA Quadro K4000, with a compute capability of 3.0, was unsupported by the software stack which required a minimum compute capability of 3.7, leaving only a single NVIDIA Tesla K40c to work with.
+\end{itemize}
+
+More recently, \ac{LAR}, located in the Department of Mechanical Engineering at the University of Aveiro, has provided access to their deep learning research server codenamed Deeplar:
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.4\textwidth]{figs/deeplar.jpg}
+    \caption{Deeplar, the deep learning research server at \ac{LAR}}
+    \label{fig:deeplar}
+\end{figure}
+
+\begin{itemize}
+    \item AMD Ryzen™ Threadripper 2950X;
+    \item Four NVIDIA GEFORCE® RTX 2080 Ti;
+    \item 128GB DDR4 RAM.
+\end{itemize}
+
+The latter much more capable server (four state-of-the-art consumer \ac{GPU} and lots of \ac{RAM}) was effectively responsible for running this work's experiments.
+
+\section{Software}
+
+The deep learning research server Deeplar runs on openSUSE Tumbleweed 20191004\footnote{\url{https://software.opensuse.org/distributions/tumbleweed}}, a popular rolling-release GNU/Linux distribution. For interfacing with the \ac{GPU} it has installed CUDA 9.2 \footnote{\url{https://developer.nvidia.com/cuda-zone}} (NVIDIA GPU's proprietary language and API) and cuDNN 7.6.0 \footnote{\url{https://developer.nvidia.com/cudnn}} (a library for working with deep neural networks which most higher level frameworks rely on).
+
+We used Miniconda\footnote{\url{https://docs.conda.io/en/latest/miniconda.html}} to install Conda\footnote{\url{https://conda.io/en/latest/}} which was used to manage a Python 3.6\footnote{\url{https://www.python.org/}} environment which was specifically required for compatibility with TensorFlow. Crucially, the following Python packages and specific versions were used for the development of most of the source code.
+
+\begin{itemize}
+    \item TensorFlow\footnote{\url{https://www.tensorflow.org/}} 1.12.0, of which we mostly use the \verb|tf.keras| API, for training and testing the various models;
+    \item scikit-learn\footnote{\url{https://scikit-learn.org/}} 0.20.2 for some useful metrics and data splitting methods;
+    \item NumPy\footnote{\url{https://numpy.org/}} 1.15.4 for various vector and matrix operations and Pillow\footnote{\url{https://pillow.readthedocs.io/en/stable/}} 5.4.1 for image handling and transformations because of this work's image preprocessing needs.
+\end{itemize}
+
+\section{Transfer Learning Experiments}
+
+Based on the transfer learning techniques introduced, models of the VGG16 architecture pre-trained on ImageNet will be explored in order to repurpose the weights to a new model for skin lesion classification and draw conclusions about its efficacy.
+
+It is hypothesized that extracting features from lower layers of models trained for ImageNet classification can provide good performance, because the former presumably provide low-level features (e.g. shapes or lines) that are still useful for skin lesion classification whereas the latter actually provide very high-level concepts (e.g. dogs, cats) that are relevant for classification in the ImageNet domain and need to be fine-tuned to the target dataset.
 
 To verify this, experiments based on this transfer learning approach will adhere to the following common methodology:
 
@@ -192,10 +234,10 @@ To verify this, experiments based on this transfer learning approach will adhere
     \item Some parameters are transfered from pre-trained models and otherwise initialized according to Xavier initialization;
     \item Define network architecture:
         \begin{enumerate}
-            \item Extract features according to the specific experiment at hand;
+            \item Extract and freeze layers from the pre-trained model according to the specific experiment at hand;
             \item Use global average pooling to reduce the number of parameters before the classifier based on fully-connected layers;
-            \item Stack fully-connected layers of ReLU-activated neurons;
-            \item Add fully-connected layer with a single sigmoid-activated neuron for binary classification.
+            \item Use one fully-connected layer of 512 ReLU-activated neurons;
+            \item Use one fully-connected layer of 1 sigmoid-activated neuron for binary classification.
         \end{enumerate}
     \item Mini-batch \ac{SGD} with momentum $\gamma = 0.9$:
         \begin{itemize}
@@ -209,17 +251,315 @@ To verify this, experiments based on this transfer learning approach will adhere
     \item Final models will be evaluated and compared primarily using accuracy as measured on the test set.
 \end{enumerate}
 
-\subsection{VGG16}
+The basic unit in traditional \ac{CNN} architectures like VGG16 is the convolutional block, which is typically comprised by a stack of convolutional layers and one pooling layer for downsampling. These convolutional blocks are then further stacked together to progressively output higher level feature maps at the end of each block.
 
-% TODO: plot feature maps visualization
-The basic unit in traditional \ac{CNN} architectures like VGG16 is the convolutional block, which is typically comprised by a number of convolutional layers and a pooling layer at the end to sum up the convolved features. These convolutional blocks are then stacked together in the hope to progressively build higher level feature maps at the end of each block. It is possible that the features at an arbitrary convolutional layer can be used for effective transfer learning, but in some sense it is expected that the features at a pooling layer are more relevant because that was the intended design. Not only that, but considering features at arbitrary convolutional layers originates a combinatorial explosion of possible feature extractions which is just not feasible given the computational resources. As such, we will only extract features at the end of each block (i.e. from pooling layers) because it is heuristically reasonable and significantly reduces the number of layers to extract features from.
+To verify this, one can run a sample input (figure \ref{fig:sample_input}) through the original VGG16 model pre-trained on ImageNet and visualize the activations at the end of each block (after its pooling layer).
 
-% TODO: cartesian product notation math stuff
-In the VGG16 architecture we are interested in extracting layers $e \in \{18,14,10,6,3\}$ and freezing layers $f \in \{18,14,10,6,3,0\}$ such that $e \geq f$ (because, obviously, one cannot freeze layers which were not extracted).
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.3\textwidth]{figs/sample_input.jpg}
+    \caption{A sample of the ISIC2018 train set showing a clear separation of background (skin) and foreground (lesion).}
+    \label{fig:sample_input}
+\end{figure}
 
-Additionally, for each of these settings, we grid-search the best $\lambda$ for L2-regularization from $\lambda \in \{10^{-10}, ..., 10^{2}\}$ (spaced evenly on a log scale). This yields a total of $200$ models, of which the top 10 are summarized in table \ref{table:vgg16_top10}.
+As expected, the features detected in the early layers of the network (figure \ref{fig:vgg16_block1}) activate for low level concepts like shapes (the border around the lesion), background (the skin), and foreground (the lesion itself).
 
-Figure \ref{fig:vgg16_extract_freeze_study}, where $A_{test}$ is plotted against the number of extracted layers $e$ and the number of frozen layers $f$, shows that it is better to extract all $e = 18$ layers of features from the original model and fine-tune them, presumably because weights develop complex co-adaptations between them since optimization algorithms work globally and not on a per-layer basis.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figs/vgg16_block1.png}
+    \caption{The 64 feature maps at the end of block 1 of the VGG16 model exactly as trained on ImageNet.}
+    \label{fig:vgg16_block1}
+\end{figure}
+
+On the other hand at the last block of the network the feature maps exhibit much higher level (and low dimensional) concepts (figure \ref{fig:vgg16_block5}) incomprehensible to the human eye.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figs/vgg16_block5.png}
+    \caption{64 of the feature maps at the end of block 5 of the VGG16 model exactly as trained on ImageNet.}
+    \label{fig:vgg16_block5}
+\end{figure}
+
+Clearly, successful transfer learning from the VGG16 pre-trained model is highly dependent on the layer up to which weights are extracted from. Presumably extracting all layers and fine-tuning them to the target dataset will always work, but in some cases it might be useful to extract only a subset of the features in order to produce a smaller model for applications where space (occupied by the model) and computation (required by the forward pass of an inherently deeper model) are at a premium (e.g. smartphones). Both of these cases (and more) will be explored.
+
+Specifically, the \verb|tf.keras.applications.vgg16| implementation of the VGG16 model pre-trained on ImageNet organizes layers as such:
+
+\begin{itemize}
+    \item Layer 0 is the input layer (\verb|input_1|) and will not be considered for extraction as it merely represents the original input;
+    \item Layers 1-3 are the first convolutional block (\verb|block1_conv1|, \verb|block1_conv2|, \verb|block1_pool|);
+    \item Layers 4-6 are the second convolutional block (\verb|block2_conv1|, \verb|block2_conv2|, \verb|block2_pool|);
+    \item Layers 7-10 are the third convolutional block (\verb|block3_conv1|, \verb|block3_conv2|, \verb|block3_conv3|, \verb|block3_pool|);
+    \item Layers 11-14 are the fourth convolutional block (\verb|block4_conv1|, \verb|block4_conv2|, \verb|block4_conv3|, \verb|block4_pool|);
+    \item Layers 15-18 are the fifth convolutional block (\verb|block5_conv1|, \verb|block5_conv2|, \verb|block5_conv3|, \verb|block5_pool|);
+    \item Layers 19-22 are non-convolutional layers (\verb|flatten|, \verb|fc1|, \verb|fc2|, \verb|predictions|) and will not be considered for extraction.
+\end{itemize}
+
+With that in mind, in these experiments,
+
+\begin{itemize}
+    \item the number of the layer $e$ up to which parameters will be extracted from will be sampled from $e \in \{18,14,10,6,3\}$;
+    \item the number of the layer $f$ up to which parameters will be frozen will be sampled from $f \in \{18,14,10,6,3,0\}$;
+    \item $\lambda$ is the L2-regularization strength sampled from $\lambda \in [10^{-4}, 10^{-2}]$ spaced evenly on a log-scale;
+\end{itemize}
+
+\subsection{Total Feature Extraction without Fine Tuning}
+
+Arguably the simplest case is to extract and freeze all layers (i.e. $e = f = 18$), feed them to the classifier, and effectively only train the classifier.
+
+Surprisingly models are converging nicely and quickly (e.g. figure \ref{fig:vgg16_total_convergence}) and already give very good results overall (table \ref{table:vgg16_total}).
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figs/vgg16_total_convergence.png}
+    \caption{Convergence of a model where $e = f = 18$ and $\lambda = 0.00135721$.}
+    \label{fig:vgg16_total_convergence}
+\end{figure}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
+\hline
+$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & AUC & Precision & Recall & F1-Score \\
+\hline
+18.0 & 18.0 & 0.0001 & 1.0 & 0.914 & 0.914 & 0.914 & 0.916 & 0.914 & 0.914 \\
+18.0 & 18.0 & 0.000154 & 0.995 & 0.9 & 0.911 & 0.911 & 0.914 & 0.911 & 0.911 \\
+18.0 & 18.0 & 0.000239 & 1.0 & 0.911 & 0.914 & 0.914 & 0.916 & 0.914 & 0.914 \\
+18.0 & 18.0 & 0.000368 & 1.0 & 0.908 & 0.915 & 0.915 & 0.917 & 0.915 & 0.915 \\
+18.0 & 18.0 & 0.000569 & 0.994 & 0.904 & 0.912 & 0.912 & 0.914 & 0.912 & 0.912 \\
+18.0 & 18.0 & 0.000879 & 0.998 & 0.911 & 0.915 & 0.915 & 0.918 & 0.915 & 0.915 \\
+18.0 & 18.0 & 0.00136 & 0.998 & 0.911 & 0.918 & 0.918 & 0.92 & 0.918 & 0.918 \\
+18.0 & 18.0 & 0.0021 & 0.994 & 0.908 & 0.915 & 0.915 & 0.917 & 0.915 & 0.915 \\
+18.0 & 18.0 & 0.00324 & 0.991 & 0.902 & 0.911 & 0.911 & 0.914 & 0.911 & 0.911 \\
+18.0 & 18.0 & 0.005 & 0.975 & 0.893 & 0.906 & 0.906 & 0.909 & 0.906 & 0.905 \\
+\hline
+ & & & $0.995\pm0.00713$ & $0.906\pm0.0061$ & $0.913\pm0.00311$ & $0.913\pm0.00311$ & $0.916\pm0.00284$ & $0.913\pm0.00311$ & $0.913\pm0.00335$ \\
+\hline
+\end{tabular}
+\caption{Foobar}
+\label{table:vgg16_total}
+\end{table}
+
+The validation curve of the L2-regularization strength $\lambda$ hyperparameter in figure \ref{fig:vgg16_total_lambda} shows these models are neither overfitting nor underfitting as $A_{val}$ is approximating $A_{train}$ well.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figs/vgg16_total_lambda.png}
+    \caption{Plot of L2-regularization strength $\lambda$ against accuracy on the test set $A_{test}$ when $e = 18$ and $f = 18$.}
+    \label{fig:vgg16_total_lambda}
+\end{figure}
+
+Presumably these surprisingly good results stem from an appropriate number $m$ of training samples (relative to the number of free parameters in the network) and proper data augmentation.
+
+Indeed, by fixating $\lambda = 0.000879$ (for example) and varying the number of samples as fractions ${0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9}$ of the total $m$ training samples it can be seen (in table \ref{table:vgg16_total_debug}) that performance increases as the number of samples increases.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
+\hline
+$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & AUC & Precision & Recall & F1-Score \\
+\hline
+18.0 & 18.0 & 0.0001 & 1.0 & 0.914 & 0.914 & 0.914 & 0.916 & 0.914 & 0.914 \\
+18.0 & 18.0 & 0.000154 & 0.995 & 0.9 & 0.911 & 0.911 & 0.914 & 0.911 & 0.911 \\
+18.0 & 18.0 & 0.000239 & 1.0 & 0.911 & 0.914 & 0.914 & 0.916 & 0.914 & 0.914 \\
+18.0 & 18.0 & 0.000368 & 1.0 & 0.908 & 0.915 & 0.915 & 0.917 & 0.915 & 0.915 \\
+18.0 & 18.0 & 0.000569 & 0.994 & 0.904 & 0.912 & 0.912 & 0.914 & 0.912 & 0.912 \\
+18.0 & 18.0 & 0.000879 & 0.998 & 0.911 & 0.915 & 0.915 & 0.918 & 0.915 & 0.915 \\
+18.0 & 18.0 & 0.00136 & 0.998 & 0.911 & 0.918 & 0.918 & 0.92 & 0.918 & 0.918 \\
+18.0 & 18.0 & 0.0021 & 0.994 & 0.908 & 0.915 & 0.915 & 0.917 & 0.915 & 0.915 \\
+18.0 & 18.0 & 0.00324 & 0.991 & 0.902 & 0.911 & 0.911 & 0.914 & 0.911 & 0.911 \\
+18.0 & 18.0 & 0.005 & 0.975 & 0.893 & 0.906 & 0.906 & 0.909 & 0.906 & 0.905 \\
+\hline
+ & & & $0.995\pm0.00713$ & $0.906\pm0.0061$ & $0.913\pm0.00311$ & $0.913\pm0.00311$ & $0.916\pm0.00284$ & $0.913\pm0.00311$ & $0.913\pm0.00335$ \\
+\hline
+\end{tabular}
+\caption{Foobar}
+\label{table:vgg16_total_debug}
+\end{table}
+
+\subsection{Partial Feature Extraction without Fine Tuning}
+
+Extracting a smaller number of layers seemed promising since that would yield a smaller and faster model. Besides, presumably, the most relevant features were in the middle layers anyway. However none of the models seemed to be converging usefully, likely stuck in a local minimum with high loss (e.g. figure \ref{fig:vgg16_partial_divergence}).
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/vgg16_partial_divergence.png}
+    \caption{Partial feature extraction network (with $e = 14$, $f = 14$, $\lambda = 0.00015445$, $\eta = 10^{-4}$) not converging, stuck in a local minimum.}
+    \label{fig:vgg16_partial_divergence}
+\end{figure}
+
+Accordingly, performance results (in table \ref{table:vgg16_partial}) were disappointing for any number $e < 18$ of frozen layers.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
+\hline
+$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & AUC & Precision & Recall & F1-Score \\
+\hline
+14.0 & 0.0 & 0.0001 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.334 \\
+14.0 & 0.0 & 0.000154 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.334 \\
+14.0 & 0.0 & 0.000239 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.334 \\
+14.0 & 0.0 & 0.000368 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.334 \\
+14.0 & 0.0 & 0.000569 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.334 \\
+3.0 & 3.0 & 0.000154 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+3.0 & 3.0 & 0.000239 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+... & ... & ... & ... & ... & ... & ... & ... & ... & ... \\
+3.0 & 3.0 & 0.000368 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+3.0 & 3.0 & 0.000569 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+3.0 & 3.0 & 0.000879 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+3.0 & 3.0 & 0.00136 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+3.0 & 3.0 & 0.0021 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+3.0 & 3.0 & 0.00324 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+3.0 & 3.0 & 0.005 & 0.5 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+\hline
+ & & & $0.5\pm0.0$ & $0.5\pm0.0$ & $0.5\pm0.0$ & $0.5\pm0.0$ & $0.25\pm0.0$ & $0.5\pm0.0$ & $0.334\pm0.000497$ \\
+\hline
+\end{tabular}
+\caption{Foobar}
+\label{table:vgg16_partial}
+\end{table}
+
+It was hypothesized that the learning rate $\eta = 10^{-4}$ was adequate for the higher layers of the fifth convolutional block, but too high for the remaining layers where \ac{SGD} was overshooting the update of the parameters. Intuitively, the high learning rate was disrupting the parameters learned by the pre-trained model.
+
+By fixating $e = 14$, $f = 14$, $\lambda = 0.00015445$, and cross-validating 20 new smaller values for the learning rate (from $\eta \in [10^0, 10^{-10}]$ spaced evenly on a log-scale) a new value $\eta = 0.000206913808$ (among others in table X) was found to provide convergence (figure \ref{fig:vgg16_partial_convergence}) to very good performance while only extracting $e = 14$ layers which makes for a smaller, faster model.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/vgg16_partial_convergence.png}
+    \caption{Partial feature extraction network (with $e = 14$, $f = 14$, $\lambda = 0.00015445$, $\eta = 10^{-4}$) converging to very good performance and modest model size.}
+    \label{fig:vgg16_partial_convergence}
+\end{figure}
+
+A more thorough systematic study of the learning rate when extracting lower-level layers would certainly unveil models with a good balance between model size and model performance, perhaps even outperforming models that extract all convolutional layers.
+
+\subsection{Total Feature Extraction with Fine Tuning}
+
+Presumably, further fine-tuning layers while extracting all $e = 18$ layers will yield higher performance since it will continue to optimize parameters relative to the target dataset thus minimizing error on said dataset.
+
+Indeed, freezing the first $f = 14$ layers (versus the previous $e = f = 18$ configuration) yields a 2\% increase in accuracy on the test set (table \ref{table:vgg16_finetuning_14}).
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
+\hline
+$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & Precision & Recall & F1-Score \\
+\hline
+18 & 14 & 0.0001 & 1.0 & 0.928 & 0.934 & 0.936 & 0.934 & 0.934 \\
+18 & 14 & 0.000154 & 1.0 & 0.923 & 0.94 & 0.941 & 0.94 & 0.94 \\
+18 & 14 & 0.000239 & 1.0 & 0.925 & 0.939 & 0.94 & 0.939 & 0.939 \\
+18 & 14 & 0.000368 & 1.0 & 0.926 & 0.939 & 0.94 & 0.939 & 0.939 \\
+18 & 14 & 0.000569 & 1.0 & 0.925 & 0.941 & 0.942 & 0.941 & 0.941 \\
+18 & 14 & 0.000879 & 1.0 & 0.921 & 0.929 & 0.93 & 0.929 & 0.929 \\
+18 & 14 & 0.00136 & 1.0 & 0.923 & 0.938 & 0.94 & 0.938 & 0.938 \\
+18 & 14 & 0.0021 & 1.0 & 0.927 & 0.936 & 0.937 & 0.936 & 0.936 \\
+18 & 14 & 0.00324 & 1.0 & 0.925 & 0.936 & 0.937 & 0.936 & 0.936 \\
+18 & 14 & 0.005 & 1.0 & 0.925 & 0.936 & 0.937 & 0.936 & 0.936 \\
+\hline
+ & & & $1.0\pm0.0$ & $0.925\pm0.00194$ & $0.937\pm0.00331$ & $0.938\pm0.00329$ & $0.937\pm0.00331$ & $0.937\pm0.00331$ \\
+\hline
+\end{tabular}
+\caption{Performance metrics of models when $e = 18$ and $f = 14$.}
+\label{table:vgg16_finetuning_14}
+\end{table}
+
+However, as $f$ decreases (to take values $f = 10$, $f = 6$, $f = 3$, and $f = 0$) the trend seems to be that performance declines (tables \ref{table:vgg16_finetuning_10}, \ref{table:vgg16_finetuning_6}, \ref{table:vgg16_finetuning_3}, and \ref{table:vgg16_finetuning_0} respectively).
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
+\hline
+$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & Precision & Recall & F1-Score \\
+\hline
+18 & 10 & 0.0001 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.334 \\
+18 & 10 & 0.000154 & 1.0 & 0.926 & 0.934 & 0.935 & 0.934 & 0.934 \\
+18 & 10 & 0.000239 & 1.0 & 0.928 & 0.931 & 0.933 & 0.931 & 0.931 \\
+18 & 10 & 0.000368 & 1.0 & 0.922 & 0.931 & 0.932 & 0.931 & 0.931 \\
+18 & 10 & 0.000569 & 1.0 & 0.933 & 0.943 & 0.945 & 0.943 & 0.943 \\
+18 & 10 & 0.000879 & 1.0 & 0.925 & 0.93 & 0.931 & 0.93 & 0.93 \\
+18 & 10 & 0.00136 & 1.0 & 0.935 & 0.937 & 0.938 & 0.937 & 0.937 \\
+18 & 10 & 0.0021 & 1.0 & 0.931 & 0.927 & 0.928 & 0.927 & 0.927 \\
+18 & 10 & 0.00324 & 1.0 & 0.929 & 0.94 & 0.941 & 0.94 & 0.94 \\
+18 & 10 & 0.005 & 1.0 & 0.929 & 0.932 & 0.933 & 0.932 & 0.932 \\
+\hline
+ & & & $0.95\pm0.15$ & $0.886\pm0.129$ & $0.891\pm0.13$ & $0.867\pm0.206$ & $0.891\pm0.13$ & $0.874\pm0.18$ \\
+\hline
+\end{tabular}
+\caption{Performance metrics of models when $e = 18$ and $f = 10$.}
+\label{table:vgg16_finetuning_10}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
+\hline
+$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & Precision & Recall & F1-Score \\
+\hline
+18 & 6 & 0.0001 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 6 & 0.000154 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 6 & 0.000239 & 1.0 & 0.93 & 0.927 & 0.928 & 0.927 & 0.927 \\
+18 & 6 & 0.000368 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 6 & 0.000569 & 1.0 & 0.925 & 0.927 & 0.928 & 0.927 & 0.927 \\
+18 & 6 & 0.000879 & 1.0 & 0.922 & 0.928 & 0.929 & 0.928 & 0.928 \\
+18 & 6 & 0.00136 & 0.5 & 0.501 & 0.499 & 0.416 & 0.499 & 0.334 \\
+18 & 6 & 0.0021 & 0.501 & 0.498 & 0.5 & 0.5 & 0.5 & 0.336 \\
+18 & 6 & 0.00324 & 1.0 & 0.917 & 0.916 & 0.917 & 0.916 & 0.916 \\
+18 & 6 & 0.005 & 1.0 & 0.922 & 0.926 & 0.927 & 0.926 & 0.926 \\
+\hline
+ & & & $0.75\pm0.25$ & $0.711\pm0.212$ & $0.712\pm0.213$ & $0.629\pm0.306$ & $0.712\pm0.213$ & $0.629\pm0.296$ \\
+\hline
+\end{tabular}
+\caption{Performance metrics of models when $e = 18$ and $f = 6$.}
+\label{table:vgg16_finetuning_6}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
+\hline
+$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & Precision & Recall & F1-Score \\
+\hline
+18 & 3 & 0.0001 & 1.0 & 0.9 & 0.913 & 0.913 & 0.913 & 0.913 \\
+18 & 3 & 0.000154 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 3 & 0.000239 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 3 & 0.000368 & 1.0 & 0.915 & 0.924 & 0.925 & 0.924 & 0.924 \\
+18 & 3 & 0.000569 & 1.0 & 0.926 & 0.931 & 0.932 & 0.931 & 0.931 \\
+18 & 3 & 0.000879 & 1.0 & 0.927 & 0.933 & 0.934 & 0.933 & 0.933 \\
+18 & 3 & 0.00136 & 1.0 & 0.933 & 0.931 & 0.933 & 0.931 & 0.931 \\
+18 & 3 & 0.0021 & 1.0 & 0.931 & 0.932 & 0.933 & 0.932 & 0.932 \\
+18 & 3 & 0.00324 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.334 \\
+18 & 3 & 0.005 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+\hline
+ & & & $0.8\pm0.245$ & $0.753\pm0.207$ & $0.756\pm0.209$ & $0.657\pm0.332$ & $0.756\pm0.209$ & $0.69\pm0.291$ \\
+\hline
+\end{tabular}
+\caption{Performance metrics of models when $e = 18$ and $f = 3$.}
+\label{table:vgg16_finetuning_3}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| }
+\hline
+$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & Precision & Recall & F1-Score \\
+\hline
+18 & 0 & 0.0001 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 0 & 0.000154 & 1.0 & 0.916 & 0.923 & 0.923 & 0.923 & 0.923 \\
+18 & 0 & 0.000239 & 1.0 & 0.9 & 0.906 & 0.907 & 0.906 & 0.906 \\
+18 & 0 & 0.000368 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 0 & 0.000569 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 0 & 0.000879 & 0.501 & 0.5 & 0.499 & 0.25 & 0.499 & 0.333 \\
+18 & 0 & 0.00136 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 0 & 0.0021 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 0 & 0.00324 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+18 & 0 & 0.005 & 0.5 & 0.5 & 0.5 & 0.25 & 0.5 & 0.333 \\
+\hline
+ & & & $0.6\pm0.2$ & $0.582\pm0.163$ & $0.583\pm0.166$ & $0.383\pm0.266$ & $0.583\pm0.166$ & $0.449\pm0.233$ \\
+\hline
+\end{tabular}
+\caption{Performance metrics of models when $e = 18$ and $f = 0$.}
+\label{table:vgg16_finetuning_0}
+\end{table}
+
+This can be explained by an inadequate setting of the learning rate just as in the previous set of experiments. The more higher layers are unfrozen, the more their weights are disrupted too quickly because of too high a learning rate.
 
 \section{End-to-End Learning Experiments}
 
@@ -227,7 +567,7 @@ This section describes a set of experiments involving custom designed \ac{CNN} a
 
 These custom architectures are based around reasonable heuristics\footnote{\url{https://cs231n.github.io/convolutional-networks/}}:
 
-% TODO: refactor, maybe this should go into background?
+% TODO: rewrite words
 \begin{itemize}
     \item The most common form of a ConvNet architecture stacks a few CONV-RELU layers, follows them with POOL layers, and repeats this pattern until the image has been merged spatially to a small size. At some point, it is common to transition to fully-connected layers.
     \item Prefer a stack of small filter convolutional layers to one large receptive field convolutional layer
@@ -265,8 +605,9 @@ The experiments models of such architectures were trained from scratch as follow
 
 This custom architecture, illustrated in figure \ref{fig:custom1}, stacks three convolution-pooling blocks. Each block stacks two convolutional layers before the pooling layer, which is a good idea for large and deep networks because multiple stacked convolutional layers can develop more complex features of the input volume before the destructive pooling operation. Specifically,
 
+% TODO: consistency
 \begin{enumerate}
-    \item 32 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
+    \item $K = 32$ filters, $F = 3$ kernel, $S = 1$ stride, same padding, ReLU activated
     \item 32 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
     \item 2x2 max pooling
     \item 64 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
@@ -403,50 +744,3 @@ The effect of $\lambda$ and $u$ on the performance of the model can be understoo
     \caption{Accuracy of custom architecture 2 over a range of values for L2-regularization strength.}
     \label{fig:lambda_units_study_custom2}
 \end{figure}
-
-\section{Hardware}
-
-Initially, computational resources from \ac{IEETA} were used in very early exploratory research:
-
-\begin{itemize}
-    \item Intel® Xeon® Processor E5-2640;
-    \item NVIDIA Tesla K40c;
-    \item NVIDIA Quadro K4000;
-    \item 32GB DDR4 RAM.
-\end{itemize}
-
-However, given that it was shared between dozens of other researchers it was deemed not enough for a comfortable and flexible workflow because:
-
-\begin{itemize}
-    \item the little amount of memory almost wasn't enough to load the dataset into memory, especially during critically busy times;
-    \item the NVIDIA Quadro K4000, with a compute capability of 3.0, was unsupported by the software stack which required a minimum compute capability of 3.7, leaving only a single NVIDIA Tesla K40c to work with.
-\end{itemize}
-
-More recently, \ac{LAR}, located in the Department of Mechanical Engineering at the University of Aveiro, has provided access to their deep learning research server codenamed Deeplar:
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.4\textwidth]{figs/deeplar.jpg}
-    \caption{Deeplar, the deep learning research server at \ac{LAR}}
-    \label{fig:deeplar}
-\end{figure}
-
-\begin{itemize}
-    \item AMD Ryzen™ Threadripper 2950X;
-    \item Four NVIDIA GEFORCE® RTX 2080 Ti;
-    \item 128GB DDR4 RAM.
-\end{itemize}
-
-The latter much more capable server (four state-of-the-art consumer \ac{GPU} and lots of \ac{RAM}) was effectively responsible for running this work's experiments.
-
-\section{Software}
-
-The deep learning research server Deeplar runs on openSUSE Tumbleweed 20191004\footnote{\url{https://software.opensuse.org/distributions/tumbleweed}}, a popular rolling-release GNU/Linux distribution. For interfacing with the \ac{GPU} it has installed CUDA 9.2 \footnote{\url{https://developer.nvidia.com/cuda-zone}} (NVIDIA GPU's proprietary language and API) and cuDNN 7.6.0 \footnote{\url{https://developer.nvidia.com/cudnn}} (a library for working with deep neural networks which most higher level frameworks rely on).
-
-We used Miniconda\footnote{\url{https://docs.conda.io/en/latest/miniconda.html}} to install Conda\footnote{\url{https://conda.io/en/latest/}} which was used to manage a Python 3.6\footnote{\url{https://www.python.org/}} environment which was specifically required for compatibility with TensorFlow. Crucially, the following Python packages and specific versions were used for the development of most of the source code.
-
-\begin{itemize}
-    \item TensorFlow\footnote{\url{https://www.tensorflow.org/}} 1.12.0, of which we mostly use the \verb|tf.keras| API, for training and testing the various models;
-    \item scikit-learn\footnote{\url{https://scikit-learn.org/}} 0.20.2 for some useful metrics and data splitting methods;
-    \item NumPy\footnote{\url{https://numpy.org/}} 1.15.4 for various vector and matrix operations and Pillow\footnote{\url{https://pillow.readthedocs.io/en/stable/}} 5.4.1 for image handling and transformations because of this work's image preprocessing needs.
-\end{itemize}
