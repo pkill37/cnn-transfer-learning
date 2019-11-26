@@ -364,7 +364,14 @@ $$
 
 In a way, these neural networks can be seen as just one big function composition of linear functions activated by some non-linear function. However networks more complex than the trivial $\hat{f_1}$ and $\hat{f_2}$ are cumbersome to express mathematically, so it is more convenient to discuss them in terms of layers of weights which hides away the complexity of highly composite functions.
 
-Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but strictly speaking an \ac{MLP} (as the name suggests) is composed of perceptrons which modern neural networks certainly don't use. Hereinafter these networks will be referred to as \ac{FCNN}. An \ac{FCNN} composes neurons in one-dimensional layers (known as fully-connected layers) where each neuron is fully-connected to every other neuron in the previous layer, i.e. the output of every neuron in a given layer is an input to every neuron in the next layer and vice versa.
+Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but strictly speaking an \ac{MLP} (as the name suggests) is composed of perceptrons which modern neural networks certainly don't use. Hereinafter these networks will be referred to as \ac{FCNN}. An \ac{FCNN} composes neurons in one-dimensional layers (known as fully-connected layers, illustrated in figure \ref{fig:1dlayers}) where each neuron is fully-connected to every other neuron in the previous layer, i.e. the output of every neuron in a given layer is an input to every neuron in the next layer and vice versa.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figs/1dlayers.png}
+    \caption{Composition of neurons in 1D fully-connected layers in a typical fully-connected neural network with 2 hidden layers \cite{cs231n}.}
+    \label{fig:1dlayers}
+\end{figure}
 
 \ac{FCNN} are relatively simple (when compared to other architectures that require setting lots of hyperparameters) and adequate for a variety of problems in various domains but, in computer vision problems where the input images are big, these networks quickly amount to a rather large number of parameters (which makes them particularly hard to train since this is a situation that is easily prone to overfitting). For example, images on the CIFAR-10 \cite{cifar10} dataset are $32 \times 32 \times 3$ (i.e. $n = 32 \times 32 \times 3 = 3072$ features) for which a vector of parameters $\theta \in \mathbb{R}^{3072}$ (i.e. 3072 weights) is needed to parameterize a single neuron fully-connected to the input. It is easy to see that this is unsustainable when
 
@@ -376,9 +383,16 @@ Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but s
 
 \subsection{Convolutional Neural Networks}
 
-\ac{CNN} are another class of feedforward \ac{ANN} (originally designed for computer vision problems) whose architecture takes advantage of the assumption that the input is an image. Unlike \ac{FCNN} which compose neurons in one-dimensional layers, \ac{CNN} compose neurons in three-dimensional layers (or volumes), namely convolutional layers and pooling layers. Nonetheless most \ac{CNN} architectures still use fully-connected layers (typically in the rightmost layers).
+\ac{CNN} are another class of feedforward \ac{ANN} (originally designed for computer vision problems) whose architecture takes advantage of the assumption that the input is an image. Unlike \ac{FCNN} which compose neurons in one-dimensional layers, \ac{CNN} compose neurons in three-dimensional layers (or volumes, as illustrated in figure \ref{fig:3dvolumes}), namely convolutional layers and pooling layers. Nonetheless most \ac{CNN} architectures still use fully-connected layers (typically in the rightmost layers).
 
-In particular, the convolutional layer\footnote{\url{https://cs231n.github.io/convolutional-networks/}} is the building block of \ac{CNN}. Essentially a convolutional layer accepts an input volume of size $W_1 \times H_1 \times D_1$ (which may eventually be zero-padded around the edges in a $P$-pixels wide border) and is parameterized by a set of $K$ learnable filters of size $F \times F \times D_1$ which in the forward pass slide (with some stride $S$) over the input volume (locally in the width and height, but fully in depth of the input volume) to compute dot products between the filter and the selected part of the input (just like a regular neuron), producing $K$ two-dimensional activation maps (one for each of the $K$ filters) stacked in depth to form the output volume.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figs/3dvolumes.png}
+    \caption{Composition of neurons in 3D volumes in convolutional neural networks \cite{cs231n}.}
+    \label{fig:3dvolumes}
+\end{figure}
+
+In particular, the convolutional layer is the building block of \ac{CNN} \cite{cs231n}. Essentially a convolutional layer accepts an input volume of size $W_1 \times H_1 \times D_1$ (which may eventually be zero-padded around the edges in a $P$-pixels wide border) and is parameterized by a set of $K$ learnable filters of size $F \times F \times D_1$ which in the forward pass slide (with some stride $S$) over the input volume (locally in the width and height, but fully in depth of the input volume) to compute dot products between the filter and the selected part of the input (just like a regular neuron), producing $K$ two-dimensional activation maps (one for each of the $K$ filters) stacked in depth to form the output volume.
 
 With the assumption that the input to a \ac{CNN} is a two-dimensional image with three color channels, it stands to reason that many of the features found in one channel will also be found in other channels because most features are spatial (e.g. edges, lines, shapes). As such if some local feature (local in width and height) is activating meaningfully at depth $d_1$ of a convolutional layer, it will also usefully activate the same concept at a different depth $d_2$. It turns out this can be taken advantage of by further relaxing the architecture and introducing parameter sharing thus allowing neurons at the same depth slice of a convolutional layer to share the same weights and biases, which
 
@@ -388,9 +402,23 @@ With the assumption that the input to a \ac{CNN} is a two-dimensional image with
     \item contributes to the translation equivariance of the \ac{CNN} architecture.
 \end{itemize}
 
-In a \ac{FCNN} all neurons are fully-connected to all the neurons in the previous layer which creates a highly complex model capable of modeling very complex relationships in the input features. However, for spatial data like images, this complexity is pointless since most features are localized anyway, i.e. the face of a person is likely completely unrelated to the dog in the background of the photo. Instead, convolutional layers exploit the spatial locality of images by connecting neurons only to local regions of the input volume which, intuitively, ensures that the learnt filters activate strongly only in the presence of a spatially local input pattern. By stacking many such layers the network first creates representations of small regions of the input and progressively assembles representations of larger regions of the input (as if the filters were bigger or global rather than local).
+In a \ac{FCNN} all neurons are fully-connected to all the neurons in the previous layer which creates a highly complex model capable of modeling very complex relationships in the input features. However, for spatial data like images, this complexity is pointless since most features are localized anyway, i.e. the face of a person is likely completely unrelated to the dog in the background of the photo. Instead, convolutional layers exploit the spatial locality of images by connecting neurons only to local regions of the input volume (illustrated in figure \ref{fig:localconnectivity}) which, intuitively, ensures that the learnt filters activate strongly only in the presence of a spatially local input pattern. By stacking many such layers the network first creates representations of small regions of the input and progressively assembles representations of larger regions of the input (as if the filters were bigger or global rather than local).
 
-On the other hand, the exact location of these features is not so important when compared to its location relative to other features. The pooling layer is an approach to providing translation invariance by reducing the spatial size (or down-sampling) of every depth slice of an input volume, most commonly by sliding a filter of size $2 \times 2$ with a stride $S = 2$ and computing the maximum (i.e. max pooling) of the selected part of the input. Effectively this progressively reduces the number of free parameters (while introducing no new parameters since max pooling is a fixed function of the input) and the memory footprint and computation in the network.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figs/localconnectivity.png}
+    \caption{Local connectivity of neurons in a convolutional layer (in blue) which are connected only to a local area of the input volume (in red) \cite{cs231n}.}
+    \label{fig:localconnectivity}
+\end{figure}
+
+On the other hand, the exact location of these features is not so important when compared to its location relative to other features. The pooling layer is an approach to providing translation invariance by reducing the spatial size (or down-sampling) of every depth slice of an input volume, most commonly by sliding a filter of size $2 \times 2$ with a stride $S = 2$ and computing the maximum (i.e. max pooling, illustrated in figure \ref{fig:maxpooling}) of the selected part of the input. Effectively this progressively reduces the number of free parameters (while introducing no new parameters since max pooling is a fixed function of the input) and the memory footprint and computation in the network.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figs/maxpooling.png}
+    \caption{Max pooling with a $2 \times 2$ filter and stride $S = 2$ \cite{cs231n}.}
+    \label{fig:maxpooling}
+\end{figure}
 
 In summary \ac{CNN} are a great architecture for computer vision due to:
 
@@ -401,14 +429,12 @@ In summary \ac{CNN} are a great architecture for computer vision due to:
     \item Translation and rotation invariance contributing to generalization of features.
 \end{itemize}
 
-% TODO: move this to SOTA
-
 LeNet \cite{lenet}, in figure \ref{fig:lenet}, is widely considered to be the first successful application of \ac{CNN}, when \citeauthor{lenet} used backpropagation to automatically learn the kernels of convolutions rather than the laborous hand-designed systems that came before it.
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.5\textwidth]{figs/lenet.png}
-    \caption{LeNet}
+    \caption{Architecture of the LeNet convolutional neural network \cite{lenet}.}
     \label{fig:lenet}
 \end{figure}
 
@@ -417,7 +443,7 @@ AlexNet \cite{alexnet} won the \ac{ILSVRC} \cite{imagenet} in 2012 by a very lar
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.6\textwidth]{figs/alexnet.png}
-    \caption{AlexNet}
+    \caption{Architecture of the AlexNet convolutional neural network \cite{alexnet}.}
     \label{fig:alexnet}
 \end{figure}
 
@@ -426,7 +452,7 @@ Later the \ac{VGG} designed an architecture (illustrated in figure \ref{fig:vgg1
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.6\textwidth]{figs/vgg16.jpg}
-    \caption{VGG16}
+    \caption{Architecture of the VGG16 convolutional neural network \cite{vgg16}.}
     \label{fig:vgg16}
 \end{figure}
 
@@ -434,8 +460,8 @@ GoogLeNet \cite{inceptionv1} (also known as Inception V1) won the \ac{ILSVRC} \c
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.6\textwidth]{figs/inceptionv3.png}
-    \caption{Inception V3}
+    \includegraphics[width=0.6\textwidth]{figs/inceptionv1.png}
+    \caption{Architecture of the GoogLeNet convolutional neural network \cite{inceptionv1}.}
     \label{fig:inceptionv3}
 \end{figure}
 
@@ -444,7 +470,7 @@ More recently \citeauthor{resnet} have pushed the state-of-the-art by introducin
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.7\textwidth]{figs/resnet50.png}
-    \caption{Comparison between ResNet-50 and more traditional architectures, illustrating how residual networks avoid the vanishing gradient problem.}
+    \caption{Comparison between residual networks and more traditional architectures like VGG19, illustrating how residual networks avoid the vanishing gradient problem \cite{resnet}.}
     \label{fig:resnet50}
 \end{figure}
 

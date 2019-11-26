@@ -46,7 +46,7 @@ The images in the dataset undergo a number of preprocessing steps:
     \label{code:crop}
     \end{listing}
 
-\item Resize the images to the target networks' input dimensions $224 \times 224 \times 3$ and $299 \times 299 \times 3$. We resize them as soon as possible in the data pipeline in order to reduce the computational costs of any subsequent operations on the images.
+\item Resize the images to the target networks' input dimensions $224 \times 224 \times 3$ and $299 \times 299 \times 3$. We resize (using nearest-neighbor interpolation) them as soon as possible in the data pipeline in order to reduce the computational costs of any subsequent operations on the images.
 
     \begin{listing}[ht]
     \begin{minted}{python}

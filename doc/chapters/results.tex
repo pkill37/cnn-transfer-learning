@@ -5,35 +5,11 @@ This chapter describes the experiments in terms of reproducible steps, settings,
 
 Ultimately the experiments aim to study transfer learning in the specific domain of skin lesion classification, as well as compare its efficacy against simpler and more traditional learning schemes, by training and testing several models of different architectures and drawing helpful conclusions about the use of transfer learning techniques.
 
-\section{Transfer Learning Experiments}
+\section{VGG16 Transfer Learning Experiments}
 
-Based on the transfer learning techniques introduced, models of the VGG16 architecture pre-trained on ImageNet will be explored in order to repurpose the weights to a new model for skin lesion classification and draw conclusions about its efficacy.
+Based on the transfer learning techniques introduced in chapter \ref{chapter:sota}, models of the VGG16 architecture pre-trained on ImageNet will be explored in order to repurpose the weights to a new model for skin lesion classification and draw conclusions about its efficacy.
 
-It is hypothesized that extracting features from lower layers of models trained for ImageNet classification can provide good performance, because the former presumably provide low-level features (e.g. shapes or lines) that are still useful for skin lesion classification whereas the latter actually provide very high-level concepts (e.g. dogs, cats) that are relevant for classification in the ImageNet domain and need to be fine-tuned to the target dataset.
-
-To verify this, experiments based on this transfer learning approach will adhere to the following common methodology:
-
-\begin{enumerate}
-    \item Standardize training and validation samples relative to ImageNet;
-    \item Some parameters are transfered from pre-trained models and otherwise initialized according to Xavier initialization;
-    \item Define network architecture:
-        \begin{enumerate}
-            \item Extract and freeze layers from the pre-trained model according to the specific experiment at hand;
-            \item Use global average pooling to reduce the number of parameters before the classifier based on fully-connected layers;
-            \item Use one fully-connected layer of 512 ReLU-activated neurons;
-            \item Use one fully-connected layer of 1 sigmoid-activated neuron for binary classification.
-        \end{enumerate}
-    \item Mini-batch \ac{SGD} with momentum $\gamma = 0.9$:
-        \begin{itemize}
-            \item Binary cross entropy cost function and explicit L2 regularization;
-            \item 32 samples batches;
-            \item Initial learning rate $\eta = 10^{-4}$ that decays by a factor of $10$ if the validation accuracy has not improved $+10^{-3}$ in the last $10$ epochs;
-            \item Shuffle the $m$ samples every epoch;
-            \item Train for a maximum of 1000 epochs, stopping early if the loss has not changed $\pm 10^{-3}$ in the last $30$ epochs.
-        \end{itemize}
-    \item Grid-search model selection based on the accuracy as measured on a fixed validation set;
-    \item Final models will be evaluated and compared primarily using accuracy as measured on the test set.
-\end{enumerate}
+It is hypothesized that extracting features from lower layers of models trained for ImageNet classification can provide good performance, because the former presumably provide low-level features (e.g. shapes or lines) that are still useful for skin lesion classification whereas the latter provide very high-level concepts (e.g. dogs, cats) that are most relevant for classification in the ImageNet domain and otherwise needs fine-tuning to the target dataset.
 
 The basic unit in traditional \ac{CNN} architectures like VGG16 is the convolutional block, which is typically comprised by a stack of convolutional layers and one pooling layer for downsampling. These convolutional blocks are then further stacked together to progressively output higher level feature maps at the end of each block.
 
@@ -66,7 +42,14 @@ On the other hand at the last block of the network the feature maps exhibit much
 
 Clearly, successful transfer learning from the VGG16 pre-trained model is highly dependent on the layer up to which weights are extracted from. Presumably extracting all layers and fine-tuning them to the target dataset will always work, but in some cases it might be useful to extract only a subset of the features in order to produce a smaller model for applications where space (occupied by the model) and computation (required by the forward pass of an inherently deeper model) are at a premium (e.g. smartphones). Both of these cases (and more) will be explored.
 
-Specifically, the \verb|tf.keras.applications.vgg16| implementation of the VGG16 model pre-trained on ImageNet organizes layers as such:
+To do this it is helpful to define two variables:
+
+\begin{itemize}
+    \item the number of the layer $e$ up to which parameters will be extracted (or used) from will be sampled from $e \in \{18,14,10,6,3\}$;
+    \item the number of the layer $f$ up to which parameters will be frozen will be sampled from $f \in \{18,14,10,6,3,0\}$;
+\end{itemize}
+
+VGG16 is named after its 16 layers of parameters found in convolutional layers (13) and fully-connected layers (3). However, for narrative purposes and easier reproducibility, the variables $e$ and $f$ will refer to the index of the layers as implemented in \verb|tf.keras.applications.vgg16|\footnote{\url{https://www.tensorflow.org/api_docs/python/tf/keras/applications/VGG16}}. Of course, input layers and pooling layers are inherently not parameterized. Specifically, the \verb|tf.keras.applications.vgg16| implementation of the VGG16 model pre-trained on ImageNet organizes layers as such:
 
 \begin{itemize}
     \item Layer 0 is the input layer (\verb|input_1|) and will not be considered for extraction as it merely represents the original input;
@@ -78,19 +61,34 @@ Specifically, the \verb|tf.keras.applications.vgg16| implementation of the VGG16
     \item Layers 19-22 are non-convolutional layers (\verb|flatten|, \verb|fc1|, \verb|fc2|, \verb|predictions|) and will not be considered for extraction.
 \end{itemize}
 
-With that in mind, in these experiments,
-
-\begin{itemize}
-    \item the number of the layer $e$ up to which parameters will be extracted from will be sampled from $e \in \{18,14,10,6,3\}$;
-    \item the number of the layer $f$ up to which parameters will be frozen will be sampled from $f \in \{18,14,10,6,3,0\}$;
-    \item $\lambda$ is the L2-regularization strength sampled from $\lambda \in [10^{-4}, 10^{-2}]$ spaced evenly on a log-scale;
-\end{itemize}
-
 \subsection{Total Feature Extraction without Fine Tuning}
 
-Arguably the simplest case is to extract and freeze all layers (i.e. $e = f = 18$), feed them to the classifier, and effectively only train the classifier.
+Arguably the simplest case is to extract and freeze all layers (i.e. $e = f = 18$), feed them to the classifier, and effectively only train the classifier. Specifically, training follows the methodology:
 
-Surprisingly models are converging nicely and quickly (e.g. figure \ref{fig:vgg16_total_convergence}) and already give very good results overall (table \ref{table:vgg16_total}).
+% TODO: fix extract/freeze part
+\begin{enumerate}
+    \item Standardize training and validation samples relative to ImageNet;
+    \item Some parameters are transfered from pre-trained models and otherwise initialized according to Xavier initialization;
+    \item Define network architecture:
+        \begin{enumerate}
+            \item Extract and freeze layers from the pre-trained model according to the specific experiment at hand;
+            \item Use global average pooling to reduce the number of parameters before the classifier based on fully-connected layers;
+            \item Use one fully-connected layer of 512 ReLU-activated neurons;
+            \item Use one fully-connected layer of 1 sigmoid-activated neuron for binary classification.
+        \end{enumerate}
+    \item Mini-batch \ac{SGD} with momentum $\gamma = 0.9$:
+        \begin{itemize}
+            \item Binary cross entropy cost function and explicit L2 regularization with $\lambda \in [0.0001, 0.005]$ spaced evenly on a log scale;
+            \item 32 samples batches;
+            \item Initial learning rate $\eta = 10^{-4}$ that decays by a factor of $10$ if the validation accuracy has not improved $+10^{-3}$ in the last $10$ epochs;
+            \item Shuffle the $m$ samples every epoch;
+            \item Train for a maximum of 1000 epochs, stopping early if the loss has not changed $\pm 10^{-3}$ in the last $30$ epochs.
+        \end{itemize}
+    \item Grid-search model selection based on the accuracy as measured on a fixed validation set;
+    \item Final models will be evaluated and compared primarily using accuracy as measured on the test set.
+\end{enumerate}
+
+Surprisingly models converge nicely and quickly (e.g. figure \ref{fig:vgg16_total_convergence}) and already give very good results overall (table \ref{table:vgg16_total}).
 
 \begin{figure}[ht]
     \centering
@@ -132,9 +130,11 @@ The validation curve of the L2-regularization strength $\lambda$ hyperparameter 
     \label{fig:vgg16_total_lambda}
 \end{figure}
 
-Presumably these surprisingly good results stem from an appropriate number $m$ of training samples (relative to the number of free parameters in the network) and proper data augmentation.
+Presumably these surprisingly good results stem from an appropriate number $m$ of training samples (relative to the number of free parameters in the network) and proper data augmentation. It is also important to remember that binary classification is a much easier optimization problem when compared to ImageNet's 1000-class classification.
 
 Indeed, by fixating $\lambda = 0.000879$ (for example) and varying the number of samples as fractions ${0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9}$ of the total $m$ training samples it can be seen (in table \ref{table:vgg16_total_debug}) that performance increases as the number of samples increases.
+
+% TODO: convert this to plot
 
 \begin{table}[ht]
 \centering
@@ -171,6 +171,8 @@ Extracting a smaller number of layers seemed promising since that would yield a 
 \end{figure}
 
 Accordingly, performance results (in table \ref{table:vgg16_partial}) were disappointing for any number $e < 18$ of frozen layers.
+
+% TODO: fix table
 
 \begin{table}[ht]
 \centering
@@ -211,6 +213,8 @@ By fixating $e = 14$, $f = 14$, $\lambda = 0.00015445$, and cross-validating 20 
     \caption{Partial feature extraction network (with $e = 14$, $f = 14$, $\lambda = 0.00015445$, $\eta = 10^{-4}$) converging to very good performance and modest model size.}
     \label{fig:vgg16_partial_convergence}
 \end{figure}
+
+% TODO: proof adam optimizer
 
 A more thorough systematic study of the learning rate when extracting lower-level layers would certainly unveil more models with a good balance between model size and model performance, perhaps even outperforming models that extract all convolutional layers.
 
@@ -344,33 +348,53 @@ $e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & Precision & Recal
 
 This can be explained by an inadequate setting of the learning rate just as in the previous set of experiments. The more higher layers are unfrozen, the more their weights are disrupted too quickly because of too high a learning rate.
 
-%\subsection{Gradual Unfreezing}
-
-%Lastly, a different transfer learning scheme will be evaluated where $e$ layers are initially extracted but all are frozen and only the classifier is trained at first. Then layers are progressively unfrozen from right to left and trained with an appropriately set learning rate (and early stopping patience) for each new set of unfrozen layers.
-
-%When extracting $e = 18$ layers
-
-%\begin{itemize}
-%    \item first the network will be trained with $f = 18$ (i.e. only the classifier will be trained), learning rate $\eta = 10^{-3}$, and early stopping patience $p = 30$.
-%\end{itemize}
+% TODO: proof different learning rate
+% TODO: proof different optimizer
 
 \section{End-to-End Learning Experiments}
 
-This section describes a set of experiments involving custom designed \ac{CNN} architectures whose models are trained from scratch, following the more traditional methodology typically called end-to-end learning, that will be used for comparison against the transfer learning approach which it is in direct contrast with.
+This section describes a set of experiments involving models of custom designed \ac{CNN} architectures trained from scratch, following the more traditional methodology typically called end-to-end learning, that will be used for comparison against the transfer learning approach which it is in direct contrast with.
 
-These custom architectures are based around reasonable heuristics\footnote{\url{https://cs231n.github.io/convolutional-networks/}}:
+Designing a custom \ac{CNN} architecture from scratch is quite difficult as it requires setting and reasoning about many different hyperparameters simultaneously (number of convolutional layers, number of filters in each layer, size of filters, stride, etc.) for which there is no one right answer; hyperparameters should always be cross-validated from a wide range on the problem at hand. Instead, these custom architectures will be based around reasonable heuristics \cite{cs231n} extrapolated from the training of successful deep networks:
 
-% TODO: rewrite words
 \begin{itemize}
-    \item The most common form of a ConvNet architecture stacks a few CONV-RELU layers, follows them with POOL layers, and repeats this pattern until the image has been merged spatially to a small size. At some point, it is common to transition to fully-connected layers.
-    \item Prefer a stack of small filter convolutional layers to one large receptive field convolutional layer
-    \item It is very uncommon to see receptive field sizes for max pooling that are larger than 3 because the pooling is then too lossy and aggressive. This usually leads to worse performance.
-    \item Reducing sizing headaches. The scheme presented above is pleasing because all the CONV layers preserve the spatial size of their input, while the POOL layers alone are in charge of down-sampling the volumes spatially. In an alternative scheme where we use strides greater than 1 or don’t zero-pad the input in CONV layers, we would have to very carefully keep track of the input volumes throughout the CNN architecture and make sure that all strides and filters “work out”, and that the ConvNet architecture is nicely and symmetrically wired.
-    \item Why use stride of 1 in CONV? Smaller strides work better in practice. Additionally, as already mentioned stride 1 allows us to leave all spatial down-sampling to the POOL layers, with the CONV layers only transforming the input volume depth-wise.
-    \item Why use padding? In addition to the aforementioned benefit of keeping the spatial sizes constant after CONV, doing this actually improves performance. If the CONV layers were to not zero-pad the inputs and only perform valid convolutions, then the size of the volumes would reduce by a small amount after each CONV, and the information at the borders would be “washed away” too quickly.
+    \item The most common architecture of convolutional neural networks is to stack ReLU-activated convolutional layers followed by a max pooling layer, a pattern which is arbitrarily repeated to some desired depth in order to reduce the dimensions of the features, after which it is common to use fully-connected layers;
+    \item Prefer a stack of many small filters in convolutional layers rather than one large filter;
+    \item Use zero-padding and stride $S = 1$ in convolutional layers as they provide better performance;
+    \item Prefer $2 \times 2$ filters with stride $S = 2$ in pooling layers to avoid aggressive, lossy downsampling and consequently worse performance.
 \end{itemize}
 
-The experiments models of such architectures were trained from scratch as follows:
+\subsection{Custom Architecture 1}
+
+This custom architecture, illustrated in figure \ref{fig:custom1}, stacks three convolution-pooling blocks. Each block stacks two convolutional layers before the pooling layer, which is a good idea for large and deep networks because multiple stacked convolutional layers can develop more complex features of the input volume before the destructive pooling operation. Specifically,
+
+\begin{enumerate}
+    \item 32 $3 \times 3$ filters, stride of 1, zero padding, ReLU activated
+    \item 32 $3 \times 3$ filters, stride of 1, zero padding, ReLU activated
+    \item $2 \times 2$ max pooling with stride 2
+    \item 64 $3 \times 3$ filters, stride of 1, zero padding, ReLU activated
+    \item 64 $3 \times 3$ filters, stride of 1, zero padding, ReLU activated
+    \item $2 \times 2$ max pooling with stride 2
+    \item 128 $3 \times 3$ filters, stride of 1, zero padding, ReLU activated
+    \item 128 $3 \times 3$ filters, stride of 1, zero padding, ReLU activated
+\end{enumerate}
+
+The classifier, illustrated in figure \ref{fig:custom1}, is a stack of two fully-connected layers of ReLU-activated neurons followed by a fully-connected sigmoid-activated neuron for binary classification.
+
+\begin{enumerate}
+    \item $u$ fully-connected ReLU-activated neurons;
+    \item Another $u$ fully-connected ReLU-activated neurons;
+    \item Single fully-connected sigmoid-activated neuron for binary classification.
+\end{enumerate}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=1.0\textwidth]{figs/custom1.png}
+    \caption{Architecture of the first custom-designed neural network.}
+    \label{fig:custom1}
+\end{figure}
+
+Models of this architecture are trained identically as follows:
 
 \begin{enumerate}
     \item Standardize training and validation samples relative to \ac{ISIC} 2018;
@@ -394,92 +418,69 @@ The experiments models of such architectures were trained from scratch as follow
     \item Final models will be evaluated and compared primarily using accuracy as measured on the test set.
 \end{enumerate}
 
-\subsection{Custom Architecture 1}
-
-This custom architecture, illustrated in figure \ref{fig:custom1}, stacks three convolution-pooling blocks. Each block stacks two convolutional layers before the pooling layer, which is a good idea for large and deep networks because multiple stacked convolutional layers can develop more complex features of the input volume before the destructive pooling operation. Specifically,
-
-% TODO: consistency
-\begin{enumerate}
-    \item $K = 32$ filters, $F = 3$ kernel, $S = 1$ stride, same padding, ReLU activated
-    \item 32 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
-    \item 2x2 max pooling
-    \item 64 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
-    \item 64 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
-    \item 2x2 max pooling
-    \item 128 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
-    \item 128 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
-\end{enumerate}
-
-The classifier, illustrated in figure \ref{fig:custom1}, is a stack of two fully-connected layers of ReLU-activated neurons followed by a fully-connected sigmoid-activated neuron for binary classification.
-
-\begin{enumerate}
-    \item $u$ fully-connected ReLU-activated neurons;
-    \item Another $u$ fully-connected ReLU-activated neurons;
-    \item Single fully-connected sigmoid-activated neuron for binary classification.
-\end{enumerate}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=1.0\textwidth]{figs/custom1.png}
-    \caption{Architecture of the first custom-designed neural network.}
-    \label{fig:custom1}
-\end{figure}
-
-We grid-search the best $\lambda$ for L2-regularization from $\lambda \in \{10^{-10}, ..., 10^{2}\}$ (spaced evenly on a log scale) as well as the number $u$ of ReLU-activated neurons in the antepenultimate and penultimate fully-connected layers from $u \in \{ 64, 128, 256, 512, 1024, 2048 \}$. This yields a total of $60$ models, of which the top 20 are summarized in table \ref{table:top20_custom1}.
+The L2-regularization strength $\lambda$ is cross-validated from $\lambda \in [0.0001, 0.005]$ spaced evenly on a log scale. Results are summarized in table \ref{table:custom1_all}.
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{ |c|c|c|c|c| }
+\begin{tabular}{ |c|c|c|c|c|c|c|c| }
 \hline
-$u$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ \\
+$\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & Precision & Recall & F1-Score \\
 \hline
-128 & 1.61e-44 & 0.725 & 0.722 & 0.728 \\
-256 & 1.27e-17 & 0.722 & 0.721 & 0.728 \\
-256 & 3.29e-05 & 0.722 & 0.722 & 0.728 \\
-256 & 1.74e-13 & 0.723 & 0.721 & 0.728 \\
-256 & 7.88e-24 & 0.722 & 0.721 & 0.728 \\
-64 & 3.04e-36 & 0.722 & 0.723 & 0.728 \\
-256 & 1.17e-48 & 0.721 & 0.719 & 0.727 \\
-256 & 2.21e-40 & 0.723 & 0.721 & 0.727 \\
-256 & 2.4e-09 & 0.722 & 0.721 & 0.727 \\
-64 & 2.59e-38 & 0.723 & 0.722 & 0.727 \\
-64 & 1.61e-44 & 0.723 & 0.723 & 0.727 \\
-64 & 1.89e-42 & 0.722 & 0.724 & 0.727 \\
-64 & 6.72e-26 & 0.722 & 0.724 & 0.727 \\
-128 & 1.08e-19 & 0.725 & 0.722 & 0.727 \\
-256 & 1.08e-19 & 0.722 & 0.72 & 0.727 \\
-256 & 1e-50 & 0.722 & 0.719 & 0.727 \\
-256 & 9.24e-22 & 0.722 & 0.721 & 0.727 \\
-64 & 1.27e-17 & 0.722 & 0.722 & 0.727 \\
-64 & 2.21e-40 & 0.722 & 0.72 & 0.727 \\
-64 & 3.29e-05 & 0.721 & 0.723 & 0.727 \\
+0.0001 & 0.737 & 0.726 & 0.741 & 0.756 & 0.741 & 0.737 \\
+0.000154 & 0.734 & 0.724 & 0.737 & 0.755 & 0.737 & 0.732 \\
+0.000239 & 0.795 & 0.785 & 0.781 & 0.785 & 0.781 & 0.78 \\
+0.000368 & 0.782 & 0.768 & 0.772 & 0.78 & 0.772 & 0.771 \\
+0.000569 & 0.723 & 0.72 & 0.729 & 0.753 & 0.729 & 0.722 \\
+0.000879 & 0.724 & 0.72 & 0.729 & 0.755 & 0.729 & 0.722 \\
+0.00136 & 0.723 & 0.718 & 0.729 & 0.753 & 0.729 & 0.722 \\
+0.0021 & 0.721 & 0.716 & 0.728 & 0.753 & 0.728 & 0.721 \\
+0.00324 & 0.719 & 0.709 & 0.724 & 0.75 & 0.724 & 0.717 \\
+0.005 & 0.713 & 0.704 & 0.718 & 0.745 & 0.718 & 0.71 \\
+\hline
+ & $0.737\pm0.0267$ & $0.729\pm0.0248$ & $0.739\pm0.0199$ & $0.758\pm0.0124$ & $0.739\pm0.0199$ & $0.733\pm0.0223$ \\
 \hline
 \end{tabular}
-\caption{Top 20 models of the custom architecture 1 sorted by $A_{test}$ in descending order.}
-\label{table:top20_custom1}
+\caption{Performance metrics of models of the custom architecture 1 where $\lambda$ is varied.}
+\label{table:custom1_all}
 \end{table}
 
-The effect of $\lambda$ and $u$ on the performance of the model can be understood in figure \ref{fig:lambda_units_study_custom1}. As $u$ gets larger performance gets subtly but increasingly lower, so large $u$ is not worth it, especially when you consider the consequently larger number of parameters in the fully-connected layers which would have to be trained.
+The effect of $\lambda$ on the performance of the model can be understood in figure \ref{fig:custom1_lambda}.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.5\textwidth]{../plots/plots_7/lambda_units_study/lambda_units_study.png}
-    \caption{Accuracy of custom architecture 1 over a range of values for L2-regularization strength and the number of ReLU-activated neurons in the penultimate fully-connected layer.}
-    \label{fig:lambda_units_study_custom1}
+    \includegraphics[width=0.8\textwidth]{figs/custom1_lambda.png}
+    \caption{Accuracy on the test set $A_{test}$ of models of the custom architecture 1 over a range of values for L2-regularization strength $\lambda$.}
+    \label{fig:custom1_lambda}
+\end{figure}
+
+In particular, $\lambda = 0.000239$ gives the best performing model of the custom architecture 1. The convergence of this model can be tracked in figure \ref{fig:custom1_best_training} and the final confusion matrix in figure \ref{fig:custom1_best_confusionmatrix}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/custom1_best_training.png}
+    \caption{Convergence of the best model of the custom architecture 1.}
+    \label{fig:custom1_best_training}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/custom1_best_confusionmatrix.png}
+    \caption{Confusion matrix of the best model of the custom architecture 1.}
+    \label{fig:custom1_best_confusionmatrix}
 \end{figure}
 
 \subsection{Custom Architecture 2}
 
-This custom architecture, illustrated in figure \ref{fig:custom2}, stacks two convolution-pooling blocks. Each block uses a single convolutional layer before the pooling layer.
+This custom architecture, illustrated in figure \ref{fig:custom2}, stacks two convolution-pooling blocks. Each block uses a single convolutional layer before the pooling layer:
 
 \begin{enumerate}
-    \item 32 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
-    \item 2x2 max pooling
-    \item 64 filters, 3x3 kernel, 1x1 stride, same padding, ReLU activated
-    \item 2x2 max pooling
+    \item 32 $3 \times 3$ filters, stride of 1, zero padding, ReLU activated;
+    \item $2 \times 2$ max pooling with stride of 2;
+    \item 64 $3 \times 3$ filters, stride of 1, zero padding, ReLU activated;
+    \item $2 \times 2$ max pooling with stride of 2.
 \end{enumerate}
 
-The classifier is a single fully-connected layer of $u$ ReLU-activated neurons followed by a fully-connected sigmoid-activated neuron for binary classification.
+The classifier is a single fully-connected layer of $u$ ReLU-activated neurons followed by a fully-connected sigmoid-activated neuron for binary classification:
 
 \begin{enumerate}
     \item $u$ fully-connected ReLU-activated neurons;
@@ -489,51 +490,88 @@ The classifier is a single fully-connected layer of $u$ ReLU-activated neurons f
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\textwidth]{figs/custom2.png}
-    \caption{Custom Architecture 2}
+    \caption{Custom Architecture 2.}
     \label{fig:custom2}
 \end{figure}
 
-We grid-search the best $\lambda$ for L2-regularization from $\lambda \in \{10^{-10}, ..., 10^{2}\}$ (spaced evenly on a log scale) as well as the number $u$ of ReLU-activated neurons in the penultimate fully-connected layer from $u \in \{ 64, 128, 256, 512, 1024, 2048 \}$. This yields a total of $60$ models, of which the top 20 are summarized in table \ref{table:top20_custom2}.
+Models of this architecture are trained identically as follows:
+
+\begin{enumerate}
+    \item Standardize training and validation samples relative to \ac{ISIC} 2018;
+    \item Parameters are all initialized according to Xavier initialization;
+    \item Define network architecture:
+        \begin{enumerate}
+            \item Stack blocks of convolutional and pooling layers to build useful features for classification;
+            \item Use global average pooling to reduce the number of parameters before the classifier based on fully-connected layers;
+            \item Stack fully-connected layers of ReLU-activated neurons;
+            \item Add fully-connected layer with a single sigmoid-activated neuron for binary classification.
+        \end{enumerate}
+    \item Mini-batch \ac{SGD} with momentum $\gamma = 0.9$:
+        \begin{itemize}
+            \item Binary cross entropy cost function and explicit L2 regularization;
+            \item 32 samples batches;
+            \item Shuffle the $m$ samples every epoch;
+            \item Initial learning rate $\eta = 10^{-4}$ that decays by a factor of $10$ if the validation accuracy has not improved $+10^{-3}$ in the last $10$ epochs;
+            \item Train for a maximum of 1000 epochs, stopping early if the loss has not changed $\pm 10^{-3}$ in the last $30$ epochs.
+        \end{itemize}
+    \item Grid-search model selection based on the accuracy as measured on a fixed validation set;
+    \item Final models will be evaluated and compared primarily using accuracy as measured on the test set.
+\end{enumerate}
+
+The L2-regularization strength $\lambda$ is cross-validated from $\lambda \in [0.0001, 0.005]$ spaced evenly on a log scale. Results are summarized in table \ref{table:custom2_all}.
 
 \begin{table}[ht]
 \centering
-\begin{tabular}{ |c|c|c|c|c| }
+\begin{tabular}{ |c|c|c|c|c|c|c|c| }
 \hline
-$u$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ \\
+$\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & Precision & Recall & F1-Score \\
 \hline
-64 & 1e-50 & 0.722 & 0.722 & 0.737 \\
-64 & 0.452 & 0.656 & 0.657 & 0.651 \\
-256 & 85300000.0 & 0.621 & 0.613 & 0.612 \\
-512 & 9.24e-22 & 0.587 & 0.583 & 0.584 \\
-256 & 1.74e-13 & 0.574 & 0.577 & 0.575 \\
-512 & 53.0 & 0.567 & 0.58 & 0.558 \\
-256 & 7.88e-24 & 0.56 & 0.544 & 0.553 \\
-128 & 728000.0 & 0.556 & 0.559 & 0.547 \\
-256 & 10000000000 & 0.544 & 0.54 & 0.534 \\
-512 & 1.74e-13 & 0.537 & 0.522 & 0.534 \\
-512 & 0.452 & 0.512 & 0.517 & 0.531 \\
-128 & 3.04e-36 & 0.542 & 0.536 & 0.526 \\
-64 & 2.81e-07 & 0.51 & 0.507 & 0.514 \\
-1024 & 7.88e-24 & 0.496 & 0.5 & 0.504 \\
-2048 & 2.04e-11 & 0.502 & 0.5 & 0.501 \\
-1024 & 0.00386 & 0.5 & 0.5 & 0.5 \\
-1024 & 1.49e-15 & 0.5 & 0.5 & 0.5 \\
-1024 & 1e-50 & 0.5 & 0.5 & 0.5 \\
-1024 & 2.4e-09 & 0.5 & 0.5 & 0.5 \\
-1024 & 2.59e-38 & 0.5 & 0.5 & 0.5 \\
+0.0001 & 0.737 & 0.724 & 0.736 & 0.756 & 0.736 & 0.73 \\
+0.000154 & 0.736 & 0.72 & 0.735 & 0.757 & 0.735 & 0.729 \\
+0.000239 & 0.734 & 0.72 & 0.737 & 0.76 & 0.737 & 0.731 \\
+0.000368 & 0.731 & 0.717 & 0.738 & 0.761 & 0.738 & 0.732 \\
+0.000569 & 0.724 & 0.716 & 0.735 & 0.762 & 0.735 & 0.728 \\
+0.000879 & 0.724 & 0.719 & 0.736 & 0.764 & 0.736 & 0.729 \\
+0.00136 & 0.725 & 0.719 & 0.735 & 0.754 & 0.735 & 0.729 \\
+0.0021 & 0.718 & 0.71 & 0.729 & 0.756 & 0.729 & 0.722 \\
+0.00324 & 0.714 & 0.706 & 0.721 & 0.752 & 0.721 & 0.712 \\
+0.005 & 0.711 & 0.703 & 0.717 & 0.753 & 0.717 & 0.707 \\
+\hline
+ & $0.725\pm0.00865$ & $0.715\pm0.00645$ & $0.732\pm0.00689$ & $0.758\pm0.00385$ & $0.732\pm0.00689$ & $0.725\pm0.00818$ \\
 \hline
 \end{tabular}
-\caption{Top 20 models of the custom architecture 2 sorted by $A_{test}$ in descending order.}
-\label{table:top20_custom2}
+\caption{Performance metrics of models of the custom architecture 2 where $\lambda$ is varied.}
+\label{table:custom2_all}
 \end{table}
 
-% TODO: citation needed
-
-The effect of $\lambda$ and $u$ on the performance of the model can be understood in figure \ref{fig:lambda_units_study_custom2}. Since models of this architecture have much less parameters they are much less prone to overfitting, meaning that a wider range of values of $\lambda$ result in good performance.
+The effect of $\lambda$ on the performance of the model can be understood in figure \ref{fig:custom2_lambda}.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.5\textwidth]{../plots/plots_2/lambda_units_study/lambda_units_study.png}
-    \caption{Accuracy of custom architecture 2 over a range of values for L2-regularization strength.}
-    \label{fig:lambda_units_study_custom2}
+    \includegraphics[width=0.8\textwidth]{figs/custom2_lambda.png}
+    \caption{Accuracy on the test set $A_{test}$ of models of the custom architecture 2 over a range of values for L2-regularization strength $\lambda$.}
+    \label{fig:custom2_lambda}
 \end{figure}
+
+In particular, $\lambda = 0.0003684$ gives the best performing model of the custom architecture 2. The convergence of this model can be tracked in figure \ref{fig:custom2_best_training} and the final confusion matrix in figure \ref{fig:custom2_best_confusionmatrix}.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/custom2_best_training.png}
+    \caption{Convergence of the best model of the custom architecture 2.}
+    \label{fig:custom2_best_training}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/custom2_best_confusionmatrix.png}
+    \caption{Confusion matrix of the best model of the custom architecture 2.}
+    \label{fig:custom2_best_confusionmatrix}
+\end{figure}
+
+\section{Discussion}
+
+% TODO: why is custom1 better than custom2?
+
+% TODO: plot sobreposto de A_test de melhores modelos de cada tipo
+
