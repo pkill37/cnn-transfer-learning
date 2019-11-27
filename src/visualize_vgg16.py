@@ -41,7 +41,7 @@ def main(img_filename):
                 ix += 1
 
         # save the figure
-        plt.savefig(f'block{block+1}')
+        plt.savefig(f'block{block+1}.png')
 
 
 if __name__ == '__main__':
