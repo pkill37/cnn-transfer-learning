@@ -20,6 +20,8 @@ def truncate_floats(stats):
         for h in stat['hyperparameters']:
             if isinstance(stat['hyperparameters'][h], float):
                 stat['hyperparameters'][h] = truncate(stat['hyperparameters'][h])
+            stat['hyperparameters']['extract'] = int(stat['hyperparameters']['extract'])
+            stat['hyperparameters']['freeze'] = int(stat['hyperparameters']['freeze'])
         stat['train_acc'][-1] = truncate(stat['train_acc'][-1])
         stat['val_acc'][-1] = truncate(stat['val_acc'][-1])
         stat['test_acc'] = truncate(stat['test_acc'])
@@ -52,7 +54,7 @@ def tabulate(stats, target_file):
     latex += '|c|c|c|c|c|c|c|c|c|c|'
     latex += ' }\n'
     latex += '\\hline\n'
-    latex += '$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & AUC & Precision & Recall & F1-Score \\\\\n'
+    latex += '$e$ & $f$ & $\lambda$ & $A_{train}$ & $A_{val}$ & $A_{test}$ & Precision & Recall & F1-Score \\\\\n'
     latex += '\\hline\n'
 
     # Build body
@@ -63,12 +65,11 @@ def tabulate(stats, target_file):
         train_acc = stat['train_acc'][-1]
         val_acc = stat['val_acc'][-1]
         test_acc = stat['test_acc']
-        auc = stat['auc']
         precision = stat['classification_report']['weighted avg']['precision']
         recall = stat['classification_report']['weighted avg']['recall']
         f1 = stat['classification_report']['weighted avg']['f1-score']
 
-        latex += f"{extract} & {freeze} & {lambd} & {train_acc} & {val_acc} & {test_acc} & {auc} & {precision} & {recall} & {f1} \\\\\n"
+        latex += f"{extract} & {freeze} & {lambd} & {train_acc} & {val_acc} & {test_acc} & {precision} & {recall} & {f1} \\\\\n"
 
     def _mean_std(stats):
         m = truncate(np.mean(stats))
@@ -81,10 +82,9 @@ def tabulate(stats, target_file):
     mean_precision, std_precision = _mean_std([stat['classification_report']['weighted avg']['precision'] for stat in stats])
     mean_recall, std_recall       = _mean_std([stat['classification_report']['weighted avg']['recall'] for stat in stats])
     mean_f1, std_f1               = _mean_std([stat['classification_report']['weighted avg']['f1-score'] for stat in stats])
-    mean_auc, std_auc             = _mean_std([stat['auc'] for stat in stats])
 
     latex += '\\hline\n'
-    latex += f" & & & ${mean_train_acc}\pm{std_train_acc}$ & ${mean_val_acc}\pm{std_val_acc}$ & ${mean_test_acc}\pm{std_test_acc}$ & ${mean_auc}\pm{std_auc}$ & ${mean_precision}\pm{std_precision}$ & ${mean_recall}\pm{std_recall}$ & ${mean_f1}\pm{std_f1}$ \\\\\n"
+    latex += f" & & & ${mean_train_acc}\pm{std_train_acc}$ & ${mean_val_acc}\pm{std_val_acc}$ & ${mean_test_acc}\pm{std_test_acc}$ & ${mean_precision}\pm{std_precision}$ & ${mean_recall}\pm{std_recall}$ & ${mean_f1}\pm{std_f1}$ \\\\\n"
     latex += '\\hline\n'
     latex += '\\end{tabular}\n'
     latex += '\\caption{Foobar}\n'
@@ -186,7 +186,7 @@ def plot_confusion_matrix(stat, target_file):
     plt.close()
 
 
-def plot_accuracy_vs_extract_freeze(stats, target_file):
+def plot_accuracy_vs_freeze(stats, target_file):
     lambdas = sorted(list(set([stat['hyperparameters']['lambda'] for stat in stats])))
 
     rows = 2
@@ -199,24 +199,20 @@ def plot_accuracy_vs_extract_freeze(stats, target_file):
             l2 = lambdas[idx]
             stats_filtered = list(filter(lambda s: s['hyperparameters']['lambda'] == l2, stats))
 
-            x = np.array([stat['hyperparameters']['extract'] for stat in stats_filtered])
-            y = np.array([stat['hyperparameters']['freeze'] for stat in stats_filtered])
-            z = np.array([stat['test_acc'] for stat in stats_filtered])
-            x, y, z = zip(*sorted(zip(x, y, z)))
+            x = np.array([stat['hyperparameters']['freeze'] for stat in stats_filtered])
+            y2 = np.array([stat['test_acc'] for stat in stats_filtered])
+            x, y2 = zip(*sorted(zip(x, y2)))
             x = np.array(x)
-            y = np.array(y)
-            z = np.array(z)
+            y2 = np.array(y2)
 
             ax = axs[i,j]
             ax.set_title(f'$\lambda = {l2}$')
             ax.set_xscale("linear")
             ax.set_yscale("linear")
-            ax.set_xticks([3,6,10,14,18])
-            ax.set_yticks([0,3,6,10,14,18])
-            ax.set_xlabel('$e$')
-            ax.set_ylabel('$f$')
-            surf = ax.tricontourf(x, y, z)
-            fig.colorbar(surf)
+            ax.set_xlabel('$f$')
+            ax.set_ylabel('$Accuracy$')
+            ax.set_xticks([0,3,6,10,14,18])
+            ax.plot(x, y2, '.g-', label="$A_{test}$")
 
     plt.savefig(target_file)
     plt.close()
@@ -237,19 +233,38 @@ def main(experiments):
         plot_confusion_matrix(stat, os.path.join(experiments, stat['id'], 'confusion_matrix.png'))
 
     # All results grouped and sorted by (extract,freeze,lambda)
-    stats_all = sorted(stats, key=lambda x: (x['hyperparameters']['extract'], x['hyperparameters']['freeze'], x['hyperparameters']['lambda']), reverse=True)
+    #stats_all = sorted(stats, key=lambda x: (x['hyperparameters']['extract'], x['hyperparameters']['freeze'], x['hyperparameters']['lambda']), reverse=True)
+    stats_all = sorted(stats, key=lambda x: x['hyperparameters']['mfraction'], reverse=True)
     tabulate(stats_all, os.path.join(experiments, 'table_all.tex'))
-    plot_accuracy_vs_extract_freeze(stats_all, os.path.join(experiments, 'extract_freeze_all.png'))
 
     # Total feature extraction with no fine tuning
     stats_total = list(filter(lambda x: x['hyperparameters']['extract'] == x['hyperparameters']['freeze'] == 18, stats))
     tabulate(stats_total, os.path.join(experiments, 'table_total.tex'))
     plot_accuracy_vs_lambda(stats_total, os.path.join(experiments, 'lambda_total.png'))
 
-    # Total feature extraction with fine tuning
+    # Total feature extraction with fine tuning overall study
     stats_finetuning = list(filter(lambda x: x['hyperparameters']['extract'] == 18 and x['hyperparameters']['freeze'] < 18, stats))
-    tabulate(stats_finetuning, os.path.join(experiments, 'table_finetuning.tex'))
-    plot_accuracy_vs_lambda(stats_finetuning, os.path.join(experiments, 'lambda_finetuning.png'))
+    plot_accuracy_vs_freeze(stats_finetuning, os.path.join(experiments, 'freeze_finetuning.png'))
+    # Total feature extraction with fine tuning 14
+    stats_finetuning14 = list(filter(lambda x: x['hyperparameters']['extract'] == 18 and x['hyperparameters']['freeze'] == 14, stats))
+    tabulate(stats_finetuning14, os.path.join(experiments, 'table_finetuning_14.tex'))
+    plot_accuracy_vs_lambda(stats_finetuning14, os.path.join(experiments, 'lambda_finetuning_14.png'))
+    # Total feature extraction with fine tuning 10
+    stats_finetuning10 = list(filter(lambda x: x['hyperparameters']['extract'] == 18 and x['hyperparameters']['freeze'] == 10, stats))
+    tabulate(stats_finetuning10, os.path.join(experiments, 'table_finetuning_10.tex'))
+    plot_accuracy_vs_lambda(stats_finetuning10, os.path.join(experiments, 'lambda_finetuning_10.png'))
+    # Total feature extraction with fine tuning 6
+    stats_finetuning6 = list(filter(lambda x: x['hyperparameters']['extract'] == 18 and x['hyperparameters']['freeze'] == 6, stats))
+    tabulate(stats_finetuning6, os.path.join(experiments, 'table_finetuning_6.tex'))
+    plot_accuracy_vs_lambda(stats_finetuning6, os.path.join(experiments, 'lambda_finetuning_6.png'))
+    # Total feature extraction with fine tuning 3
+    stats_finetuning3 = list(filter(lambda x: x['hyperparameters']['extract'] == 18 and x['hyperparameters']['freeze'] == 3, stats))
+    tabulate(stats_finetuning3, os.path.join(experiments, 'table_finetuning_3.tex'))
+    plot_accuracy_vs_lambda(stats_finetuning3, os.path.join(experiments, 'lambda_finetuning_3.png'))
+    # Total feature extraction with fine tuning 0
+    stats_finetuning0 = list(filter(lambda x: x['hyperparameters']['extract'] == 18 and x['hyperparameters']['freeze'] == 0, stats))
+    tabulate(stats_finetuning0, os.path.join(experiments, 'table_finetuning_0.tex'))
+    plot_accuracy_vs_lambda(stats_finetuning0, os.path.join(experiments, 'lambda_finetuning_0.png'))
 
     # Partial feature extraction
     stats_partial = list(filter(lambda x: x['hyperparameters']['extract'] < 18, stats))
