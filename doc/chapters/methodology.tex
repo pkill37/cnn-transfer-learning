@@ -23,7 +23,7 @@ The datasets from the \ac{ISIC} 2018 grand challenge \cite{isic2018} were largel
 The images in the dataset undergo a number of preprocessing steps:
 
 \begin{enumerate}
-    \item Most readily available pretrained models are of network architectures whose input tensor is of square dimensions (e.g. $224 \times 224 \times 3$). Since our dataset's images are of distinct non-square dimensions, it is necessary to resize them to a square. However, resizing them all naively to the network's input tensor dimensions without regards to the image's aspect ratio means that the input fed to the network is of varying distinct aspect ratios which does not constitute a good start. Therefore, the first step is to crop an arbitrarily-sized square of the center of the image which will likely (and, in fact, does) capture the skin lesion.
+    \item Most readily available pretrained models are of network architectures whose input tensor is of square dimensions (e.g. $224 \times 224 \times 3$). Since our dataset's images are of distinct non-square dimensions, it is necessary to resize them to a square. However, resizing them all naively to the network's input tensor dimensions without regards to the image's aspect ratio means that the input fed to the network is of varying distinct aspect ratios which does not constitute a good start. Therefore, the first step is to crop an arbitrarily-sized square of the center of the image (as per code snippet \ref{code:crop}) which will likely capture the skin lesion.
 
     \begin{listing}[ht]
     \begin{minted}{python}
@@ -46,7 +46,7 @@ The images in the dataset undergo a number of preprocessing steps:
     \label{code:crop}
     \end{listing}
 
-\item Resize the images to the target networks' input dimensions $224 \times 224 \times 3$ and $299 \times 299 \times 3$. We resize (using nearest-neighbor interpolation) them as soon as possible in the data pipeline in order to reduce the computational costs of any subsequent operations on the images.
+\item Resize the images to the target networks' input dimensions $224 \times 224 \times 3$ and $299 \times 299 \times 3$. Images are resized (using nearest-neighbor interpolation, as per code snippet \ref{code:resize}) as soon as possible in the data pipeline in order to reduce the computational costs of any subsequent operations on the images.
 
     \begin{listing}[ht]
     \begin{minted}{python}
@@ -57,7 +57,7 @@ The images in the dataset undergo a number of preprocessing steps:
     \label{code:resize}
     \end{listing}
 
-    \item Normalize the luminance and apply a 99\% contrast stretch to reduce the negative effect of changes in illumination and acquisition devices that alter the color of images \cite{colorconstancy}.
+\item Normalize the luminance and apply a 99\% contrast stretch (as in code snippet \ref{code:correct}) to reduce the negative effect of changes in illumination and acquisition devices that alter the color of images \cite{colorconstancy}.
 
     \begin{listing}[ht]
     \begin{minted}{python}
@@ -130,7 +130,7 @@ The final available augmentations are all the $k$-combinations of the set $T$ fo
 
 \subsection{Split}
 
-The number of variables in the future experiments would quickly lead to a combinatorial explosion of configurations, so to minimize the computational cost of the experiments a fixed validation scheme will be used rather than a cross validation scheme. To compensate for this lack of averaging over multiple folds of the data (which gives statistical confidence in the results), a fixed seed is set for every \ac{PRNG} as in code listing \ref{code:seed}, which in practice means parameters are initialized identically between experiments (providing some level of statistical confidence when making comparisons) and guarantees reproducibility.
+The number of variables in the future experiments would quickly lead to a combinatorial explosion of configurations, so to minimize the computational cost of the experiments a fixed validation scheme will be used rather than a cross validation scheme. To compensate for this lack of averaging over multiple folds of the data (which gives statistical confidence in the results), a fixed seed is set for every \ac{PRNG} as in code snippet \ref{code:seed}, which in practice means parameters are initialized identically between experiments (providing some level of statistical confidence when making comparisons) and guarantees reproducibility.
 
 \begin{listing}[ht]
 \begin{minted}{python}

@@ -32,6 +32,77 @@ $K$-fold cross-validation is a common cross-validation technique that randomly p
 
 Nested cross-validation techniques are required when, in addition to estimating a model's generalization performance (i.e. performance on the test set), it is also necessary to select the best model among many (e.g. with different hyperparameters) \cite{crossvalidationbias}. A truly nested variant will use an inner loop of $L$ folds to tune the hyperparameters and select the best model, and an outer loop of $K$ folds to evaluate the models selected by the inner loop. A simpler (albeit not really nested) scheme is one that is similar to the $K$-fold cross-validation we described above, except that, of the $K$ equally sized subsamples, we take 1 subsample for validation, another 1 subsample for testing, and the remaining $K-2$ subsamples are used for training. However, in practice, nested cross-validation when selecting classifiers is overzealous and too expensive for most applications \cite{nestedcvoverzealous}.
 
+\section{Bias-Variance Tradeoff}
+
+The goal of supervised learning is to find a function $\hat{f}(x)$ that approximates the true function $f(x)$ in the underlying relationship between the data $x$ and associated labels $y$. For this approximation to be useful it should simultaneously
+
+\begin{itemize}
+    \item accurately capture the training data
+    \item generalize to new data
+\end{itemize}
+
+It turns out this is very difficult to do simultaneously. Decomposition of the expectation $E$ of the error on an unseen sample $x$ yields
+
+$$
+{\displaystyle {\begin{aligned}\operatorname {E} &={\Big (}\operatorname {Bias} {\big [}{\hat {f}}(x){\big ]}{\Big )}^{2}+\operatorname {Var} {\big [}{\hat {f}}(x){\big ]}+\sigma ^{2}\\\end{aligned}}}
+$$
+
+where
+
+\begin{itemize}
+    \item the bias of the approximation is the error caused by the simplifying assumptions inherent to the approximation
+    \item the variance of the approximation is the error caused by how much the approximation $\hat{f}(x)$ will try to fit the data $x$ exactly
+    \item the error $\sigma^2$ is the variance of the noise within the data, which forms a lower bound on the expected error since all other equated terms are necessarily non-negative and the error $\sigma^2$ is irreducible
+\end{itemize}
+
+This formulation causes a tradeoff that models must make between bias and variance among the following possible scenarios:
+
+\begin{itemize}
+    \item high-variance low-bias models represent the training data well but risk overfitting to noise
+    \item low-variance high-bias models are simpler but risk underfitting the training data, failing to capture the underlying signal
+\end{itemize}
+
+An underfitting (low variance) problem can be identified when the training error is high and the validation error is roughly equally high, which can be fixed by
+
+\begin{itemize}
+    \item training with more features
+    \item decreasing regularization
+\end{itemize}
+
+On the other hand, an overfitting (high variance) problem can be identified when the training error is high and the validation error is comparatively much higher, which can be fixed by
+
+\begin{itemize}
+    \item training with more data
+    \item training with less features
+    \item increasing regularization
+\end{itemize}
+
+\section{Feature Normalization}
+
+Some machine learning algorithms rely on the distance between the features in a feature vector $x$ and assume the values are on the same scale. Min-max normalization rescales $x$ to $x'$ to be on the interval $[0, 1]$, i.e.
+
+$$
+x' = \frac{x - \min{(x)}}{\max{(x)} - \min{(x)}}
+$$
+
+Other machine learning algorithms assume that the feature vector $x$ follows a Gaussian distribution (i.e. zero mean and unit-variance). Gaussian normalization is the process of rescaling $x$ (where $\mu_x$ is the mean of each feature vector $x$ and $\sigma_x$ its standard deviation) to $x'$ to follow a Gaussian distribution, i.e.
+
+$$
+x' = \frac{x - \mu_x}{\sigma_x}
+$$
+
+In practice, gradient descent converges much faster with features that follow a normal distribution as was seen by the work of \citeauthor{batchnormalization} on batch normalization \cite{batchnormalization}.
+
+Performing feature normalization on the entire dataset and only afterwards split it (into train, validation, and test sets) will leak information (i.e. the mean and variance) about the validation and test sets into the train set itself which will bias performance metrics on the validation and test sets. Therefore, it is crucial to
+
+\begin{enumerate}
+    \item Split the dataset;
+    \item Perform feature normalization on the train set and save the mean $\mu_{train}$ and variance $\sigma_{train}$;
+    \item Perform feature normalization on the validation set using the mean $\mu_{train}$ and variance $\sigma_{train}$;
+    \item Perform feature normalization on the test set using the mean $\mu_{train}$ and variance $\sigma_{train}$.
+\end{enumerate}
+
+
 \section{Binary Classification}
 
 In general, let
@@ -127,31 +198,6 @@ In binary classification problems, it is said that a dataset of $m$ samples has 
     \item and the majority class must also be augmented by a factor of $\frac{\frac{m'}{2}}{|S_{maj}|}$
 \end{itemize}
 
-\section{Feature Normalization}
-
-Some machine learning algorithms rely on the distance between the features in a feature vector $x$ and assume the values are on the same scale. Min-max normalization rescales $x$ to $x'$ to be on the interval $[0, 1]$, i.e.
-
-$$
-x' = \frac{x - \min{(x)}}{\max{(x)} - \min{(x)}}
-$$
-
-Other machine learning algorithms assume that the feature vector $x$ follows a Gaussian distribution (i.e. zero mean and unit-variance). Gaussian normalization is the process of rescaling $x$ (where $\mu_x$ is the mean of each feature vector $x$ and $\sigma_x$ its standard deviation) to $x'$ to follow a Gaussian distribution, i.e.
-
-$$
-x' = \frac{x - \mu_x}{\sigma_x}
-$$
-
-In practice, gradient descent converges much faster with features that follow a normal distribution as was seen by the work of \citeauthor{batchnormalization} on batch normalization \cite{batchnormalization}.
-
-Performing feature normalization on the entire dataset and only afterwards split it (into train, validation, and test sets) will leak information (i.e. the mean and variance) about the validation and test sets into the train set itself which will bias performance metrics on the validation and test sets. Therefore, it is crucial to
-
-\begin{enumerate}
-    \item Split the dataset;
-    \item Perform feature normalization on the train set and save the mean $\mu_{train}$ and variance $\sigma_{train}$;
-    \item Perform feature normalization on the validation set using the mean $\mu_{train}$ and variance $\sigma_{train}$;
-    \item Perform feature normalization on the test set using the mean $\mu_{train}$ and variance $\sigma_{train}$.
-\end{enumerate}
-
 \section{Optimization}
 
 Given a cost function $J$ and initial parameters $\theta$, the goal is to find the optimal $\theta^*$ that minimizes the cost function, i.e. the optimization objective is
@@ -224,51 +270,6 @@ Modern initialization techniques are heuristic based and designed around the act
 
 More recently, initializing a network with parameters transferred from other networks (typically trained on natural image datasets whose lower-layers' features generalise well to other tasks) has emerged as a very useful and pragmatic initialization strategy which in practice works very well for most tasks \cite{howtransferable}, giving birth to what is now known as transfer learning.
 
-\section{Bias-Variance Tradeoff}
-
-The goal of supervised learning is to find a function $\hat{f}(x)$ that approximates the true function $f(x)$ in the underlying relationship between the data $x$ and associated labels $y$. For this approximation to be useful it should simultaneously
-
-\begin{itemize}
-    \item accurately capture the training data
-    \item generalize to new data
-\end{itemize}
-
-It turns out this is very difficult to do simultaneously. Decomposition of the expectation $E$ of the error on an unseen sample $x$ yields
-
-$$
-{\displaystyle {\begin{aligned}\operatorname {E} &={\Big (}\operatorname {Bias} {\big [}{\hat {f}}(x){\big ]}{\Big )}^{2}+\operatorname {Var} {\big [}{\hat {f}}(x){\big ]}+\sigma ^{2}\\\end{aligned}}}
-$$
-
-where
-
-\begin{itemize}
-    \item the bias of the approximation is the error caused by the simplifying assumptions inherent to the approximation
-    \item the variance of the approximation is the error caused by how much the approximation $\hat{f}(x)$ will try to fit the data $x$ exactly
-    \item the error $\sigma^2$ is the variance of the noise within the data, which forms a lower bound on the expected error since all other equated terms are necessarily non-negative and the error $\sigma^2$ is irreducible
-\end{itemize}
-
-This formulation causes a tradeoff that models must make between bias and variance among the following possible scenarios:
-
-\begin{itemize}
-    \item high-variance low-bias models represent the training data well but risk overfitting to noise
-    \item low-variance high-bias models are simpler but risk underfitting the training data, failing to capture the underlying signal
-\end{itemize}
-
-An underfitting (low variance) problem can be identified when the training error is high and the validation error is roughly equally high, which can be fixed by
-
-\begin{itemize}
-    \item training with more features
-    \item decreasing regularization
-\end{itemize}
-
-On the other hand, an overfitting (high variance) problem can be identified when the training error is high and the validation error is comparatively much higher, which can be fixed by
-
-\begin{itemize}
-    \item training with more data
-    \item training with less features
-    \item increasing regularization
-\end{itemize}
-
 \section{Regularization}
 
 In the optimization literature, regularization is clasically seen as a modification $J_R(\theta)$ to the original objective function $J(\theta)$ that penalises large parameter values $\theta$ using some criteria $R(\theta)$ such that
@@ -317,13 +318,13 @@ In practice, the regularization strength is controlled via the $\lambda \in \mat
 
 \citeauthor{regularizationsurvey} present a much broader and more modern view of regularization in machine learning in their \citeyear{regularizationsurvey} paper \cite{regularizationsurvey}, where they define regularization more abstractly as any technique that allows the model to generalize better (i.e. perform better on the test set). They go over implicit regularization via data augmentation, network architecture, and the optimization algorithm itself as well as various explicit regularization techniques that penalize large weights (e.g. L1 and L2 regularization).
 
-More recently, Dropout \cite{dropout} is another regularization technique designed specifically to prevent neural networks from overfitting by randomly dropping neuron (and their connections) from the network during training which prevents complex co-adaptations on training data.
+More recently, Dropout \cite{dropout} is another regularization technique designed specifically to prevent neural networks from overfitting by randomly dropping neurons (and their connections) from the network during training which prevents complex co-adaptations on training data.
 
 Iterative optimization algorithms like \ac{SGD} work by improving the model's fit to the training set every epoch which, up to some point, also improves its generalization performance (i.e. performance on data outside of the training set). However, past that point, continuing to improve the model's fit to the training set will negatively impact its generalization performance. Early stopping emerges as a form of regularization applicable to such optimization algorithms that stops training according to some stopping criterion \cite{earlystopping} \cite{deeplearning}. For example, most implementations\footnote{\url{https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/EarlyStopping}} stop training after $p$ patient epochs of no significant improvement within a threshold $\epsilon$ (e.g. $\epsilon = 0.0001$) of some monitored metric (e.g. error on a validation set) and in the end either uses the weights from the epoch with the best value of the monitored metric (which requires extra memory to maintain the best weights) or the weights obtained at the last epoch of training after early stopping (which is faster since it just needs to seek the weights of the current model).
 
 \section{Feedforward Neural Networks}
 
-Feedforward \ac{ANN} define a family of parameterized non-linear functions which, according to the universal approximation theorem, can approximate any continuous function. A feedforward \ac{ANN} with a single hidden layer of finite width is such a universal approximator, but requires an exponentially large number of neurons in the hidden layer (its width) \cite{uat}. This has since motivated the construction of width-bounded deeper networks, sparking what is now known as deep learning.
+Feedforward \ac{ANN} define a family of parameterized non-linear functions which, according to the universal approximation theorem \cite{uat}, can approximate any continuous function. A feedforward \ac{ANN} with a single hidden layer of finite width is such a universal approximator, but may require a large number of neurons in the hidden layer (its width) \cite{uat}. This has since motivated the construction of width-bounded deeper networks, sparking what is now known as deep learning.
 
 \subsection{Neuron}
 
@@ -342,10 +343,10 @@ $$
 When the activation function is
 
 \begin{itemize}
-    \item the Heaviside step function the neuron is reduced to the Rosenblatt perceptron which does not output a continuous value nor does it distinguish data that is not linearly separable.
-    \item any linear function (e.g. $g(x) = x$) the network is reduced to a linear regression model.
-    \item the logistic function $g(x) = \frac{1}{1 + e^{-x}}$ the single-layer network is reduced to a logistic regression model.
-    \item the ReLU activation function $g(x) = \max(0, x)$ is the de facto default recommendation for neural networks as it is able to overcome numerical computation issues (exploding or vanishing gradients) associated with activation functions like the logistic function. In practice, ReLU networks converge faster \cite{alexnet}.
+    \item the Heaviside step function the neuron is reduced to the Rosenblatt perceptron \cite{perceptron} which does not output a continuous value nor does it distinguish data that is not linearly separable;
+    \item any linear function (e.g. $g(x) = x$) the network is reduced to a linear regression model;
+    \item the logistic function $g(x) = \frac{1}{1 + e^{-x}}$ the single-layer network is reduced to a logistic regression model;
+    \item the ReLU activation function $g(x) = \max(0, x)$ a network of such neurons is able to overcome numerical computation issues (exploding and vanishing gradients, typically associated with activation functions like the logistic function) which, in practice, allow faster convergence \cite{alexnet}.
 \end{itemize}
 
 \subsection{Fully-Connected Neural Networks}
@@ -362,7 +363,7 @@ $$
 \hat{f_2}(x) = g(\theta_1^1 T (g(\theta^T x) + g(\theta^T x) + g(\theta^T x) + g(\theta^T x)))
 $$
 
-In a way, these neural networks can be seen as just one big function composition of linear functions activated by some non-linear function. However networks more complex than the trivial $\hat{f_1}$ and $\hat{f_2}$ are cumbersome to express mathematically, so it is more convenient to discuss them in terms of layers of weights which hides away the complexity of highly composite functions.
+In a way, these neural networks can be seen as just one big function composition of linear functions activated by some non-linear function. However networks more complex than the trivial $\hat{f_1}$ and $\hat{f_2}$ are cumbersome to express mathematically, so it is more convenient to discuss them in terms of layers of weights which hides away the notational complexity of highly composite functions.
 
 Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but strictly speaking an \ac{MLP} (as the name suggests) is composed of perceptrons which modern neural networks certainly don't use. Hereinafter these networks will be referred to as \ac{FCNN}. An \ac{FCNN} composes neurons in one-dimensional layers (known as fully-connected layers, illustrated in figure \ref{fig:1dlayers}) where each neuron is fully-connected to every other neuron in the previous layer, i.e. the output of every neuron in a given layer is an input to every neuron in the next layer and vice versa.
 
@@ -373,10 +374,10 @@ Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but s
     \label{fig:1dlayers}
 \end{figure}
 
-\ac{FCNN} are relatively simple (when compared to other architectures that require setting lots of hyperparameters) and adequate for a variety of problems in various domains but, in computer vision problems where the input images are big, these networks quickly amount to a rather large number of parameters (which makes them particularly hard to train since this is a situation that is easily prone to overfitting). For example, images on the CIFAR-10 \cite{cifar10} dataset are $32 \times 32 \times 3$ (i.e. $n = 32 \times 32 \times 3 = 3072$ features) for which a vector of parameters $\theta \in \mathbb{R}^{3072}$ (i.e. 3072 weights) is needed to parameterize a single neuron fully-connected to the input. It is easy to see that this is unsustainable when
+\ac{FCNN} are relatively simple (when compared to other architectures that require setting lots of hyperparameters) and adequate for a variety of problems in various domains but, in computer vision problems where the input images are big, these networks quickly amount to a rather large number of parameters (which makes them particularly hard to train since this is a situation that is easily prone to overfitting). For example, images on the CIFAR-10 \cite{cifar10} dataset are $32 \times 32 \times 3$ (i.e. $n = 32 \times 32 \times 3 = 3072$ features) for which a vector of parameters $\theta \in \mathbb{R}^{3072}$ is needed to parameterize a single neuron fully-connected to the input. It is easy to see that this is unsustainable when
 
 \begin{itemize}
-    \item the input dimensions are more typically on the order of $224 \times 224 \times 3$, i.e. $n = 224 \times 224 \times 3 = 150528$ features which would require 150528 weights for a single neuron;
+    \item the input dimensions are more typically on the order of $224 \times 224 \times 3$ or $n = 224 \times 224 \times 3 = 150528$ features which would require 150528 weights for a single neuron;
     \item fully-connected layers are often composed of hundreds or thousands of neurons, which would require anywhere between $10^7$ and $10^8$ (or more) weights for a single fully-connected layer of neurons;
     \item \ac{FCNN} can be arbitrarily deep in the number of layers.
 \end{itemize}
@@ -392,7 +393,7 @@ Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but s
     \label{fig:3dvolumes}
 \end{figure}
 
-In particular, the convolutional layer is the building block of \ac{CNN} \cite{cs231n}. Essentially a convolutional layer accepts an input volume of size $W_1 \times H_1 \times D_1$ (which may eventually be zero-padded around the edges in a $P$-pixels wide border) and is parameterized by a set of $K$ learnable filters of size $F \times F \times D_1$ which in the forward pass slide (with some stride $S$) over the input volume (locally in the width and height, but fully in depth of the input volume) to compute dot products between the filter and the selected part of the input (just like a regular neuron), producing $K$ two-dimensional activation maps (one for each of the $K$ filters) stacked in depth to form the output volume.
+In particular, the convolutional layer is the building block of \ac{CNN} \cite{cs231n} \cite{deeplearning}. Essentially a convolutional layer accepts an input volume of size $W_1 \times H_1 \times D_1$ (which may eventually be zero-padded around the edges in a $P$-pixels wide border) and is parameterized by a set of $K$ learnable filters of size $F \times F \times D_1$ which in the forward pass slide (with some stride $S$) over the input volume (locally in the width and height, but fully in depth of the input volume) to compute dot products between the filter and the selected part of the input (just like a regular neuron), producing $K$ two-dimensional activation maps (one for each of the $K$ filters) stacked in depth to form the output volume.
 
 With the assumption that the input to a \ac{CNN} is a two-dimensional image with three color channels, it stands to reason that many of the features found in one channel will also be found in other channels because most features are spatial (e.g. edges, lines, shapes). As such if some local feature (local in width and height) is activating meaningfully at depth $d_1$ of a convolutional layer, it will also usefully activate the same concept at a different depth $d_2$. It turns out this can be taken advantage of by further relaxing the architecture and introducing parameter sharing thus allowing neurons at the same depth slice of a convolutional layer to share the same weights and biases, which
 
@@ -542,7 +543,14 @@ The data that is used to train the weak learners is not relevant for training th
 \section{Transfer Learning}
 \label{section:transferlearning}
 
-Supervised training of deep neural networks requires vast amounts of labeled data, which is very expensive and time consuming in itself, as well as immense computational and time resources which is often equally or more expensive. In practice, transfer learning emerges as a technique that can be used to reduce the costs or time constraints of training these deep neural networks.
+Supervised training of deep neural networks requires
+
+\begin{itemize}
+    \item vast amounts of labeled data, which is very expensive and time consuming in itself;
+    \item as well as immense computational and time resources which is often equally or more expensive.
+\end{itemize}
+
+In practice, transfer learning emerges as a technique that can be used to reduce the costs or time constraints of training these deep neural networks.
 
 Transfer learning is a machine learning technique that seeks to leverage (or transfer) the knowledge gained from solving one problem to another (ideally related) problem \cite{deeptransferlearning}. In the context of deep neural networks it means to transfer the weights of a model trained on a very large dataset (e.g. ImageNet \cite{imagenet}) and re-purpose them for another model.
 
@@ -620,7 +628,7 @@ In part 3 of the \ac{ISIC} 2017 \cite{isic2017} challenge participants were aske
 Participants were given a training set of 2000 images (374 melanoma, 254 seborrheic keratosis, and the remaining 1372 benign nevi), a validation set of 150 images and a test set of 600 images. The images were of questionable quality and required a lot of preprocessing effort, which they could also complement by gathering their own data. Participants were ranked and awarded based only on AUC, but other metrics were reported for scientific completeness.
 
 % first place
-First place was a joint effort between Casio and Shinshu University presented by Kazuhisa Matsunaga et al\cite{isic2017first}. In their work they adopted ensembles of their own variant of ResNet-50 that they trained presumably end-to-end (using RMSProp\cite{rmsprop} and AdaGrad\cite{adagrad}) on data from the challenge as well as data they gathered independently, which was normalized in such a way to exploit color constancy and of which multiple geometric transformations were input in parallel to the networks.
+First place was a joint effort between Casio and Shinshu University presented by Kazuhisa Matsunaga et al\cite{isic2017first}. In their work they adopted ensembles of their own variant of ResNet-50 that they trained presumably end-to-end (using RMSProp \cite{rmsprop} and AdaGrad \cite{adagrad}) on data from the challenge as well as data they gathered independently, which was normalized in such a way to exploit color constancy and of which multiple geometric transformations were input in parallel to the networks.
 
 The metadata available in the training set showed that melanoma and seborrheic keratosis were both uncommon in young ages. From this observation they implemented a simple thresholding by age, which improved performance for seborrheic keratosis classification from 0.957 to 0.960 AUC in cross-validation but not for melanoma classification. They noted that a more careful thresholding implementation is necessary from a clinical point of view. In the end, the mean performance of the two classifiers on the validation set was 0.958 AUC and, after the paper was published, 0.911 on the test set.
 

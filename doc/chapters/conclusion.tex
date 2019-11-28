@@ -5,16 +5,18 @@ In this section we present conclusions, final remarks, and point to directions f
 
 \section{Discussion}
 
-The following conclusions were made:
+In conclusion:
 
 \begin{itemize}
-    \item Extracting all features is likely the best idea. Optimization algorithms work globally, not in layers, so arbitrarily extracting features from layers is not ideal because neurons have developed co-dependencies between other neurons deep in the network;
-    \item Sometimes extracting features from middle layers can be highly performant too because these features represent low-level concepts like shapes and lines which are more useful for a different target domain;
-    \item Successful transfer learning depends largely on regularization techniques and an appropriate amount of data, otherwise models will be high variance.
+    \item In transfer learning, the optimizer and respective learning rate are very important, especially when extracting lower layers which empirically seem to be more sensitive to overshooting updates when compared to higher layers;
+    \item Designing a custom \ac{CNN} and training it from scratch is difficult because it requires reasoning and setting many hyperparameters simultaneously, and cross-validating a wide range of values for so many hyperparameters is computationally expensive. Transfer learning emerges as the clear solution to a lot of problems where data is scarce, especially in computer vision where the availability of pre-trained models is particularly high.
 \end{itemize}
 
 \section{Future Work}
 
-The VGG16 architecture, although very capable given its age, is not state-of-the-art anymore and attention has long shifted to residual networks. In such complex networks it is not so clear how to best take advantage of the parameters in the layers of the pre-trained model, and the kind of exhaustive study that can easily be done for VGG16 is not so feasible for such networks because the number of layers is in the hundreds which quickly originates a combinatorial explosion of all the possible configurations for extracting and freezing parameters. In that sense, it would be interesting to see a similar study for more recent architectures, which of course requires a very deep understanding of their inner workings, unlike VGG16 which is a much more traditional architecture.
+Multiple lines of future work are possible:
 
-Learning rate needs to be more carefully evaluated. Different optimizers.
+\begin{itemize}
+    \item The VGG16 architecture, although very capable given its age, is not state-of-the-art anymore and attention has long shifted to residual networks. In such complex networks it is not so clear how to best take advantage of the parameters in the layers of the pre-trained model, and the kind of exhaustive study that can easily be done for VGG16 is not so feasible for such networks because the number of layers is in the hundreds which quickly originates a combinatorial explosion of all the possible configurations for extracting and freezing parameters. In that sense, it would be interesting to see a similar study for more recent architectures, which of course requires a very deep understanding of their inner workings;
+    \item Systematic study of optimizers and learning rates in transfer learning applied to skin lesion classification.
+\end{itemize}
