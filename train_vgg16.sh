@@ -23,7 +23,9 @@ for extract in 18 14 10 06 03; do
 				--units 512 \
 				--l2 "$lambda" \
 				--dropout 0.0 \
-				--patience 20
+				--patience 20 \
+				--lr 10e-4 \
+				--m-fraction 1.0
 		done
 	done
 done
