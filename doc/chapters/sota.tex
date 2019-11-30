@@ -7,7 +7,7 @@ This chapter provides the necessary background of machine learning and deep lear
 
 A supervised learning problem is a machine learning problem in which the data has the correct expected output for every input.
 
-More formally, it is a problem in which there are $m$ labeled pairs $(x^{(i)}, y^{(i)})$, also denoted as samples, where $x^{(i)} \in \mathbb{R}^n$ (i.e. the input vectors, commonly referred to as features) and $y^{(i)} \in \mathbb{R}^n$ (i.e. the corresponding output vector, usually called the target or label) which have some relationship expressed by some function.
+More formally, it is a problem in which there are $m$ labeled pairs $(x^{(i)}, y^{(i)})$, also denoted as samples, where $x^{(i)} \in \mathbb{R}^n$ (i.e., the input vectors, commonly referred to as features) and $y^{(i)} \in \mathbb{R}^n$ (i.e., the corresponding output vector, usually called the target or label) which have some relationship expressed by some function.
 
 The goal of supervised learning is to find a function $h_{\theta}(x)$ (sometimes called the hypothesis) that usefully approximates the true function in the underlying relationship between the input $x$ and associated output $y$, parameterized by $\theta$.
 
@@ -25,12 +25,12 @@ However, this technique (typically referred to as the holdout method) has its do
 
 \begin{itemize}
     \item using an arbitrary fixed split of the dataset means that we are completely setting aside data for validation and testing which will not be used for fitting the model and vice versa, thus wasting data in some sense
-    \item without averaging over multiple runs (i.e. different splits) with different initial conditions, results may be biased and misleading
+    \item without averaging over multiple runs (i.e., different splits) with different initial conditions, results may be biased and misleading
 \end{itemize}
 
 $K$-fold cross-validation is a common cross-validation technique that randomly partitions the data into $K$ equally sized subsamples, of which a single subsample is used for testing and the remaining $K-1$ subsamples for fitting the model, a process which is repeated $K$ times to yield $K$ performance estimations that can be averaged over to produce one estimation that can be referred to. In this way all samples are used for training and testing, which is an advantage over repeated random sub-sampling which does not systematically use all samples for training and testing.
 
-Nested cross-validation techniques are required when, in addition to estimating a model's generalization performance (i.e. performance on the test set), it is also necessary to select the best model among many (e.g. with different hyperparameters) \cite{crossvalidationbias}. A truly nested variant will use an inner loop of $L$ folds to tune the hyperparameters and select the best model, and an outer loop of $K$ folds to evaluate the models selected by the inner loop. A simpler (albeit not really nested) scheme is one that is similar to the $K$-fold cross-validation we described above, except that, of the $K$ equally sized subsamples, we take 1 subsample for validation, another 1 subsample for testing, and the remaining $K-2$ subsamples are used for training. However, in practice, nested cross-validation when selecting classifiers is overzealous and too expensive for most applications \cite{nestedcvoverzealous}.
+Nested cross-validation techniques are required when, in addition to estimating a model's generalization performance (i.e., performance on the test set), it is also necessary to select the best model among many (e.g. with different hyperparameters) \cite{crossvalidationbias}. A truly nested variant will use an inner loop of $L$ folds to tune the hyperparameters and select the best model, and an outer loop of $K$ folds to evaluate the models selected by the inner loop. A simpler (albeit not really nested) scheme is one that is similar to the $K$-fold cross-validation we described above, except that, of the $K$ equally sized subsamples, we take 1 subsample for validation, another 1 subsample for testing, and the remaining $K-2$ subsamples are used for training. However, in practice, nested cross-validation when selecting classifiers is overzealous and too expensive for most applications \cite{nestedcvoverzealous}.
 
 \section{Bias-Variance Tradeoff}
 
@@ -79,13 +79,13 @@ On the other hand, an overfitting (high variance) problem can be identified when
 
 \section{Feature Normalization}
 
-Some machine learning algorithms rely on the distance between the features in a feature vector $x$ and assume the values are on the same scale. Min-max normalization rescales $x$ to $x'$ to be on the interval $[0, 1]$, i.e.
+Some machine learning algorithms rely on the distance between the features in a feature vector $x$ and assume the values are on the same scale. Min-max normalization rescales $x$ to $x'$ to be on the interval $[0, 1]$, i.e.,
 
 $$
 x' = \frac{x - \min{(x)}}{\max{(x)} - \min{(x)}}
 $$
 
-Other machine learning algorithms assume that the feature vector $x$ follows a Gaussian distribution (i.e. zero mean and unit-variance). Gaussian normalization is the process of rescaling $x$ (where $\mu_x$ is the mean of each feature vector $x$ and $\sigma_x$ its standard deviation) to $x'$ to follow a Gaussian distribution, i.e.
+Other machine learning algorithms assume that the feature vector $x$ follows a Gaussian distribution (i.e., zero mean and unit-variance). Gaussian normalization is the process of rescaling $x$ (where $\mu_x$ is the mean of each feature vector $x$ and $\sigma_x$ its standard deviation) to $x'$ to follow a Gaussian distribution, i.e.,
 
 $$
 x' = \frac{x - \mu_x}{\sigma_x}
@@ -93,7 +93,7 @@ $$
 
 In practice, gradient descent converges much faster with features that follow a normal distribution as was seen by the work of \citeauthor{batchnormalization} on batch normalization \cite{batchnormalization}.
 
-Performing feature normalization on the entire dataset and only afterwards split it (into train, validation, and test sets) will leak information (i.e. the mean and variance) about the validation and test sets into the train set itself which will bias performance metrics on the validation and test sets. Therefore, it is crucial to
+Performing feature normalization on the entire dataset and only afterwards split it (into train, validation, and test sets) will leak information (i.e., the mean and variance) about the validation and test sets into the train set itself which will bias performance metrics on the validation and test sets. Therefore, it is crucial to
 
 \begin{enumerate}
     \item Split the dataset;
@@ -129,7 +129,7 @@ Essentially, binary classification requires a cost function that penalizes very 
     \item if the prediction is $h_{\theta}(x) = 1$ and the ground-truth label is $y = 1$, $J(\theta)$ is low.
 \end{itemize}
 
-Whereas in linear regression the hypothesis is of the form $h_{\theta}(x) = \theta^Tx$, in binary classification (or logistic regression) the hypothesis is of the form $h_{\theta}(x) = \sigma(\theta^Tx)$ to squash predictions to the interval $[0, 1]$, hence the name logistic regression, because it uses the sigmoid-shaped logistic function $\sigma(z) = \frac{1}{1 + e^{-z}}$.
+Whereas in linear regression the hypothesis is of the form $h_{\theta}(x) = \theta^{\top}x$, in binary classification (or logistic regression) the hypothesis is of the form $h_{\theta}(x) = \sigma(\theta^{\top}x)$ to squash predictions to the interval $[0, 1]$, hence the name logistic regression, because it uses the sigmoid-shaped logistic function $\sigma(z) = \frac{1}{1 + e^{-z}}$.
 
 A useful loss function (sometimes called binary cross-entropy in some literature) for logistic regression that takes these requirements into consideration is
 
@@ -152,10 +152,10 @@ $$
 To evaluate a binary classifier means to compare the model's predicted conditions against the true conditions, where one must consider:
 
 \begin{itemize}
-    \item \ac{TP}, cases correctly classified as positive, i.e. $h(x^{(i)}) = 1$ matches $y^{(i)} = 1$;
-    \item \ac{TN}, cases correctly classified as negative, i.e. $h(x^{(i)}) = 0$ matches $y^{(i)} = 0$;
-    \item \ac{FP}, cases incorrectly classified as positive, i.e. $h(x^{(i)}) = 1$ but $y^{(i)} = 0$;
-    \item \ac{FN}, cases incorrectly classified as negative, i.e. $h(x^{(i)}) = 0$ but $y^{(i)} = 1$.
+    \item \ac{TP}, cases correctly classified as positive, i.e., $h(x^{(i)}) = 1$ matches $y^{(i)} = 1$;
+    \item \ac{TN}, cases correctly classified as negative, i.e., $h(x^{(i)}) = 0$ matches $y^{(i)} = 0$;
+    \item \ac{FP}, cases incorrectly classified as positive, i.e., $h(x^{(i)}) = 1$ but $y^{(i)} = 0$;
+    \item \ac{FN}, cases incorrectly classified as negative, i.e., $h(x^{(i)}) = 0$ but $y^{(i)} = 1$.
 \end{itemize}
 
 From these basic measurements one can derive useful metrics:
@@ -185,13 +185,13 @@ $$
 F_1 = 2 \times \frac{PPV \times TPR}{PPV + TPR}
 $$
 
-Lastly, \ac{AUC} is known as the area under the \ac{ROC} curve, i.e. the area under the plot of \ac{FPR} versus \ac{TPR} at different points in the interval $[0, 1]$.
+Lastly, \ac{AUC} is known as the area under the \ac{ROC} curve, i.e., the area under the plot of \ac{FPR} versus \ac{TPR} at different points in the interval $[0, 1]$.
 
 \subsection{Class Imbalance}
 
 In binary classification problems, it is said that a dataset of $m$ samples has class imbalance when there is a majority class with $|S_{maj}|$ samples and a minority class with $|S_{min}|$ samples where $|S_{maj}| > |S_{min}|$, in other words when there is a significant difference between the number of samples of one class compared to the other. It is very common to see datasets in which classes are highly imbalanced, simply because it reflects the real world distribution (e.g. there are more benign moles than actual melanoma cases). A lot of machine learning algorithms do not perform well under this imbalance. When a dataset is imbalanced, machine learning algorithms will typically over-classify the majority group due to its increased prior probability. Thus, the samples in the minority group are misclassified more often than the majority group \cite{Johnson2019}.
 
-\citeauthor{haibo2009} provide a comprehensive survey of class balancing algorithms \cite{haibo2009}, of which oversampling of the minority class is the simplest and most natural. In practice the minority class must be oversampled by a factor (i.e. number of transformations applied to each original sample) of $\frac{|S_{maj}|}{|S_{min}|}$. Sometimes, perhaps because of an overfitting problem, it is also necessary to augment the total number of samples $m$ to a new total number of samples $m'$, in which case
+\citeauthor{haibo2009} provide a comprehensive survey of class balancing algorithms \cite{haibo2009}, of which oversampling of the minority class is the simplest and most natural. In practice the minority class must be oversampled by a factor (i.e., number of transformations applied to each original sample) of $\frac{|S_{maj}|}{|S_{min}|}$. Sometimes, perhaps because of an overfitting problem, it is also necessary to augment the total number of samples $m$ to a new total number of samples $m'$, in which case
 
 \begin{itemize}
     \item the minority class must be oversampled by augmenting its samples  by a factor of $\frac{\frac{m'}{2}}{|S_{min}|}$
@@ -200,19 +200,19 @@ In binary classification problems, it is said that a dataset of $m$ samples has 
 
 \section{Optimization}
 
-Given a cost function $J$ and initial parameters $\theta$, the goal is to find the optimal $\theta^*$ that minimizes the cost function, i.e. the optimization objective is
+Given a cost function $J$ and initial parameters $\theta$, the goal is to find the optimal $\theta^*$ that minimizes the cost function, i.e., the optimization objective is
 
 $$
 \theta^{*} = \argmin_{\theta} J(\theta)
 $$
 
-In the deep learning high-dimensional optimization landscape, the objective function is highly non-convex w.r.t. the parameters, so one can't use any of the tools from the convex optimization literature. Using calculus to find the minimum analytically is only feasible for trivial, low-dimensional, convex functions.
+In the deep learning high-dimensional optimization landscape, the objective function is highly non-convex w.r.t. the parameters, so one can not use any of the tools from the convex optimization literature. Using calculus to find the minimum analytically is only feasible for trivial, low-dimensional, convex functions.
 
 A naive first approach is to systematically and exhaustively enumerate and evaluate many candidate solutions while keeping track of the best one. This simple brute-force search solution, arguably the simplest metaheuristic, is infeasible in the context of deep neural networks due to the curse of dimensionality.
 
 Rather than try all solutions exhaustively, another approach is to try random values of $\theta$ in a loop and record the running best until some stopping criteria. Random local search is a slightly better strategy that starts with random $\theta$ and iteratively refine the best-found solution (hence the local in local search) until some stopping criteria.
 
-Random local search forms a good basis for optimization, but there is no need to move randomly in search-space. The negative of the gradient of the cost function w.r.t. the parameters $\theta$ over all $m$ training samples gives the direction of steepest descent (i.e. the direction in which the cost function decreases):
+Random local search forms a good basis for optimization, but there is no need to move randomly in search-space. The negative of the gradient of the cost function w.r.t. the parameters $\theta$ over all $m$ training samples gives the direction of steepest descent (i.e., the direction in which the cost function decreases):
 
 $$
 \nabla_{\theta} J(\theta) = \frac{1}{m} \sum_{i=1}^{m} \nabla_{\theta} L(h_{\theta}(x^{(i)}), y^{(i)})
@@ -268,7 +268,7 @@ Modern initialization techniques are heuristic based and designed around the act
     \item for ReLU activation functions, He et al. \cite{heinit} suggest drawing from $\mathcal{N}(0, \frac{2}{n_{in}})$.
 \end{itemize}
 
-More recently, initializing a network with parameters transferred from other networks (typically trained on natural image datasets whose lower-layers' features generalise well to other tasks) has emerged as a very useful and pragmatic initialization strategy which in practice works very well for most tasks \cite{howtransferable}, giving birth to what is now known as transfer learning.
+More recently, initializing a network with parameters transferred from other networks (typically trained on natural image datasets whose lower-layers' parameters generalise well to other tasks) has emerged as a very useful and pragmatic initialization strategy which in practice works very well for most tasks \cite{howtransferable}, giving birth to what is now known as transfer learning.
 
 \section{Regularization}
 
@@ -281,8 +281,8 @@ $$
 This regularization penalty can be seen as a form of Occam's razor that prefers simpler functions. In a sense, this redefines the optimization goal to simultaneously
 
 \begin{itemize}
-    \item fit the training data well (i.e. the $J(\theta)$ term) and
-    \item keep the parameters small (i.e. the $R(\theta)$ term).
+    \item fit the training data well (i.e., the $J(\theta)$ term);
+    \item keep the parameters small (i.e., the $R(\theta)$ term).
 \end{itemize}
 
 In the case of L1 regularization, also known as Lasso Regression,
@@ -316,11 +316,11 @@ which basically
 
 In practice, the regularization strength is controlled via the $\lambda \in \mathbb{{R}^{+}}$ parameter. Put simply, in a high variance scenario (overfitting) one should increase $\lambda$ and in a high bias situation (underfitting) decrease $\lambda$.
 
-\citeauthor{regularizationsurvey} present a much broader and more modern view of regularization in machine learning in their \citeyear{regularizationsurvey} paper \cite{regularizationsurvey}, where they define regularization more abstractly as any technique that allows the model to generalize better (i.e. perform better on the test set). They go over implicit regularization via data augmentation, network architecture, and the optimization algorithm itself as well as various explicit regularization techniques that penalize large weights (e.g. L1 and L2 regularization).
+\citeauthor{regularizationsurvey} present a much broader and more modern view of regularization in machine learning in their \citeyear{regularizationsurvey} paper \cite{regularizationsurvey}, where they define regularization more abstractly as any technique that allows the model to generalize better (i.e., perform better on the test set). They go over implicit regularization via data augmentation, network architecture, and the optimization algorithm itself as well as various explicit regularization techniques that penalize large weights (e.g. L1 and L2 regularization).
 
 More recently, Dropout \cite{dropout} is another regularization technique designed specifically to prevent neural networks from overfitting by randomly dropping neurons (and their connections) from the network during training which prevents complex co-adaptations on training data.
 
-Iterative optimization algorithms like \ac{SGD} work by improving the model's fit to the training set every epoch which, up to some point, also improves its generalization performance (i.e. performance on data outside of the training set). However, past that point, continuing to improve the model's fit to the training set will negatively impact its generalization performance. Early stopping emerges as a form of regularization applicable to such optimization algorithms that stops training according to some stopping criterion \cite{earlystopping} \cite{deeplearning}. For example, most implementations\footnote{\url{https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/EarlyStopping}} stop training after $p$ patient epochs of no significant improvement within a threshold $\epsilon$ (e.g. $\epsilon = 0.0001$) of some monitored metric (e.g. error on a validation set) and in the end either uses the weights from the epoch with the best value of the monitored metric (which requires extra memory to maintain the best weights) or the weights obtained at the last epoch of training after early stopping (which is faster since it just needs to seek the weights of the current model).
+Iterative optimization algorithms like \ac{SGD} work by improving the model's fit to the training set every epoch which, up to some point, also improves its generalization performance (i.e., performance on data outside of the training set). However, past that point, continuing to improve the model's fit to the training set will negatively impact its generalization performance. Early stopping emerges as a form of regularization applicable to such optimization algorithms that stops training according to some stopping criterion \cite{earlystopping} \cite{deeplearning}. For example, most implementations\footnote{\url{https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/EarlyStopping}} stop training after $p$ patient epochs of no significant improvement within a threshold $\epsilon$ (e.g. $\epsilon = 0.0001$) of some monitored metric (e.g. error on a validation set) and in the end either uses the weights from the epoch with the best value of the monitored metric (which requires extra memory to maintain the best weights) or the weights obtained at the last epoch of training after early stopping (which is faster since it just needs to seek the weights of the current model).
 
 \section{Feedforward Neural Networks}
 
@@ -331,41 +331,56 @@ Feedforward \ac{ANN} define a family of parameterized non-linear functions which
 In general, a neuron is a function $\hat{f} \colon \mathbb{R}^n \to \mathbb{R}$
 
 \begin{itemize}
-    \item accepting an input $x \in \mathbb{R}^{n}$ where $x_0 = 1$ by convention, enabling fast matrix-multiplication implementations
-    \item parameterized by $\theta \in \mathbb{R}^{n}$
+    \item accepting an input $x \in \mathbb{R}^{n}$ where $x_0 = 1$ by convention, enabling fast matrix-multiplication implementations of the forward pass;
+    \item parameterized by a vector $\theta \in \mathbb{R}^{n}$
     \item characterized by a (usually non-linear) activation function $g \colon \mathbb{R} \to \mathbb{R}$
 \end{itemize}
 
 $$
-\hat{f}(x) = g(\theta_0 x_0 + \sum_{i=1}^{n}{\theta_i x_i}) = g(\theta^T x)
+\hat{f}(x) = g(\theta_0 x_0 + \sum_{i=1}^{n}{\theta_i x_i}) = g(\theta^{\top} x)
 $$
 
 When the activation function is
 
 \begin{itemize}
     \item the Heaviside step function the neuron is reduced to the Rosenblatt perceptron \cite{perceptron} which does not output a continuous value nor does it distinguish data that is not linearly separable;
-    \item any linear function (e.g. $g(x) = x$) the network is reduced to a linear regression model;
-    \item the logistic function $g(x) = \frac{1}{1 + e^{-x}}$ the single-layer network is reduced to a logistic regression model;
+    \item any linear function (e.g. $g(x) = x$) the neuron is reduced to a linear regression model;
+    \item the logistic function $g(x) = \frac{1}{1 + e^{-x}}$ the neuron is reduced to a logistic regression model;
     \item the ReLU activation function $g(x) = \max(0, x)$ a network of such neurons is able to overcome numerical computation issues (exploding and vanishing gradients, typically associated with activation functions like the logistic function) which, in practice, allow faster convergence \cite{alexnet}.
 \end{itemize}
 
 \subsection{Fully-Connected Neural Networks}
 
-Neurons can be arbitrarily composed (as in function composition) in so called hidden layers to form a neural network. For example a neural network with 3 hidden layers (each with only one neuron) and an output layer of 1 neuron is parameterized by $\theta_1$ in the first hidden layer (the first function composition), $\theta_2$ in the second hidden layer (the second function composition), $\theta_3$ in the third hidden layer (the third function composition), i.e. the neural network computes
+Neurons can be arbitrarily composed (as in function composition) in so called hidden layers to form a neural network. For example a neural network with two hidden layers (each with only one neuron) and an output layer of one neuron is parameterized by $\theta^1_1$ in the first hidden layer (the first function composition), $\theta^2_1$ in the second hidden layer (the second function composition), $\theta^3_1$ in the output layer (the third function composition), i.e., the neural network computes
 
 $$
-\hat{f_1}(x) = g(\theta_3^T g(\theta_2^T g(\theta_1^T x)))
+\hat{f_1}(x) = g({\theta^3_1}^{\top} g({\theta^2_1}^{\top} g({\theta^1_1}^{\top} x)))
 $$
+
 
 As another example, a neural network with 1 hidden layer of 4 neurons and an output layer of 1 neuron computes
 
 $$
-\hat{f_2}(x) = g(\theta_1^1 T (g(\theta^T x) + g(\theta^T x) + g(\theta^T x) + g(\theta^T x)))
+\hat{f_2}(x) = g({\theta^2_1}^{\top} (g({\theta^1_1}^{\top} x) + g({\theta^1_2}^{\top} x) + g({\theta^1_3}^{\top} x) + g({\theta^1_4}^{\top} x)))
 $$
 
-In a way, these neural networks can be seen as just one big function composition of linear functions activated by some non-linear function. However networks more complex than the trivial $\hat{f_1}$ and $\hat{f_2}$ are cumbersome to express mathematically, so it is more convenient to discuss them in terms of layers of weights which hides away the notational complexity of highly composite functions.
+In a way, these neural networks can be seen as just one big function composition of linear functions activated by some non-linear function. However networks more complex than the trivial $\hat{f_1}$ and $\hat{f_2}$ are cumbersome to express algebraically, so it is more convenient to visualize them in terms of layers of parameters (figures \ref{fig:fcnn1} and \ref{fig:fcnn2}) which hides away the notational complexity of the algebraic representation of highly composite functions.
 
-Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but strictly speaking an \ac{MLP} (as the name suggests) is composed of perceptrons which modern neural networks certainly don't use. Hereinafter these networks will be referred to as \ac{FCNN}. An \ac{FCNN} composes neurons in one-dimensional layers (known as fully-connected layers, illustrated in figure \ref{fig:1dlayers}) where each neuron is fully-connected to every other neuron in the previous layer, i.e. the output of every neuron in a given layer is an input to every neuron in the next layer and vice versa.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figs/fcnn1.png}
+    \caption{Graphical representation of the $\hat{f_1}$ neural network in vertical layers where the input layer is $x \in \mathbb{R}^{5}$ and other nodes represent a neuron in a given layer.}
+    \label{fig:fcnn1}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figs/fcnn2.png}
+    \caption{Graphical representation of the $\hat{f_2}$ neural network in vertical layers where the input layer is $x \in \mathbb{R}^{5}$ and other nodes represent a neuron in a given layer.}
+    \label{fig:fcnn2}
+\end{figure}
+
+Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but strictly speaking an \ac{MLP} (as the name suggests) is composed of perceptrons which modern neural networks certainly do not use. Hereinafter these networks will be referred to as \ac{FCNN}. An \ac{FCNN} composes neurons in one-dimensional layers (known as fully-connected layers, illustrated in figure \ref{fig:1dlayers}) where each neuron is fully-connected to every other neuron in the previous layer, i.e., the output of every neuron in a given layer is an input to every neuron in the next layer and vice versa.
 
 \begin{figure}[ht]
     \centering
@@ -374,7 +389,7 @@ Networks such as $\hat{f_1}$ and $\hat{f_2}$ are commonly called \ac{MLP}, but s
     \label{fig:1dlayers}
 \end{figure}
 
-\ac{FCNN} are relatively simple (when compared to other architectures that require setting lots of hyperparameters) and adequate for a variety of problems in various domains but, in computer vision problems where the input images are big, these networks quickly amount to a rather large number of parameters (which makes them particularly hard to train since this is a situation that is easily prone to overfitting). For example, images on the CIFAR-10 \cite{cifar10} dataset are $32 \times 32 \times 3$ (i.e. $n = 32 \times 32 \times 3 = 3072$ features) for which a vector of parameters $\theta \in \mathbb{R}^{3072}$ is needed to parameterize a single neuron fully-connected to the input. It is easy to see that this is unsustainable when
+\ac{FCNN} are relatively simple (when compared to other architectures that require setting lots of hyperparameters) and adequate for a variety of problems in various domains but, in computer vision problems where the input images are big, these networks quickly amount to a rather large number of parameters (which makes them particularly hard to train since this is a situation that is easily prone to overfitting). For example, images on the CIFAR-10 \cite{cifar10} dataset are $32 \times 32 \times 3$ (i.e., $n = 32 \times 32 \times 3 = 3072$ features) for which a vector of parameters $\theta \in \mathbb{R}^{3072}$ is needed to parameterize a single neuron fully-connected to the input. It is easy to see that this is unsustainable when
 
 \begin{itemize}
     \item the input dimensions are more typically on the order of $224 \times 224 \times 3$ or $n = 224 \times 224 \times 3 = 150528$ features which would require 150528 weights for a single neuron;
@@ -403,7 +418,7 @@ With the assumption that the input to a \ac{CNN} is a two-dimensional image with
     \item contributes to the translation equivariance of the \ac{CNN} architecture.
 \end{itemize}
 
-In a \ac{FCNN} all neurons are fully-connected to all the neurons in the previous layer which creates a highly complex model capable of modeling very complex relationships in the input features. However, for spatial data like images, this complexity is pointless since most features are localized anyway, i.e. the face of a person is likely completely unrelated to the dog in the background of the photo. Instead, convolutional layers exploit the spatial locality of images by connecting neurons only to local regions of the input volume (illustrated in figure \ref{fig:localconnectivity}) which, intuitively, ensures that the learnt filters activate strongly only in the presence of a spatially local input pattern. By stacking many such layers the network first creates representations of small regions of the input and progressively assembles representations of larger regions of the input (as if the filters were bigger or global rather than local).
+In a \ac{FCNN} all neurons are fully-connected to all the neurons in the previous layer which creates a highly complex model capable of modeling very complex relationships in the input features. However, for spatial data like images, this complexity is pointless since most features are localized anyway, i.e., the face of a person is likely completely unrelated to the dog in the background of the photo. Instead, convolutional layers exploit the spatial locality of images by connecting neurons only to local regions of the input volume (illustrated in figure \ref{fig:localconnectivity}) which, intuitively, ensures that the learnt filters activate strongly only in the presence of a spatially local input pattern. By stacking many such layers the network first creates representations of small regions of the input and progressively assembles representations of larger regions of the input (as if the filters were bigger or global rather than local).
 
 \begin{figure}[ht]
     \centering
@@ -412,7 +427,7 @@ In a \ac{FCNN} all neurons are fully-connected to all the neurons in the previou
     \label{fig:localconnectivity}
 \end{figure}
 
-On the other hand, the exact location of these features is not so important when compared to its location relative to other features. The pooling layer is an approach to providing translation invariance by reducing the spatial size (or down-sampling) of every depth slice of an input volume, most commonly by sliding a filter of size $2 \times 2$ with a stride $S = 2$ and computing the maximum (i.e. max pooling, illustrated in figure \ref{fig:maxpooling}) of the selected part of the input. Effectively this progressively reduces the number of free parameters (while introducing no new parameters since max pooling is a fixed function of the input) and the memory footprint and computation in the network.
+On the other hand, the exact location of these features is not so important when compared to its location relative to other features. The pooling layer is an approach to providing translation invariance by reducing the spatial size (or down-sampling) of every depth slice of an input volume, most commonly by sliding a filter of size $2 \times 2$ with a stride $S = 2$ and computing the maximum (i.e., max pooling, illustrated in figure \ref{fig:maxpooling}) of the selected part of the input. Effectively this progressively reduces the number of free parameters (while introducing no new parameters since max pooling is a fixed function of the input) and the memory footprint and computation in the network.
 
 \begin{figure}[ht]
     \centering
@@ -434,7 +449,7 @@ LeNet \cite{lenet}, in figure \ref{fig:lenet}, is widely considered to be the fi
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.5\textwidth]{figs/lenet.png}
+    \includegraphics[width=1.0\textwidth]{figs/lenet.png}
     \caption{Architecture of the LeNet convolutional neural network \cite{lenet}.}
     \label{fig:lenet}
 \end{figure}
@@ -443,16 +458,16 @@ AlexNet \cite{alexnet} won the \ac{ILSVRC} \cite{imagenet} in 2012 by a very lar
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.6\textwidth]{figs/alexnet.png}
+    \includegraphics[width=1.0\textwidth]{figs/alexnet.png}
     \caption{Architecture of the AlexNet convolutional neural network \cite{alexnet}.}
     \label{fig:alexnet}
 \end{figure}
 
-Later the \ac{VGG} designed an architecture (illustrated in figure \ref{fig:vgg16}) that used repeated blocks of layers to build progressively more abstract features, shifting thinking in terms of layers to blocks. This basic building block consists of a convolutional layer with padding to maintain resolution, a nonlinearity (i.e. ReLU), pooling for downsampling the features. In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convolutions and $2 \times 2$ max pooling with stride $S = 2$, essentially halving the resolution after each one of these blocks.
+Later the \ac{VGG} designed an architecture (illustrated in figure \ref{fig:vgg16}) that used repeated blocks of layers to build progressively more abstract features, shifting thinking in terms of layers to blocks. This basic building block consists of a convolutional layer with padding to maintain resolution, a nonlinearity (i.e., ReLU), pooling for downsampling the features. In the original VGG16 paper \cite{vgg16} the authors employed $3 \times 3$ convolutions and $2 \times 2$ max pooling with stride $S = 2$, essentially halving the resolution after each one of these blocks.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.6\textwidth]{figs/vgg16.jpg}
+    \includegraphics[width=1.0\textwidth]{figs/vgg16.jpg}
     \caption{Architecture of the VGG16 convolutional neural network \cite{vgg16}.}
     \label{fig:vgg16}
 \end{figure}
@@ -461,7 +476,7 @@ GoogLeNet \cite{inceptionv1} (also known as Inception V1) won the \ac{ILSVRC} \c
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.6\textwidth]{figs/inceptionv1.png}
+    \includegraphics[width=1.0\textwidth]{figs/inceptionv1.png}
     \caption{Architecture of the GoogLeNet convolutional neural network \cite{inceptionv1}.}
     \label{fig:inceptionv3}
 \end{figure}
@@ -470,7 +485,7 @@ More recently \citeauthor{resnet} have pushed the state-of-the-art by introducin
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{figs/resnet50.png}
+    \includegraphics[width=1.0\textwidth]{figs/resnet50.png}
     \caption{Comparison between residual networks and more traditional architectures like VGG19, illustrating how residual networks avoid the vanishing gradient problem \cite{resnet}.}
     \label{fig:resnet50}
 \end{figure}
@@ -510,8 +525,8 @@ There are three major ensemble learning methods: bagging, boosting, and stacking
 Bagging, short for bootstrap aggregation, focuses on reducing variance and relies on $L$ approximately i.i.d. subsamples of the data (called bootstrap samples) to fit $L$ weak learners $h_1(x), h_2(x), \ldots, h_L(x)$ and aggregate or average them through some function $H(x)$ which e.g.
 
 \begin{enumerate}
-    \item in a regression problem can literally be the average of the predictions of the weak learners, sometimes referred to as soft voting, i.e. $H(x) = \frac{1}{L} \sum_{i=1}^{L} h_i(x)$
-    \item in a classification problem can be to just take the mode of the predictions of the weak learners, often called hard voting, i.e. $H(x) = \mode{(h_1(x), h_2(x), \ldots, h_L(x))}$
+    \item in a regression problem can literally be the average of the predictions of the weak learners, sometimes referred to as soft voting, i.e., $H(x) = \frac{1}{L} \sum_{i=1}^{L} h_i(x)$
+    \item in a classification problem can be to just take the mode of the predictions of the weak learners, often called hard voting, i.e., $H(x) = \mode{(h_1(x), h_2(x), \ldots, h_L(x))}$
 \end{enumerate}
 
 Perhaps the biggest advantage of bagging is that the the $L$ weak learners can be fit independently and in parallel, considerably speeding up research iterations.
@@ -536,63 +551,57 @@ $$
 
 Rather than combining the weak learners using some arbitrary pre-determined scheme, stacking learns this combination by training a meta-model based on the weak learners' predictions, which can even be done in multiple layers.
 
-Stacking often works well with heterogeneous weak learners, i.e. different algorithms. For example, our weak learners could consist of \ac{KNN}, \ac{SVM}, and decision tree models. Then, the outputs of the weak learners could be taken as inputs for an \ac{ANN} to learn the meta-model based on their predictions.
+Stacking often works well with heterogeneous weak learners, i.e., different algorithms. For example, our weak learners could consist of \ac{KNN}, \ac{SVM}, and decision tree models. Then, the outputs of the weak learners could be taken as inputs for an \ac{ANN} to learn the meta-model based on their predictions.
 
 The data that is used to train the weak learners is not relevant for training the meta-model. Thus we need to split the data in two folds: one for training the weak learners and another for training the meta-model. An obvious immediate drawback is that we only have a fraction of the data available for training the meta-model and vice versa.
 
 \section{Transfer Learning}
 \label{section:transferlearning}
 
-Supervised training of deep neural networks requires
+In practice, supervised training of deep neural networks requires
 
 \begin{itemize}
     \item vast amounts of labeled data, which is very expensive and time consuming in itself;
-    \item as well as immense computational and time resources which is often equally or more expensive.
+    \item setting and reasoning about many different hyperparameters and cross-validating them;
+    \item immense computational and time resources which is often equally or more expensive.
 \end{itemize}
 
-In practice, transfer learning emerges as a technique that can be used to reduce the costs or time constraints of training these deep neural networks.
+Transfer learning emerges as a technique that can be used to reduce the costs or time constraints of training these deep neural networks.
 
 Transfer learning is a machine learning technique that seeks to leverage (or transfer) the knowledge gained from solving one problem to another (ideally related) problem \cite{deeptransferlearning}. In the context of deep neural networks it means to transfer the weights of a model trained on a very large dataset (e.g. ImageNet \cite{imagenet}) and re-purpose them for another model.
 
-In image classification problems \ac{CNN} models are used to build progressively more specific feature maps in layers, where lower layers represent abstract, problem independent features (e.g. squares, circles) and higher layers represent specific, problem dependent features (e.g. car, dog). Transfer learning seeks to exploit and take advantage of this construct. In practice, transfer learning for current state-of-the-art image classification techniques boils down to:
+In image classification problems \ac{CNN} models are used to build progressively more specific feature maps in layers, where lower layers represent abstract, problem independent features (e.g. squares, circles) and higher layers represent specific, problem dependent features (e.g. car, dog). Transfer learning seeks to exploit and take advantage of this construct. In computer vision problems, the most common transfer learning techniques boil down to:
 
 \begin{enumerate}
-    \item choosing up to which layers should features be extracted
-    \item connecting it to a classifier
-    \item deciding which layers' weights should be trained (i.e. updated during gradient descent) and which should remain frozen (i.e. not updated during gradient descent)
+    \item choose up to which layer parameters should be extracted from;
+    \item decide up to which layer parameters should be trained (i.e., updated during gradient descent) and which should remain frozen (i.e., not updated during gradient descent);
+    \item connect a classifier (e.g. fully-connected layers.
 \end{enumerate}
 
-The classifier is commonly based on:
-
-\begin{itemize}
-    \item Fully connected layers;
-    \item Global average pooling;
-    \item SVM.
-\end{itemize}
-
-\subsection{Transfer Learning by Total Feature Extraction}
+\subsection{Transfer Learning by Total Parameter Extraction without Fine Tuning}
 
 In the simplest scenario:
 
 \begin{enumerate}
-    \item extract all the convolutional layers of the pre-trained model
-    \item freeze the weights of all the extracted layers
-    \item build a classifier on top of the extracted features and only train the weights of the classifier layers
+    \item extract and freeze all the layers of the pre-trained model, i.e., total parameter extraction;
+    \item build a classifier on top of the extracted parameters and only train those of the classifier layers, i.e., without fine tuning.
 \end{enumerate}
 
-\subsection{Transfer Learning by Partial Feature Extraction}
+Intuitively this is unlikely to be the best performing solution because only the classifier's parameters are being updated, leaving the pre-trained model's parameters untouched (thus too specific to the ImageNet domain).
+
+\subsection{Transfer Learning by Total Parameter Extraction with Fine Tuning}
+
+The parameters of the extracted layers do not need to remain frozen. Given sufficient computational and time resources, further training the parameters of the extracted layers can yield even higher generalization performance because we are, in some sense, fine-tuning the extracted parameters to better fit the target dataset.
+
+For this fine-tuning one should be very careful and make sure to use a very slow (i.e., low) learning rate so as to not suddenly disrupt the learned parameters from different layers, because we are actually updating parameters transferred from another model.
+
+\subsection{Transfer Learning by Partial Parameter Extraction}
 
 When the source and target domains are not very similar, extracting higher layers will yield features that are too specific to the source domain. For example, if the source domain is cars but the target domain is dogs, then the higher layers likely represent features very specific to dogs (e.g. dog eyes, dog tails, dog legs), whereas some arbitrary middle layer might represent more abstract shape-like features that can still be used as a solid starting point for the cars domain.
 
-For this reason it is often counter-productive to extract all the features. Instead features can be extracted up to an arbitrary middle layer which likely represents more useful features that are still relevant for the target domain. The precise point up to which features should be extracted needs to be studied and tested empirically for each problem and chosen based on whichever yields the highest generalization performance.
+For this reason it is often counter-productive to extract all the parameters. Instead parameters can be extracted up to an arbitrary middle layer which likely represents more useful features that are still relevant for the target domain. The precise point up to which parameters should be extracted needs to be studied and tested empirically for each problem and chosen based on whichever yields the highest generalization performance.
 
-Like the previous strategy, the classifier is built on top of the extracted features and only the weights of the classifier layers are trained.
-
-\subsection{Transfer Learning by Fine-Tuning}
-
-The weights of the extracted layers (regardless if they were all extracted or only partially) do not all need to remain frozen. Given sufficient computational and time resources, further training the weights of the extracted layers can yield even higher generalization performance because we are, in some sense, fine-tuning the weights of the extracted features to better fit the target dataset.
-
-For this fine-tuning one should be very careful and make sure to use a very slow (i.e. low) learning rate so as to not suddenly disrupt the learned features, because we are actually updating weights transferred from another model.
+Under this strategy, the parameters of earlier extracted layers can still be fine tuned.
 
 \section{Deep Learning Hardware and Software}
 
@@ -600,7 +609,7 @@ Deep learning is very computationally intensive in itself and even more so when 
 
 \ac{CNN}, the core of most state-of-the-art deep learning applied to computer vision, are computationally complex and embarassingly parallel \cite{chang2017} which the architecture of general purpose \ac{GPU} are appropriate for \cite{gpu} and for which libraries like cuDNN \cite{cudnn} were developed to further leverage the characteristics of \ac{GPU} into even bigger performance improvements.
 
-There is a growing demand for domain-specific hardware designed specifically for the computations necessary in neural network training and inference, like Google's TPU custom ASIC \cite{tpu}, which naturally can achieve major improvements in cost-energy-performance when compared to general purpose hardware like \ac{GPU} that were originally designed for the demands of computer graphics which coincidentally also serve deep learning reasonably well. Nonetheless, \ac{GPU} remain the best cost-effective commodity hardware for this type of computation, especially when not working at the scale of companies like Google and Facebook. In a typical scenario, the CPU does little useful computation in a deep learning application where most of the computation is delegated to the GPU.
+There is a growing demand for domain-specific hardware designed specifically for the computations necessary in neural network training and inference, like Google's TPU custom ASIC \cite{tpu}, which naturally can achieve major improvements in cost-energy-performance when compared to general purpose hardware like \ac{GPU} that was originally designed for the demands of computer graphics which coincidentally also serve deep learning reasonably well. Nonetheless, \ac{GPU} remain the best cost-effective commodity hardware for this type of computation, especially when not working at the scale of companies like Google and Facebook. In a typical scenario, the CPU does little useful computation in a deep learning application where most of the computation is delegated to the GPU.
 
 TensorFlow\footnote{\url{https://www.tensorflow.org/}} is an open source software library for numerical computation using data flow graphs (or computational graphs). The graph nodes represent mathematical operations, while the graph edges represent the tensors that flow between them. This flexible architecture enables you to deploy computation to one or more CPU or GPU in a desktop, server, or mobile device without rewriting code \cite{tensorflow}.
 
@@ -612,7 +621,7 @@ This section reviews current state-of-the-art results in skin lesion classificat
 
 \subsection{Transfer Learning Approaches}
 
-\citeauthor{Brinker2018} \cite{Brinker2018} present the first systematic review of the cutting edge in lesion classification with deep convolutional neural networks, which remains the fundamental technique in state-of-the-art results. They review 13 papers that use \ac{CNN}, most of which transfer weights from networks trained on \ac{ILSVRC} to the target task, which speeds up training and reduces costs by leveraging previous knowledge. In conclusion they note that \ac{CNN} are currently the state-of-the-art in skin lesion classification and that transfer learning is a very effective approach, but that it was rather difficult to compare results given the heterogeneity of datasets (some of which are not public) making reproduceability difficult. This motivated the initiative by the \ac{ISIC} Archive to collect and uniformize data as well as organize challenges to push new results.
+\citeauthor{Brinker2018} \cite{Brinker2018} present the first systematic review of the cutting edge in lesion classification with deep convolutional neural networks, which remains the fundamental technique in state-of-the-art results. They review 13 papers that use \ac{CNN}, most of which transfer weights from networks trained on ImageNet to the target task, which speeds up training and reduces costs by leveraging previous knowledge. In conclusion they note that \ac{CNN} are currently the state-of-the-art in skin lesion classification and that transfer learning is a very effective approach, but that it was rather difficult to compare results given the heterogeneity of datasets (some of which are not public) making reproduceability difficult. This motivated the initiative by the \ac{ISIC} Archive to collect and uniformize data as well as organize challenges to push new results.
 
 In \citeyear{nature2017} \citeauthor{nature2017} \cite{nature2017} achieved perhaps the most famous result in skin lesion classification using deep learning, making it to the Nature scientific journal. Their dataset combines biopsy-proven data from the \ac{ISIC} Archive, Edinburgh Dermofit Library, and the Stanford Hospital, totalling an astonishing 129450 samples (after going through data augmentation of random flips, rotations, crops) which remains one of the biggest efforts in data collection in the area. They build an undirected graph connecting images that were deemed to be similar and made sure that the connected components of this graph were separated and distributed between the train, validation, and test sets in order to create a more effective and diverse split of the data. The authors follow a transfer learning approach by leveraging the weights of the InceptionV3 network trained on ImageNet, on top of which they build their own classifier and fine-tune previous layers carefully using the RMSProp optimizer. They evaluate the performance of the network by pitting it against 21 board-certified dermatologists on biopsy-proven medically-relevant cases of keratinocyte carcinomas versus benign seborrheic keratoses and malignant melanomas versus benign nevi, attaining performance on par with experts.
 
