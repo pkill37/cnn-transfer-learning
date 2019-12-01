@@ -5,10 +5,13 @@ In this section we present conclusions, final remarks, and point to directions f
 
 \section{Discussion}
 
-In conclusion:
+In conclusion, several remarks are in order:
 
 \begin{itemize}
-    \item In transfer learning, the learning rate is very important, especially when extracting lower layers which empirically seem to be more sensitive to overshooting updates when compared to higher layers. Alternatively an adaptive optimizer can solve the same fundamental issue;
+    \item Although transfer learning helps alleviate the lack of vast amounts of labeled data in supervised learning problems, it is extremely important to tackle the issue at its core and augment the data that is available through appropriate and reasonable data augmentation techniques;
+    \item The learning rate is very important for transfer learning, especially when extracting lower layers which empirically seem to be more sensitive to overshooting updates when compared to higher layers. Alternatively an adaptive optimizer can solve the same fundamental issue;
+    \item Extracting parameters up to middle layers of pre-trained model can simultaneously provide good generalization performance as well as a more compact and computationally efficient model for certain applications;
+    \item Extracting parameters up to the highest layer of the VGG16 pre-trained model and fine-tuning the parameters up to the middle layers is the strategy that yielded the best generalization performance in skin lesion classification on the ISIC 2018 dataset, a result which can be taken as a simple guiding heuristic for applications where a more thorough cross-validated study of models is not feasible;
     \item Designing a custom \ac{CNN} and training it from scratch is difficult because it requires reasoning and setting many hyperparameters simultaneously, and cross-validating a wide range of values for so many hyperparameters is computationally expensive. Transfer learning emerges as the clear solution to a lot of problems where data is scarce, especially in computer vision where the availability of pre-trained models is quite diverse.
 \end{itemize}
 

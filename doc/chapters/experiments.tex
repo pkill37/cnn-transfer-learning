@@ -21,7 +21,7 @@ Based on the transfer learning techniques introduced in chapter \ref{chapter:sot
     \label{fig:vgg16_reillustration}
 \end{figure}
 
-It is hypothesized that extracting parameters from lower layers of models trained for ImageNet classification can provide good performance, because the former presumably provide low-level features (e.g. shapes or lines) that are still useful for skin lesion classification whereas the latter provide very high-level concepts (e.g. dogs, cats) that are most relevant for classification in the ImageNet domain and otherwise needs fine-tuning to the target dataset.
+It is hypothesized that extracting parameters from lower layers of models trained for ImageNet classification can provide good performance, because the former presumably provide low-level features (e.g., shapes or lines) that are still useful for skin lesion classification whereas the latter provide very high-level concepts (e.g., dogs, cats) that are most relevant for classification in the ImageNet domain and otherwise needs fine-tuning to the target dataset.
 
 In particular, the basic unit in the VGG16 network is the convolutional block, which is comprised by a stack of convolutional layers and one pooling layer. These convolutional blocks are then further stacked together to progressively build higher level feature maps at the end of each block. To verify this, one can run a sample input (figure \ref{fig:sample_input}) through the original VGG16 model pre-trained on ImageNet and visualize the activations at the end of each block (after its pooling layer).
 
@@ -155,7 +155,7 @@ Arguably the simplest case is to extract and freeze all layers (i.e., $e = f = 1
         \end{itemize}
 \end{enumerate}
 
-Surprisingly models converge nicely and quickly (e.g. figure \ref{fig:vgg16_total_convergence}) and already give very good results overall (table \ref{table:vgg16_total}).
+Surprisingly models converge nicely and quickly (e.g., figure \ref{fig:vgg16_total_convergence}) and already give very good results overall (table \ref{table:vgg16_total}).
 
 \begin{figure}[ht]
     \centering
@@ -258,7 +258,7 @@ In this case, training specifically follows the methodology:
         \end{itemize}
 \end{enumerate}
 
-However none of the models converge usefully, likely stuck in a local minimum with high loss (e.g. figure \ref{fig:vgg16_partial_divergence}).
+However none of the models converge usefully, likely stuck in a local minimum with high loss (e.g., figure \ref{fig:vgg16_partial_divergence}).
 
 \begin{figure}[ht]
     \centering
@@ -560,7 +560,7 @@ The classifier, illustrated in figure \ref{fig:custom1}, is a stack of two fully
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\textwidth]{figs/custom1.png}
-    \caption{Architecture of the first custom-designed neural network.}
+    \caption{Custom \ac{CNN} architecture 1.}
     \label{fig:custom1}
 \end{figure}
 
@@ -617,7 +617,7 @@ The effect of $\lambda$ on the performance of the model can be understood in fig
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\textwidth]{figs/custom1_lambda.png}
-    \caption{Accuracy on the train set $A_{test}$ of models of the custom architecture 1 over a range of values for L2-regularization strength $\lambda$.}
+    \caption{Accuracy on the train set ($A_{train}$) and validation set ($A_{val}$) of models of the custom architecture 1 over a range of values for L2-regularization strength $\lambda$.}
     \label{fig:custom1_lambda}
 \end{figure}
 
@@ -651,7 +651,7 @@ The classifier is a single fully-connected layer of 512 ReLU-activated neurons f
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\textwidth]{figs/custom2.png}
-    \caption{Custom Architecture 2.}
+    \caption{Custom \ac{CNN} architecture 2.}
     \label{fig:custom2}
 \end{figure}
 
@@ -708,7 +708,7 @@ The effect of $\lambda$ on the performance of the model can be understood in fig
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\textwidth]{figs/custom2_lambda.png}
-    \caption{Accuracy on the test set $A_{test}$ of models of the custom architecture 2 over a range of values for L2-regularization strength $\lambda$.}
+    \caption{Accuracy on the train set ($A_{train}$) and validation set ($A_{val}$) of models of the custom architecture 2 over a range of values for L2-regularization strength $\lambda$.}
     \label{fig:custom2_lambda}
 \end{figure}
 

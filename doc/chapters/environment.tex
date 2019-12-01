@@ -23,7 +23,7 @@ The datasets from the \ac{ISIC} 2018 grand challenge \cite{isic2018} were largel
 The images in the dataset undergo a number of preprocessing steps:
 
 \begin{enumerate}
-    \item Most readily available pretrained models are of network architectures whose input tensor is of square dimensions (e.g., $224 \times 224 \times 3$). Since our dataset's images are of distinct non-square dimensions, it is necessary to resize them to a square. However, resizing them all naively to the network's input tensor dimensions without regards to the image's aspect ratio means that the input fed to the network is of varying distinct aspect ratios which does not constitute a good start. Therefore, the first step is to crop an arbitrarily-sized square of the center of the image (as per code snippet \ref{code:crop}) which will likely capture the skin lesion.
+    \item Most readily available pretrained models are of network architectures whose input tensor is of square dimensions (e.g., $224 \times 224 \times 3$). Since the dataset's images are of distinct non-square dimensions, it is necessary to resize them to a square. However, resizing them all naively to the network's input tensor dimensions without regards to the image's aspect ratio means that the input fed to the network is of varying distinct aspect ratios which does not constitute a good start. Therefore, the first step is to crop an arbitrarily-sized square of the center of the image (as per code snippet \ref{code:crop}) which will likely capture the skin lesion.
 
     \begin{listing}[ht]
     \begin{minted}{python}
@@ -90,7 +90,7 @@ The images in the dataset undergo a number of preprocessing steps:
 \subsection{Augmentation}
 \label{subsection:augmentation}
 
-In our binary classification task (melanoma vs non-melanoma) the $m = 10015$ samples in the training set are highly imbalanced (illustrated in figure \ref{fig:classimbalance}):
+In the binary classification task (melanoma vs non-melanoma) the $m = 10015$ samples in the training set are highly imbalanced (illustrated in figure \ref{fig:classimbalance}):
 
 \begin{itemize}
     \item the majority class has $|S_{maj}| = 8902$ samples, constituting $\frac{8902}{10015} \times 100 = 88.9\%$ of the samples;
@@ -104,7 +104,7 @@ In our binary classification task (melanoma vs non-melanoma) the $m = 10015$ sam
     \label{fig:classimbalance}
 \end{figure}
 
-We correct this imbalance by oversampling the minority class, while also augmenting the total number of samples to $m' \approx 18000$ to increase the size of the dataset. That means we must augment the minority class by a factor of $\frac{\frac{m'}{2}}{|S_{min}|}$ and the majority class by a factor of $\frac{\frac{m'}{2}}{|S_{maj}|}$. For this augmentation we consider a set $T$ of possible transformations:
+We correct this imbalance by oversampling the minority class, while also augmenting the total number of samples to $m' \approx 18000$ to increase the size of the dataset. That means the minority class must be augmented by a factor of $\frac{\frac{m'}{2}}{|S_{min}|}$ and the majority class by a factor of $\frac{\frac{m'}{2}}{|S_{maj}|}$. For this augmentation a set $T$ of possible transformations is considered:
 
 \begin{itemize}
     \item Horizontal flip
@@ -124,7 +124,7 @@ implemented by \verb|PIL.Image.transpose|\footnote{\url{https://pillow.readthedo
     \item \verb|PIL.Image.ROTATE_270|.
 \end{itemize}
 
-On principle, we did not consider transformations that change the color (e.g., contrast change, channel shift) or size (e.g., zoom) of features because it would unjustifiably allow the network to learn from these potentially misrepresenting features which even an expert human diagnosis would have trouble with.
+On principle, transformations that change the color (e.g., contrast change, channel shift) or size (e.g., zoom) of features were not considered because it would unjustifiably allow the network to learn from these potentially misrepresenting features which even an expert human diagnosis would have trouble with.
 
 The final available augmentations are all the $k$-combinations of the set $T$ for $k \in \{1, ..., |T|\}$, in other words all the possible ways in which you can combine the transformations from the set $T$.
 
@@ -146,7 +146,7 @@ def seed():
 \label{code:seed}
 \end{listing}
 
-The original training set from \ac{ISIC} 2018 is available for direct download, but the validation and test sets are kept private by the organization and are only used internally for reporting performance without actually releasing the data itself. As such, we will split the samples from the training set (which is available for download) into our own training, validation and test sets.
+The original training set from \ac{ISIC} 2018 is available for direct download, but the validation and test sets are kept private by the organization and are only used internally for reporting performance without actually releasing the data itself. As such, samples from the training set (which is available for download) will be split into proprietary training, validation and test sets.
 
 Augmentation, as described previously, results in 17810 samples which are split 85\%-15\% in a stratified fashion to maintain class balance within the splits into:
 
@@ -213,7 +213,7 @@ The deep learning research server Deeplar runs on openSUSE Tumbleweed 20191004\f
 We used Miniconda\footnote{\url{https://docs.conda.io/en/latest/miniconda.html}} to install Conda\footnote{\url{https://conda.io/en/latest/}} which was used to manage a Python 3.6\footnote{\url{https://www.python.org/}} environment which was specifically required for compatibility with TensorFlow. Crucially, the following Python packages and specific versions were used for the development of most of the source code.
 
 \begin{itemize}
-    \item TensorFlow\footnote{\url{https://www.tensorflow.org/}} 1.12.0, of which we mostly use the \verb|tf.keras| API, for training and testing the various models;
+    \item TensorFlow\footnote{\url{https://www.tensorflow.org/}} 1.12.0, of which the \verb|tf.keras| API is mostly used for training and testing the various models;
     \item scikit-learn\footnote{\url{https://scikit-learn.org/}} 0.20.2 for some useful metrics and data splitting methods;
     \item NumPy\footnote{\url{https://numpy.org/}} 1.15.4 for various vector and matrix operations and Pillow\footnote{\url{https://pillow.readthedocs.io/en/stable/}} 5.4.1 for image handling and transformations because of this work's image preprocessing needs.
 \end{itemize}
