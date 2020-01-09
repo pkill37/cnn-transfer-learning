@@ -23,7 +23,7 @@ The datasets from the \ac{ISIC} 2018 grand challenge \cite{isic2018} were largel
 The images in the dataset undergo a number of preprocessing steps:
 
 \begin{enumerate}
-    \item Most readily available pretrained models are of network architectures whose input tensor is of square dimensions (e.g., $224 \times 224 \times 3$). Since the dataset's images are of distinct non-square dimensions, it is necessary to resize them to a square. However, resizing them all naively to the network's input tensor dimensions without regards to the image's aspect ratio means that the input fed to the network is of varying distinct aspect ratios which does not constitute a good start. Therefore, the first step is to crop an arbitrarily-sized square of the center of the image (as per code snippet \ref{code:crop}) which will likely capture the skin lesion.
+    \item Most readily available pretrained models are of network architectures whose input tensor is of square dimensions (\textit{e.g.}, $224 \times 224 \times 3$). Since the dataset's images are of distinct non-square dimensions, it is necessary to resize them to a square. However, resizing them all naively to the network's input tensor dimensions without regards to the image's aspect ratio means that the input fed to the network is of varying distinct aspect ratios which does not constitute a good start. Therefore, the first step is to crop an arbitrarily-sized square of the center of the image (as per code snippet \ref{code:crop}) which will likely capture the skin lesion.
 
     \begin{listing}[ht]
     \begin{minted}{python}
@@ -124,7 +124,7 @@ implemented by \verb|PIL.Image.transpose|\footnote{\url{https://pillow.readthedo
     \item \verb|PIL.Image.ROTATE_270|.
 \end{itemize}
 
-On principle, transformations that change the color (e.g., contrast change, channel shift) or size (e.g., zoom) of features were not considered because it would unjustifiably allow the network to learn from these potentially misrepresenting features which even an expert human diagnosis would have trouble with.
+On principle, transformations that change the color (\textit{e.g.}, contrast change, channel shift) or size (\textit{e.g.}, zoom) of features were not considered because it would unjustifiably allow the network to learn from these potentially misrepresenting features which even an expert human diagnosis would have trouble with.
 
 The final available augmentations are all the $k$-combinations of the set $T$ for $k \in \{1, ..., |T|\}$, in other words all the possible ways in which you can combine the transformations from the set $T$.
 
