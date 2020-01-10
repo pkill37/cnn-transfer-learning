@@ -80,13 +80,13 @@ For narrative and reproducibility purposes, the variables $e$ and $f$ will refer
     \item Layers 19-22 constitute the classifier layers (\verb|flatten|, \verb|fc1|, \verb|fc2|, \verb|predictions|) and will not be considered.
 \end{itemize}
 
-In this work the pooling layers at the end of each of the five convolutional blocks will be considered for parameter extraction, \textit{i.e.}, $e$ will take values $e \in \{18, 14, 10, 6, 3\}$. Layers will be frozen accordingly, \textit{i.e.}, $f$ will take values $e \in \{18, 14, 10, 6, 3, 0\}$ such that $e \geq f$. For example:
+In this work the pooling layers at the end of each of the five convolutional blocks will be considered for parameter extraction, \textit{i.e.}, $e$ will take values $e \in \{18, 14, 10, 6, 3\}$. Layers will be frozen accordingly, \textit{i.e.}, $f$ will take values $f \in \{18, 14, 10, 6, 3, 0\}$ such that $e \geq f$. For example:
 
 \begin{itemize}
     \item $e = 18$ and $f = 14$ means that parameters are extracted up to layer 18 but the parameters up to layer 14 are frozen and will not be updated;
     \item $e = 14$ and $f = 6$ means that parameters are extracted up to layer 14 but the parameters up to layer 6 are frozen and will not be updated;
     \item $e = 10$ and $f = 0$ means that parameters are extracted up to layer 10 but no parameters will be frozen and thus will all be updated;
-    \item $e = 10$ and $f = 14$ can not take place simultaneously since there is no meaning to extracting the first 10 layers and freezing the first 14 after having extracted only 10 of them.
+    \item $e = 10$ and $f = 14$ can not take place simultaneously.
 \end{itemize}
 
 The same examples are implemented in \verb|tf.keras| in code snippet \ref{code:vgg16}:
@@ -339,7 +339,7 @@ For example, $\eta = 0.000206913808$ was found to provide convergence (figure \r
 \begin{figure}[ht]
     \centering
     \includegraphics[width=1.0\textwidth]{figs/vgg16_partial_convergence.png}
-    \caption{Partial parameter extraction model (with $e = 14$, $f = 14$, $\lambda = 0.00015445$, $\eta = 10^{-4}$) converging to very good performance while maintaining modest model size.}
+    \caption{Partial parameter extraction model (with $e = 14$, $f = 14$, $\lambda = 0.00015445$, $\eta = 0.000206913808$) converging to very good performance while maintaining modest model size.}
     \label{fig:vgg16_partial_convergence}
 \end{figure}
 
