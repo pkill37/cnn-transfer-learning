@@ -1,13 +1,10 @@
 # MSc
 
-The MSc thesis by Fábio Maia who developed
-
-- a simple, pragmatic, Unix-y workflow for running experiments and storing their workflows
-- a comprehensive study of transfer learning applied to binary classification of skin lesions
+The MSc thesis by Fábio Maia who developed a comprehensive study and comparison of transfer learning techniques applied to binary classification of skin lesions.
 
 ## Environment
 
-We use [Miniconda](https://docs.conda.io/en/latest/miniconda.html) to manage a virtual Python 3.6 environment and dependencies (without the overhead of containerization tools like Docker or Podman).
+We use [Miniconda](https://docs.conda.io/en/latest/miniconda.html) to manage a virtual Python 3.6 environment and dependencies.
 
 Install Miniconda and create the virtual Python environment with all necessary dependencies with:
 
@@ -31,24 +28,28 @@ Download the official ISIC2018 train set, preprocess it, and split it into our o
 
 ## Train
 
-Given a script `./src/5_resnet.py` that trains a model, you can run it and store the model in `./experiments_5_resnet/model.h5` using
+Run the prepared scripts to train the VGG16 transfer learning models and the custom CNN end-to-end learning models:
 
 ```
-python ./src/5_resnet.py --experiments ./experiments_5_resnet --train-set ./data/isic2018/224/train/train.npz --epochs 1000 --batch-size 32
+./train_vgg16.sh
+./train_custom1.sh
+./train_custom2.sh
 ```
 
 ## Test
 
-Given a model residing in directory `./experiments_5_resnet` you can test the model against a test set and store results in `./experiments_5_resnet` using
+Run the prepared scripts to test the VGG16 transfer learning models and the custom CNN end-to-end learning models:
 
 ```
-python ./src/test.py --experiments ./experiments_5_resnet --test-set ./data/isic2018/224/test/test.npz
+./test_vgg16.sh
+./test_custom.sh
 ```
 
-And then plot results using
+Then plot results accordingly:
 
 ```
-python ./src/plot.py --experiments ./experiments_5_resnet --plots ./plots_5_resnet
+./plot_vgg16.sh
+./plot_custom.sh
 ```
 
 ## Dissertation
