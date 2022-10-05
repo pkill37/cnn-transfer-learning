@@ -1,6 +1,6 @@
 # MSc
 
-The MSc thesis by Fábio Maia who developed a comprehensive study and comparison of transfer learning techniques applied to binary classification of skin lesions.
+A comprehensive study and comparison of transfer learning techniques applied to binary classification of skin lesions.
 
 ## Environment
 
